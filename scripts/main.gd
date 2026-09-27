@@ -28,6 +28,24 @@ const FAR_PROJECTED_FOOT_Y_RATIO := GROUND_BACK_TOUCH_Y_RATIO
 const HORSE_VISIBLE_HEIGHT_TEXTURE_RATIO := 1039.0 / 1086.0
 const HORSE_FOOT_ANCHOR_TEXTURE_RATIO := 1055.0 / 1086.0
 
+# Calibrated obstacle-aware rear ground edge.
+# The user's selected 1536x1384 screenshots show:
+# - open rear yard: hoof line about y=781px ~= 0.565h
+# - hay-bale / right-shelter limits: hoof line about y=809px ~= 0.585h
+# Near the extreme sides the boundary comes slightly farther forward so the
+# horse walks in front of the barn/shelter instead of visually standing on them.
+const LEFT_OUTER_GROUND_Y_RATIO := 0.600
+const LEFT_OBSTACLE_GROUND_Y_RATIO := 0.585
+const RIGHT_OBSTACLE_GROUND_Y_RATIO := 0.585
+const RIGHT_OUTER_GROUND_Y_RATIO := 0.600
+
+const LEFT_OUTER_X_RATIO := 0.00
+const LEFT_OBSTACLE_X_RATIO := 0.36
+const LEFT_OPEN_X_RATIO := 0.43
+const RIGHT_OPEN_X_RATIO := 0.80
+const RIGHT_OBSTACLE_X_RATIO := 0.87
+const RIGHT_OUTER_X_RATIO := 1.00
+
 @onready var background: Sprite2D = $Background
 @onready var horse_root: Node2D = $HorseRoot
 @onready var horse_master: Sprite2D = $HorseRoot/HorseMaster
@@ -127,11 +145,17 @@ func set_horse_position(new_position: Vector2) -> void:
 	var clamped_y := clampf(new_position.y, min_y, max_y)
 
 	horse_x_ratio = clamped_x / size.x
-	horse_depth_t = clampf(
+
+	var requested_depth_t := clampf(
 		inverse_lerp(min_y, max_y, clamped_y),
 		0.0,
 		1.0
 	)
+	var obstacle_min_depth_t := _minimum_depth_t_for_x(horse_x_ratio)
+
+	# If the user drags "through" the hay stack or the right shelter, project
+	# the horse to the nearest legal ground point in front of that obstacle.
+	horse_depth_t = maxf(requested_depth_t, obstacle_min_depth_t)
 	_apply_perspective()
 
 
@@ -158,10 +182,87 @@ func _layout_scene() -> void:
 	_apply_perspective()
 
 
+func _minimum_projected_foot_y_ratio_for_x(x_ratio: float) -> float:
+	var x := clampf(x_ratio, 0.0, 1.0)
+
+	if x <= LEFT_OBSTACLE_X_RATIO:
+		var outer_t := inverse_lerp(
+			LEFT_OUTER_X_RATIO,
+			LEFT_OBSTACLE_X_RATIO,
+			x
+		)
+		return lerpf(
+			LEFT_OUTER_GROUND_Y_RATIO,
+			LEFT_OBSTACLE_GROUND_Y_RATIO,
+			smoothstep(0.0, 1.0, outer_t)
+		)
+
+	if x < LEFT_OPEN_X_RATIO:
+		var open_t := inverse_lerp(
+			LEFT_OBSTACLE_X_RATIO,
+			LEFT_OPEN_X_RATIO,
+			x
+		)
+		return lerpf(
+			LEFT_OBSTACLE_GROUND_Y_RATIO,
+			GROUND_BACK_TOUCH_Y_RATIO,
+			smoothstep(0.0, 1.0, open_t)
+		)
+
+	if x <= RIGHT_OPEN_X_RATIO:
+		return GROUND_BACK_TOUCH_Y_RATIO
+
+	if x < RIGHT_OBSTACLE_X_RATIO:
+		var obstacle_t := inverse_lerp(
+			RIGHT_OPEN_X_RATIO,
+			RIGHT_OBSTACLE_X_RATIO,
+			x
+		)
+		return lerpf(
+			GROUND_BACK_TOUCH_Y_RATIO,
+			RIGHT_OBSTACLE_GROUND_Y_RATIO,
+			smoothstep(0.0, 1.0, obstacle_t)
+		)
+
+	var outer_t := inverse_lerp(
+		RIGHT_OBSTACLE_X_RATIO,
+		RIGHT_OUTER_X_RATIO,
+		x
+	)
+	return lerpf(
+		RIGHT_OBSTACLE_GROUND_Y_RATIO,
+		RIGHT_OUTER_GROUND_Y_RATIO,
+		smoothstep(0.0, 1.0, outer_t)
+	)
+
+
+func _minimum_depth_t_for_x(x_ratio: float) -> float:
+	var minimum_foot_y_ratio := _minimum_projected_foot_y_ratio_for_x(x_ratio)
+	var far_delta := FAR_PROJECTED_FOOT_Y_RATIO - PERSPECTIVE_HORIZON_Y_RATIO
+	var requested_delta := minimum_foot_y_ratio - PERSPECTIVE_HORIZON_Y_RATIO
+
+	if far_delta <= 0.0 or requested_delta <= far_delta:
+		return 0.0
+
+	var inverse_depth_gain := requested_delta / far_delta
+	var distance_m := FAR_DISTANCE_M / inverse_depth_gain
+	return clampf(
+		(FAR_DISTANCE_M - distance_m) / (FAR_DISTANCE_M - NEAR_DISTANCE_M),
+		0.0,
+		1.0
+	)
+
+
 func _apply_perspective() -> void:
 	var size := get_viewport_rect().size
 	if size.x <= 0.0 or size.y <= 0.0:
 		return
+
+	# Keep an already-stored position legal after a resize/fold-state change too.
+	horse_depth_t = maxf(
+		horse_depth_t,
+		_minimum_depth_t_for_x(horse_x_ratio)
+	)
 
 	# Move linearly in world depth, not linearly in sprite scale.
 	# Perspective itself then naturally grows non-linearly as Z approaches camera.
