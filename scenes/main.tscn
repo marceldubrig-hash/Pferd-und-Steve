@@ -11,10 +11,7 @@ position = Vector2(640, 360)
 
 [node name="HorseRoot" type="Node2D" parent="."]
 
-[node name="HorseMaster" type="Sprite2D" parent="HorseRoot"]
-
 [node name="HorseVisual" type="Node2D" parent="HorseRoot"]
-visible = false
 
 [node name="RigSpace" type="Node2D" parent="HorseRoot/HorseVisual"]
 scale = Vector2(0.701686, 0.701686)

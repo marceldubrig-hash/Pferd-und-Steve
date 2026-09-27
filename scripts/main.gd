@@ -2,7 +2,6 @@ extends Node2D
 
 const FARM_DAY := "res://assets/backgrounds/farm_day_v01.png"
 const FARM_NIGHT := "res://assets/backgrounds/farm_night_v01.png"
-const HORSE_MASTER := "res://assets/horse/horse_master_standing_v01.png"
 
 # Perspective model:
 # A pinhole camera projects apparent size proportional to 1 / distance.
@@ -26,7 +25,10 @@ const FAR_PROJECTED_FOOT_Y_RATIO := GROUND_BACK_TOUCH_Y_RATIO
 # Canon master alpha calibration, expressed as fractions so it stays correct
 # if the runtime source is resized. Original canonical source: 1448 x 1086.
 const HORSE_VISIBLE_HEIGHT_TEXTURE_RATIO := 1039.0 / 1086.0
-const HORSE_FOOT_ANCHOR_TEXTURE_RATIO := 1055.0 / 1086.0
+# Freeze the exact pre-integration runtime calibration denominator. The cutout
+# is mapped into this height by RigSpace, so the 1/Z perspective itself is unchanged.
+const HORSE_MASTER_RUNTIME_HEIGHT_PX := 768.0
+const HORSE_VISIBLE_SOURCE_HEIGHT_PX := HORSE_MASTER_RUNTIME_HEIGHT_PX * HORSE_VISIBLE_HEIGHT_TEXTURE_RATIO
 
 # Calibrated obstacle-aware rear ground edge.
 # The user's selected 1536x1384 screenshots show:
@@ -48,7 +50,6 @@ const RIGHT_OUTER_X_RATIO := 1.00
 
 @onready var background: Sprite2D = $Background
 @onready var horse_root: Node2D = $HorseRoot
-@onready var horse_master: Sprite2D = $HorseRoot/HorseMaster
 @onready var horse_visual: Node2D = $HorseRoot/HorseVisual
 
 var is_night := false
@@ -63,8 +64,6 @@ var horse_depth_t := 0.28
 func _ready() -> void:
 	get_viewport().size_changed.connect(_layout_scene)
 	_load_texture_if_available(background, FARM_DAY)
-	_load_texture_if_available(horse_master, HORSE_MASTER)
-	_configure_horse_foot_anchor()
 	_layout_scene()
 	_apply_perspective()
 
@@ -101,22 +100,6 @@ func _load_texture_if_available(target: Sprite2D, path: String) -> void:
 		push_warning("Runtime-Asset fehlt: %s" % path)
 
 
-func _configure_horse_foot_anchor() -> void:
-	if horse_master.texture == null:
-		return
-
-	var texture_size := horse_master.texture.get_size()
-	var foot_y := texture_size.y * HORSE_FOOT_ANCHOR_TEXTURE_RATIO
-
-	# Keep the visual centered horizontally, but move its pivot vertically
-	# from the image centre to the actual hoof/ground contact.
-	horse_master.centered = true
-	horse_master.position = Vector2.ZERO
-	horse_master.offset = Vector2(
-		0.0,
-		texture_size.y * 0.5 - foot_y
-	)
-
 
 func show_day() -> void:
 	is_night = false
@@ -132,9 +115,7 @@ func show_night() -> void:
 
 func set_horse_facing_right(facing_right: bool) -> void:
 	# Canon: RIGHT = Original, LEFT = horizontal gespiegelt.
-	# During the parallel-integration stage the visible master stays in sync,
-	# while the complete cutout is mirrored only once at its outer visual container.
-	horse_master.flip_h = not facing_right
+	# Mirror the complete cutout once at its outer visual container.
 	horse_visual.scale = Vector2(1.0 if facing_right else -1.0, 1.0)
 
 
@@ -289,15 +270,8 @@ func _apply_perspective() -> void:
 		HORSE_WORLD_HEIGHT_M / CAMERA_HEIGHT_M
 	) * maxf(foot_delta_from_horizon, 0.001)
 
-	var visible_source_height := 1.0
-	if horse_master.texture != null:
-		visible_source_height = maxf(
-			horse_master.texture.get_height() * HORSE_VISIBLE_HEIGHT_TEXTURE_RATIO,
-			1.0
-		)
-
 	var target_horse_height_px := size.y * projected_horse_height_ratio
-	var visual_scale := target_horse_height_px / visible_source_height
+	var visual_scale := target_horse_height_px / HORSE_VISIBLE_SOURCE_HEIGHT_PX
 
 	horse_root.position = Vector2(
 		size.x * horse_x_ratio,

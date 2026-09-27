@@ -257,3 +257,35 @@ Whole-rig-Flip-Commit: `e1398dfcd9b9e8d33faa2b1fb60ea4e001c6f777`.
 
 Kein Fehler und kein Korrekturcommit nötig. 11E ist technisch bereit für den isolierten
 Austausch des sichtbaren Masters.
+
+
+## 11F — Sichtbaren Master durch Cutout-Rig ersetzt
+
+Das alte Runtime-`Sprite2D` `Main/HorseRoot/HorseMaster` wurde erst jetzt entfernt.
+`HorseVisual` ist sichtbar und enthält als alleinige Pferdegrafik:
+
+`HorseRoot → HorseVisual → RigSpace → HorseCutoutRig`.
+
+Die bisherige Perspektivberechnung bleibt mathematisch identisch. Der einzige
+Sprite-spezifische Nenner wurde eingefroren auf den bereits bestätigten alten
+Runtime-Kalibrierwert:
+
+`HORSE_VISIBLE_SOURCE_HEIGHT_PX = 768 × 1039 / 1086 = 734.762430939…`.
+
+Dadurch muss die 1/Z-Formel nicht auf die internen Cutout-Pixelmaße umgeschrieben
+werden. `RigSpace.scale = 0.701686` bildet das neue Rig auf genau diesen alten
+Kalibrierraum ab. Entfernt wurden ausschließlich die nicht mehr nötigen Master-
+Spezifika: Textur-Laden, Sprite-Fußanker-Konfiguration, `flip_h` und die dynamische
+Texture-Height-Abfrage. Der neue Bodenanker bleibt der in 11C gemessene lokale
+Rig-Offset `(0, -516.7995)`.
+
+Unverändert bleiben `HorseRoot.position`, `HorseRoot.scale`, `HorseRoot.z_index`,
+Drag/Touch, Hindernisgrenzen, Tiefenvariablen und sämtliche Rig-Animationen.
+
+Vor diesem Commit stoppte ein lokaler Connector-Vorprüfguard den ersten Schreibversuch,
+weil der zu breite Suchbegriff `HORSE_MASTER` auch den neuen Namen
+`HORSE_MASTER_RUNTIME_HEIGHT_PX` traf. **Es wurde dabei nichts auf GitHub geschrieben**
+und kein Runtime-Zustand verändert; der Guard wurde präzisiert und derselbe isolierte
+Patch danach erneut aufgebaut.
+
+Nächster Prüfpunkt vor weiteren Änderungen: Godot + Android für genau diesen Austausch.
