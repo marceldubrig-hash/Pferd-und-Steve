@@ -1,0 +1,46 @@
+name: Verify farm cutout movement
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-farm-cutout-movement.yml"
+      - "tools/verify_farm_cutout_movement.gd"
+      - "scenes/main.tscn"
+      - "scripts/main.gd"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Godot 4.3
+        shell: bash
+        run: |
+          curl -L --fail --retry 3 -o godot.zip "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          chmod +x Godot_v4.3-stable_linux.x86_64
+
+      - name: Import project
+        run: ./Godot_v4.3-stable_linux.x86_64 --headless --path . --editor --quit
+
+      - name: Exercise touch drag bounds and world z
+        run: ./Godot_v4.3-stable_linux.x86_64 --headless --path . --script res://tools/verify_farm_cutout_movement.gd
+
+      - name: Commit validation evidence
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add debug/farm_cutout_movement_validation.txt
+          if git diff --cached --quiet; then
+            echo "Evidence unchanged."
+            exit 0
+          fi
+          git commit -m "Record farm cutout movement validation"
+          git push origin HEAD:main

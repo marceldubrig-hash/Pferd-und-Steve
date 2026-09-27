@@ -303,3 +303,25 @@ Austausch-Commit: `bfba37dbc058de129e2f2605a015241ae6bca2e7`.
 Damit lädt die Farm nach vollständiger Entfernung von `HorseMaster` technisch sauber
 und lässt sich als Android-Debug-Build exportieren. Noch keine Movement-, Grenz- oder
 World-Z-Logik wurde in 11F verändert.
+
+
+## 11G/11H — Runtime-Prüfprobe für Input, Grenzen und World-Z
+
+Da der Austausch den äußeren `HorseRoot` absichtlich beibehalten hat, wird die
+bestehende Movement-Logik nicht vorsorglich umgeschrieben. Stattdessen prüft ein
+temporärer Godot-4.3-Runtime-Runner jetzt direkt:
+
+- Scene-Instanz ohne `HorseMaster`
+- Cutout-Hierarchie, Basis-Scale und Bodenanker
+- offene hintere Hofgrenze
+- linke Heuballen-/Außengrenze
+- rechte Unterstand-/Außengrenze
+- X-/Y-Clamping
+- `HorseRoot.z_index = round(depth_t × 100)`
+- echte `InputEventScreenTouch`-Weiterleitung
+- echte `InputEventScreenDrag`-Weiterleitung
+- LEFT/RIGHT-Flip des Gesamtcontainers
+
+Der Runner verändert keine Runtime-Datei; er schreibt ausschließlich einen
+Validierungsnachweis unter `debug/`. Erst das grüne Ergebnis entscheidet, ob 11G/11H
+ohne Runtime-Fix abgeschlossen werden können.
