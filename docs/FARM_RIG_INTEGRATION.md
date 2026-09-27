@@ -1,0 +1,100 @@
+# Farm / Cutout-Rig — Schritt 11
+
+## Ausgangsstand und Audit (11A)
+
+GitHub `main` direkt geprüft: `d83694ccc2be05df037a50b75cd09e18afbb2e90`.
+Dies entspricht dem Übergabeanker. Die letzten fünf Commits entfernen ausschließlich
+die temporären Step-10-Prüfdateien. Es gibt keinen neueren Farm-Umbau.
+
+Vollständig gelesen: `MASTER_SPEC.md`, `HORSE_LEG_RIG.md`,
+`horse_cutout_rig.tscn`, `main.tscn`, `main.gd`, außerdem `PERSPECTIVE_MODEL.md`,
+Asset-/Recovery-/Source-Audit-Doku, Materializer und bestehende Build-Workflows.
+Keine AGENTS.md im Repository. Die Farm referenziert kein weiteres Script oder Helper.
+Historische Aussagen in Asset-/Source-Dokumenten beschreiben ältere Meilensteine;
+der aktuelle Dateibaum und der erfolgreiche Materializer bestätigen alle Assets.
+
+### Tatsächliche Integrationspunkte
+
+| Frage | Verifizierter Stand vor Integration |
+| --- | --- |
+| Sichtbares Pferd | `Main/HorseRoot/HorseMaster`, Typ `Sprite2D` |
+| Bewegter Parent | `Main/HorseRoot`, Typ `Node2D`, Ursprung ist der projizierte Bodenpunkt |
+| Script-Referenzen | `$Background`, `$HorseRoot`, `$HorseRoot/HorseMaster` in `main.gd` |
+| Position | ausschließlich `horse_root.position` in `_apply_perspective()` |
+| Perspektiv-Scale | `horse_root.scale = Vector2.ONE * visual_scale` |
+| Richtungswechsel | `set_horse_facing_right()` setzt `horse_master.flip_h`; `_move_horse_to()` entscheidet anhand X-Differenz > 1 px |
+| Welt-Z | `horse_root.z_index = int(round(horse_depth_t * 100.0))` |
+| Bodenanker | Texturmitte in X; Y = Texturhöhe × `1055/1086`; nicht Sprite-Mittelpunkt |
+| Runtime-Mastergröße | tatsächlich **1024 × 768**; ursprünglicher Referenzraum **1448 × 1086** |
+| Sprite-Offset | `(0, 768/2 - 768*1055/1086)` = `(0, -362.077348...)`; Sprite-Position `(0,0)`, centered true |
+| Sichtbare Kalibrierhöhe | `768 * 1039/1086` = `734.762430...` Runtime-Pixel |
+| Kollision | kein CollisionObject, keine Physics-/Area-Nodes; Grenzen rein mathematisch in `main.gd` |
+| Sprite-spezifische Zugriffe | Laden der Pferdetextur in `_ready()`, `texture.get_size()`/centered/offset in `_configure_horse_foot_anchor()`, `flip_h` und `texture.get_height()` in `_apply_perspective()` |
+
+### Erhaltene Farm-Systeme
+
+- Touch-Press, ScreenDrag, linker Mausklick und MouseMotion während Drag führen
+  über `_move_horse_to()` zu `set_horse_position()`.
+- X wird auf `[0, viewport_width]` begrenzt, Eingabe-Y auf `[0.565h, 0.985h]`.
+- Zustand bleibt `horse_x_ratio` / `horse_depth_t`, inklusive Resize/Fold-Erhalt.
+- `Z = lerp(12.0, 1.40, depth_t)`, Gain `12/max(Z,0.01)`.
+- Horizont `0.405h`, hinterer Hufpunkt `0.565h`, Pferd/Kamera `1.65/1.70`.
+- Bei Nahdistanz darf der Hufpunkt unterhalb des Viewports liegen.
+- Ortsabhängige rückwärtige Hindernisgrenze bleibt in
+  `_minimum_projected_foot_y_ratio_for_x()` / `_minimum_depth_t_for_x()`:
+  außen 0.600, Hindernisse 0.585, offener Hof 0.565; alle X-Grenzen bleiben gleich.
+- Die als Y-Sortierung bezeichnete vorhandene Logik ist technisch ein monotoner
+  depth_t-Z-Wert 0–100. Kein `y_sort_enabled` und keine einzeln sortierbaren
+  Farmobjekte: Scheune, Heu, Zaun und Unterstand sind im Background enthalten.
+  Daher keine erfundene Objektverdeckung einbauen.
+
+### Rig und Integrationsplan
+
+`horse_cutout_rig.tscn` ist vollständig und scriptfrei. 3 AnimationPlayer,
+Jaw/Head, Tail und Walk (15 Tracks + 15 RESET-Tracks); der Rig-Root wird nicht animiert.
+Alle internen Transforms, Atlas-Regions, Layer und Animationen bleiben unverändert.
+
+Geplante schrittweise Hierarchie:
+
+`HorseRoot` (bestehende Weltposition/Perspektive/Z)
+→ `HorseVisual` (Ganzrig-Flip)
+→ `RigSpace` (fester Referenzraum-Faktor)
+→ `HorseCutoutRig` (lokale Bodenanker-Verschiebung).
+
+11B ergänzt diese Instanz zunächst unsichtbar parallel zum unveränderten Master.
+11C misst die tatsächlichen Hufunterkanten im Stand und setzt ausschließlich den
+Rig-Offset; bisheriger Master-Referenzanker entspricht Y=512 im Rig-Referenzraum.
+11D bestimmt separat den festen Größenfaktor; Ausgangskandidat 1024/1448 = 768/1086.
+11E überträgt Flip auf `HorseVisual`, ohne den positiven Perspektivscale zu überschreiben.
+Erst 11F entfernt das sichtbare Master-Sprite samt überflüssigen Sprite-Zugriffen.
+Eine Textur als unsichtbarer Runtime-Helfer ist nicht nötig: die bisherige gemessene
+Kalibrierhöhe kann als feste Zahl aus den unveränderten Canon-Maßen erhalten bleiben.
+
+### Asset-Integrität vor jeglicher Runtime-Änderung
+
+`python tools/materialize_verified_rig_assets.py`: **PASS**, alle acht Dateien
+**UNCHANGED**, exakte Source-Bytes und gepinnte Recovery-Hashes bestätigt.
+Kein Aufruf des re-encodierenden Runtime-Extractors.
+
+Zusätzlich gemessene SHA-256:
+
+- Master (1024×768): `6738b40a2ba94d084c2fbb17b1eaf08755d19d5ef2f534ceec21b384f2db6dab`
+- Tagfarm (1536×864): `70dc5165483fcb02ca31a08e165ecffe63474db4f6b62b2b6d67e5ef5f50d8bd`
+- Nachtfarm (1536×864): `c60542efdbdcc792c3f61ae7e8e0f6cd13163b5aff1b86aa6985436045f0bc4d`
+- HeadUpper: `dd753547d79e2d3a817726815543ca565319980fbbb8f9d4f8d7e98c3eb617bd`
+- Jaw: `b50d5a41a80e2faf483849a21082f9c788a76d19c556b56e84c585c26ffb9152`
+
+Übrige Pins stehen unverändert in `tools/materialize_verified_rig_assets.py`.
+
+## Fortschritt
+
+- 11A Audit abgeschlossen. **Noch keine Runtime-Änderung.**
+- Nächster Mini-Schritt: parallele unsichtbare Scene-Instanz, separater Commit,
+  danach Godot-Headless-Prüfung vor Bodenanker-/Scale-Änderungen.
+
+### Arbeitsumgebung
+
+Git-Clone/Fetch funktioniert. Direkter Git-Push hat keine lokalen HTTPS-Zugangsdaten;
+Schreibzugriffe erfolgen deshalb über den verbundenen GitHub-Connector, mit
+anschließender lokaler Synchronisierung vom verifizierten `main`. Godot 4.3 wurde
+für lokale Headless-Prüfungen heruntergeladen. Dies ist kein Runtime-Problem.
