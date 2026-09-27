@@ -159,7 +159,7 @@ Stand auf `main`:
 - alle vier Beine sind vollständig als `Upper → LowerPivot → Lower → HoofPivot → Hoof` montiert; insgesamt sind damit alle 12 Beinsegmente angebunden
 - vollständige statische Pferdefigur wurde in Schritt 6 gegen die Master-Pose geprüft; einzige nötige Transformkorrektur war die Ruhe-Rotation von `JawPivot` von ursprünglich `-14°` über einen kontrollierten Zwischenstand `-17°` auf final `-19°`
 - Body, Tail, HeadPivot/HeadUpper sowie alle vier Bein-Roots, Pivotwerte, Scales und Layer blieben in Schritt 6 unverändert
-- erster minimaler Jaw-Test, minimale HeadPivot-Kopfrotation und primitive TailPivot-Schweifrotation sind in der Standalone-Rig-Szene aktiv; Walk-Animation und Farm-Integration bleiben weiterhin unbegonnen
+- minimaler Jaw-Test, minimale HeadPivot-Kopfrotation, primitive TailPivot-Schweifrotation und erster bewusst billiger Walk-Test sind in der Standalone-Rig-Szene aktiv; Farm-Integration bleibt weiterhin unbegonnen
 
 ## Technischer Test-Meilenstein — erster Android-Build
 
@@ -825,10 +825,175 @@ Damit ist **Schritt 9 abgeschlossen**.
 
 Es wurde ausdrücklich **keine** Walk-Animation und keine Farm-Integration begonnen.
 
+## Rig-Meilenstein — erster bewusst billiger Walk-Test
+
+Abgeschlossen am 2026-09-27.
+
+### Ziel
+
+Der vollständige Standalone-Cutout soll erstmals eine einfache Laufbewegung zeigen, ohne daraus eine realistische Pferde-Ganganalyse zu machen.
+
+Verbindlich blieb:
+
+- Segmentrotation statt IK
+- leichte Asynchronität
+- kleine primitive Körperbewegung
+- keine Asset-Neugenerierung
+- keine Farm-Integration
+- kein Animieren des gesamten Rig-Roots, damit die spätere Farm-Positionierung nicht überschrieben wird
+
+Detailwerte aller zwölf Bein-Rotationstracks sind dauerhaft in `docs/HORSE_LEG_RIG.md` dokumentiert.
+
+### Ausgangszustand
+
+- Step-10-Ausgangs-HEAD: `5026bc227da6dde89a8097226fe0a23988818160`
+- dieser HEAD war exakt der bereinigte Abschluss von Schritt 9
+- alle statischen Bein-, Body-, Head-, Jaw- und Tail-Transforms waren unverändert
+- bestehende `jaw_test`-, HeadPivot- und `tail_test`-Animationen waren weiterhin korrekt vorhanden
+
+### Eigener WalkAnimationPlayer
+
+Neu ergänzt:
+
+- Node: `WalkAnimationPlayer`
+- Animation: `walk_test`
+- Autoplay: aktiv
+- Loop: aktiv
+- Länge: `1.2 s`
+- eigene `RESET`-Animation
+
+Final enthält `walk_test` exakt **15 Tracks**:
+
+- 4 × Bein-Root/Upper-Rotation
+- 4 × LowerPivot-Rotation
+- 4 × HoofPivot-Rotation
+- 3 × Position für `Body`, `HeadPivot`, `TailPivot`
+
+Die RESET-Animation enthält dieselben 15 Eigenschaften mit den bestätigten Ruhewerten.
+
+### Aufbau in kleinen Runtime-Schritten
+
+1. Nur Bein-Roots / proximale Segmente:
+   - Commit `684642a7e87ba86d9ba854a9484a4bf08008c078`
+   - diagonal gegeneinander, leicht asynchron
+   - maximale Root-Ausschläge zwischen ungefähr `-5°` und `+6°`
+
+2. LowerPivot-Gegenbewegung:
+   - Commit `68dfdc73268568a36875344e45f911cf1aac7d56`
+   - maximale Lower-Ausschläge zwischen ungefähr `-8°` und `+6°`
+
+3. HoofPivot-Gegenrotation:
+   - Commit `a659d41dfe39cc46cf40955047225db249a852a6`
+   - bewusst kleiner Bereich zwischen ungefähr `-3°` und `+4°`
+
+4. Kleiner Torso-Bob:
+   - Commit `bfa96169aae7e1b852a5e0c6133b8e162a8a96d1`
+   - bewegt ausschließlich `Body`, `HeadPivot` und `TailPivot` gemeinsam
+   - Y-Deltas über den Zyklus: `0 / -3 / +2 / -2 / 0 px`
+   - Rig-Root selbst bleibt unangetastet
+
+Es wurde kein zusätzliches Gleiten in die Standalone-Animation eingebaut. Horizontale Fortbewegung bleibt Aufgabe des späteren Farm-/Movement-Systems.
+
+### Visuelle Prüfung
+
+Temporärer Walk-Preview-Workflow:
+
+- Workflow-Basis: `a81a01b810613a0024bbbee7f147b3aa52fce608`
+- Root-only Preview: `3a044616e50e5bc8f53a03a9ed6c3872032079b3`
+- Lower-Preview: `8b4d492ba4ba8b5d3983d5b937ecf84154c0158f`
+- Hoof-Preview: `d362cbf3372277d75756a6fd1e7e0103c08259d2`
+
+Vor dem Torso-Bob wurde das Prüfwerkzeug separat um Positions-Tracks erweitert:
+
+- `d10aa0f2123cd1bbb19cce0dcbbd3d46c94b7f18` — Preview unterstützt Rotation + Position
+- `6f3015a0824818b2f4c8eed7271421d155914d75` — Verifikations-Preview
+
+Beim ersten Torso-Bob-Preview trat ausschließlich im Prüfwerkzeug ein Fehler auf:
+
+- fehlgeschlagener Preview-Run: `36351647438`
+- Runtime/Godot innerhalb dieses Runs: **success**
+- Ursache: `Vector2(...)`-Regex im Python-Preview war zu stark escaped und erkannte keine Positionswerte
+- kleinster Fix: `d0d3d261c032d7adcef1a55393906034172f6185`
+- korrigierter Preview-Run: `36351702096` — **success**
+- finaler visueller Nachweis: `9b74b73e3229c596aeb13d15c43e8538da06c099`
+
+Ergebnis der finalen Sichtprüfung:
+
+- alle Segmentanschlüsse bleiben geschlossen
+- keine neue transparente Gelenklücke
+- Root-, Lower- und Hoof-Bewegungen sind klar lesbar
+- Bewegung bleibt absichtlich steif und puppig
+- der kleine Torso-Bob erzeugt Bewegung, ohne sichtbar auszurenken
+- kein finaler Winkelbereich musste nach der vollständigen Preview korrigiert werden
+
+### Unverändert
+
+Schritt 10 verändert keine bestätigten statischen Rig-Transforms und keine Runtime-Assets.
+
+Unverändert bleiben insbesondere:
+
+- alle vier Bein-Root-Positionen und Scales
+- sämtliche LowerPivot- und HoofPivot-Positionen
+- alle Near/Far-Layer
+- HindFar-Sonderkorrekturen
+- AtlasTexture-Regions
+- Body-Ruheposition
+- HeadPivot-Ruheposition/-Rotation/-Scale
+- Jaw-Ruheposition und Step-7-Jaw-Werte
+- Step-8-Head-Rotationswerte
+- TailPivot-Ruheposition und Step-9-Tail-Werte
+- `scenes/main.tscn`
+- `scripts/main.gd`
+- Farm-/Perspektivsystem
+- alle bestätigten Bildassets
+
+### Finale technische Validierung
+
+Finaler Step-10-Workflow:
+
+- Workflow-Commit: `64aba17d30447a6b15d3ae2f4da013961a4d0651`
+- Workflow-Run: `36351805073` — **success**
+- Ergebnis-Commit: `844f3664edcadcaeac5cefb789f50ac8f1a21e0d`
+
+Bestätigt:
+
+- Asset-Integrität: **success**
+- Godot 4.3 Headless: **success**
+- Runtime-Scene lädt: **success**
+- Step-7-Jaw-Track unverändert: **success**
+- Step-8-Head-Track unverändert: **success**
+- Step-9-Tail-Track unverändert: **success**
+- `WalkAnimationPlayer`: vorhanden
+- Autoplay `walk_test`: bestätigt
+- Loop: bestätigt
+- Länge: `1.2 s`
+- Walk-Track-Anzahl: `15`
+- RESET-Track-Anzahl: `15`
+- 4 Root-/Upper-Tracks: bestätigt
+- 4 LowerPivot-Tracks: bestätigt
+- 4 HoofPivot-Tracks: bestätigt
+- 3 Torso-Positions-Tracks: bestätigt
+- statische Standpose-Transforms: bestätigt
+- Android Debug Export: **success**
+- APK SHA-256: `1f8359f2f6c460b2e3e0fce354148a4ac9b09d8633b83e6468eaba7f7f60e517`
+
+Damit ist **Schritt 10 abgeschlossen**.
+
+Es wurde ausdrücklich **keine Farm-Integration** begonnen.
+
 ## Aktuell nächste technische Aufgabe
 
-Die bestätigte Farm-/Perspektivgrundlage bleibt unverändert.
+Erst nach ausdrücklichem `weiter` folgt **Schritt 11: Cutout-Rig in die bestehende Farm integrieren**.
 
-Erst nach ausdrücklichem `weiter` folgt **Schritt 10: erster bewusst billiger Walk-Test**.
+Dabei muss das bisherige starre Master-Pferd ersetzt werden, während zwingend erhalten bleiben:
 
-Ziel: einfache Segmentrotationen mit leichter Asynchronität und kleinem Puppen-Wackeln. Keine IK-Pflicht und keine realistische Pferde-Ganganalyse; der Cutout-/Bastelcharakter bleibt wichtiger als anatomische Perfektion.
+- bestehende kalibrierte 1/Z-Perspektivskalierung
+- Huf-/Bodenkontakt als Bodenanker
+- Y-basierte Z-Sortierung
+- Hindernisgrenzen
+- Drag-/Touch-Steuerung
+- extreme Kameranähe
+- RIGHT = Original
+- LEFT = horizontale Spiegelung des **gesamten** fertigen Rigs
+
+Die Farm-/Perspektivlogik darf für diese Integration nicht neu erfunden werden.
