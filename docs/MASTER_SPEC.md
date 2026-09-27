@@ -155,9 +155,11 @@ Stand auf `main`:
 - Godot-4.3-Headless-Validierung läuft in GitHub Actions
 - Android-Debug-APK wird automatisiert gebaut
 - separate Rig-Testszene `scenes/horse_cutout_rig.tscn` angelegt; Farm-/Perspektivsystem bleibt dabei unangetastet
-- erster Cutout-Baustein ist implementiert und getestet: bestätigter Körper + oberer Kopf + Unterkiefer sind als unveränderte Runtime-Texturen eingebunden, statisch ausgerichtet und über getrennte Head-/Jaw-Pivots vorbereitet
-- bestätigter Schweif ist ebenfalls implementiert und getestet; `TailPivot` sitzt am Schweifansatz, der Schweif liegt hinter dem Körper
-- erstes vollständiges Bein ist implementiert und getestet: linke Front-Sheet-Kette = `FrontNear`, als `Upper → LowerPivot → Lower → HoofPivot → Hoof`; die übrigen drei Beine bleiben untexturiert
+- Körper, oberer Kopf, Unterkiefer und Schweif sind aus den unveränderten bestätigten Runtime-Assets statisch montiert
+- alle vier Beine sind vollständig als `Upper → LowerPivot → Lower → HoofPivot → Hoof` montiert; insgesamt sind damit alle 12 Beinsegmente angebunden
+- vollständige statische Pferdefigur wurde in Schritt 6 gegen die Master-Pose geprüft; einzige nötige Transformkorrektur war die Ruhe-Rotation von `JawPivot` von ursprünglich `-14°` über einen kontrollierten Zwischenstand `-17°` auf final `-19°`
+- Body, Tail, HeadPivot/HeadUpper sowie alle vier Bein-Roots, Pivotwerte, Scales und Layer blieben in Schritt 6 unverändert
+- noch keine Animation und keine Farm-Integration des Cutout-Rigs
 
 ## Technischer Test-Meilenstein — erster Android-Build
 
@@ -399,10 +401,92 @@ Erreicht am 2026-09-27:
 - keine Walk-Animation und keine Farm-Integration begonnen
 - Detaildokumentation: `docs/HORSE_LEG_RIG.md`
 
+## Rig-Meilenstein — vollständige statische Pferdefigur validiert
+
+Abgeschlossen am 2026-09-27.
+
+### Geprüfter Umfang
+
+Der vollständige Stand von `scenes/horse_cutout_rig.tscn` wurde gemeinsam gegen die bestätigte Master-Pose geprüft:
+
+- Body
+- Tail
+- HeadUpper
+- Jaw in Ruhepose
+- FrontNear
+- FrontFar
+- HindNear
+- HindFar
+- vier Hufhöhen
+- horizontale Beinabstände
+- Near/Far-Layering
+- Übergänge Upper → Lower → Hoof
+- Hals-/Kopfanschluss
+- Schweifansatz
+
+Der Vergleich wurde aus der echten TSCN erzeugt; die temporäre Preview parste die Scene-Transforms direkt statt die Rig-Werte separat nachzubauen. Vor jedem Preview-Lauf wurde der fail-closed Rig-Materializer ausgeführt. Asset-Integrität blieb erfolgreich.
+
+### Einzige statische Korrektur in Schritt 6
+
+Im vollständigen Vergleich stand der Unterkiefer in Ruhe sichtbar etwas zu offen gegenüber der Master-Pose.
+
+Nur `JawPivot.rotation` wurde verändert:
+
+- vorher: `-0.244346 rad` = ca. `-14°`
+- kontrollierter Zwischenstand: `-0.296706 rad` = ca. `-17°`
+- final: `-0.331613 rad` = ca. `-19°`
+
+Commits:
+
+- `5e9b6f9f6687f4d06e5781f557eea5c2a5bfb7a5` — erster Jaw-Ruhekorrekturversuch auf `-17°`
+- `dd94c868e9b36a7196012b5ce736702d76fc961b` — finaler Jaw-Ruhewert `-19°`
+
+Der `-17°`-Zwischenstand wurde absichtlich nicht stillschweigend überschrieben; er bleibt als dokumentierter kontrollierter Korrekturversuch im Commit-Verlauf erhalten.
+
+### Unveränderte bestätigte Transforms
+
+In Schritt 6 wurden **nicht** verändert:
+
+- Body: Position `(-76.5412, -101.756)`, Rotation `0.0239099 rad`, Scale `0.695201`
+- TailPivot: Position `(-449, -198)`, `z_index = -1`
+- Tail: Offset `(-102.18, 270.66)`, Scale `0.39`
+- HeadPivot: Position `(321.171, -194.253)`, Rotation `-0.00592869 rad`, Scale `0.42439`, `z_index = 10`
+- HeadUpper: Offset `(311, -199)`, relativer `z_index = 1`
+- JawPivot Position: `(340, -110)`
+- Jaw: Offset `(260.624, 174.613)`, Rotation `0.0299578 rad`, Scale `0.27589`
+- FrontNear inklusive aller drei Segment-/Pivotwerte
+- FrontFar inklusive aller drei Segment-/Pivotwerte
+- HindNear inklusive aller drei Segment-/Pivotwerte
+- HindFar inklusive finalem `LowerPivot (7.159, 219.652)` und Root `(-262, -77)`
+- Near/Far-Layering: Near `z_index = 1`, Far `z_index = -1`
+
+Nach der Jaw-Korrektur war kein zweiter sichtbar störender Fehler stark genug, um einen bereits bestätigten Transform anzufassen. Der bewusste Cutout-/Stickercharakter bleibt erhalten.
+
+`docs/HORSE_LEG_RIG.md` musste nicht geändert werden, weil in Schritt 6 kein Beinwert verändert wurde.
+
+### Finale technische Validierung
+
+Temporärer vollständiger Vergleich:
+
+- finaler Scene-Commit: `dd94c868e9b36a7196012b5ce736702d76fc961b`
+- Preview-/Headless-Nachweis: Commit `f9b62b8db2384b9937de0418de824d3eeff2b0ee`
+- Godot 4.3 Headless: **success**
+- Asset-Integrität: **success**
+
+Finale Android-Prüfung:
+
+- Validierungsbasis: `1303fe7500d46ba67aa5459aa037f6ad92370bcb`
+- Ergebnis-Commit: `8ce3f810b9cf770d7b25fb8a2d8bd02dd93408bd`
+- Godot 4.3 Headless: **success**
+- Android Debug Export: **success**
+- APK SHA-256: `78ca4078c154854c9daed1aef82e9ff3d13ccd44ffe9cae0f9ed68f9fab3d0b5`
+
+Damit ist **Schritt 6 abgeschlossen**. Es wurde keine Jaw-Animation, Kopfanimation, Schweifanimation, Walk-Animation oder Farm-Integration begonnen.
+
 ## Aktuell nächste technische Aufgabe
 
 Die bestätigte Farm-/Perspektivgrundlage bleibt unverändert.
 
-Die statischen Cutout-Bausteine **Körper + oberer Kopf + Unterkiefer + Schweif + alle vier Beine / zwölf Beinsegmente** sind abgeschlossen und technisch getestet.
+Erst nach ausdrücklichem `weiter` folgt **Schritt 7: minimaler Jaw-Test**.
 
-Als nächster Schritt folgt **Schritt 6: vollständige statische Pferdefigur gegen die Master-Pose prüfen**. Dabei nur Node-Transforms/Pivots korrigieren; keine Asset-Neugenerierung und noch keine Animation.
+Ziel: Unterkiefer bewusst billig hoch/runter klappen; keine Lip-Sync-Komplexität.
