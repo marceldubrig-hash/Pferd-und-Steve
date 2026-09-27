@@ -1,3 +1,0 @@
-source_commit=dd94c868e9b36a7196012b5ce736702d76fc961b
-godot_4_3_headless=success
-asset_integrity=success
