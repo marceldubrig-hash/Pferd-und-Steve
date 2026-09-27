@@ -1,0 +1,287 @@
+name: Preview static horse rig
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/preview-static-horse-rig.yml"
+      - "scenes/horse_cutout_rig.tscn"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install preview dependency
+        run: python -m pip install --disable-pip-version-check pillow
+
+      - name: Verify approved rig assets
+        run: python tools/materialize_verified_rig_assets.py
+
+      - name: Render master vs complete cutout rig
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageDraw
+          import math
+          import re
+
+          ROOT = Path(".")
+          SCENE = ROOT / "scenes/horse_cutout_rig.tscn"
+          W, H = 1448, 1086
+          ORIGIN = (W / 2.0, H / 2.0)
+
+          ext = {}
+          atlas = {}
+          nodes = []
+          current_kind = None
+          current = None
+
+          ext_re = re.compile(r'^\[ext_resource type="[^"]+" path="([^"]+)" id="([^"]+)"\]$')
+          sub_re = re.compile(r'^\[sub_resource type="AtlasTexture" id="([^"]+)"\]$')
+          node_re = re.compile(r'^\[node name="([^"]+)" type="([^"]+)"(?: parent="([^"]+)")?\]$')
+          vec_re = re.compile(r'Vector2\(([-0-9.eE]+),\s*([-0-9.eE]+)\)')
+          rect_re = re.compile(r'Rect2\(([-0-9.eE]+),\s*([-0-9.eE]+),\s*([-0-9.eE]+),\s*([-0-9.eE]+)\)')
+          ext_id_re = re.compile(r'ExtResource\("([^"]+)"\)')
+          sub_id_re = re.compile(r'SubResource\("([^"]+)"\)')
+
+          for raw in SCENE.read_text().splitlines():
+              line = raw.strip()
+              if not line:
+                  continue
+
+              m = ext_re.match(line)
+              if m:
+                  ext[m.group(2)] = m.group(1).replace("res://", "")
+                  current_kind = None
+                  current = None
+                  continue
+
+              m = sub_re.match(line)
+              if m:
+                  current_kind = "atlas"
+                  current = {"id": m.group(1), "atlas_id": None, "region": None}
+                  atlas[current["id"]] = current
+                  continue
+
+              m = node_re.match(line)
+              if m:
+                  parent = m.group(3) if m.group(3) is not None else None
+                  current_kind = "node"
+                  current = {
+                      "name": m.group(1),
+                      "type": m.group(2),
+                      "parent": parent,
+                      "position": (0.0, 0.0),
+                      "rotation": 0.0,
+                      "scale": (1.0, 1.0),
+                      "z_index": 0,
+                      "texture_kind": None,
+                      "texture_id": None,
+                      "order": len(nodes),
+                  }
+                  nodes.append(current)
+                  continue
+
+              if current_kind == "atlas":
+                  if line.startswith("atlas ="):
+                      m = ext_id_re.search(line)
+                      if m:
+                          current["atlas_id"] = m.group(1)
+                  elif line.startswith("region ="):
+                      m = rect_re.search(line)
+                      if m:
+                          current["region"] = tuple(float(m.group(i)) for i in range(1, 5))
+                  continue
+
+              if current_kind == "node":
+                  if line.startswith("position ="):
+                      m = vec_re.search(line)
+                      if m:
+                          current["position"] = (float(m.group(1)), float(m.group(2)))
+                  elif line.startswith("rotation ="):
+                      current["rotation"] = float(line.split("=", 1)[1].strip())
+                  elif line.startswith("scale ="):
+                      m = vec_re.search(line)
+                      if m:
+                          current["scale"] = (float(m.group(1)), float(m.group(2)))
+                  elif line.startswith("z_index ="):
+                      current["z_index"] = int(line.split("=", 1)[1].strip())
+                  elif line.startswith("texture = ExtResource"):
+                      m = ext_id_re.search(line)
+                      if m:
+                          current["texture_kind"] = "ext"
+                          current["texture_id"] = m.group(1)
+                  elif line.startswith("texture = SubResource"):
+                      m = sub_id_re.search(line)
+                      if m:
+                          current["texture_kind"] = "sub"
+                          current["texture_id"] = m.group(1)
+
+          def node_path(node, by_order):
+              if node["parent"] is None:
+                  return node["name"]
+              if node["parent"] == ".":
+                  return node["name"]
+              return node["parent"] + "/" + node["name"]
+
+          path_map = {}
+          for node in nodes:
+              path_map[node_path(node, nodes)] = node
+
+          def mul(a, b):
+              return (
+                  a[0]*b[0] + a[1]*b[2],
+                  a[0]*b[1] + a[1]*b[3],
+                  a[2]*b[0] + a[3]*b[2],
+                  a[2]*b[1] + a[3]*b[3],
+                  a[0]*b[4] + a[1]*b[5] + a[4],
+                  a[2]*b[4] + a[3]*b[5] + a[5],
+              )
+
+          def local_matrix(node):
+              x, y = node["position"]
+              sx, sy = node["scale"]
+              r = node["rotation"]
+              c = math.cos(r)
+              s = math.sin(r)
+              return (c*sx, -s*sy, s*sx, c*sy, x, y)
+
+          global_matrix = {}
+          global_z = {}
+
+          def resolve(node):
+              path = node_path(node, nodes)
+              if path in global_matrix:
+                  return global_matrix[path], global_z[path]
+
+              local = local_matrix(node)
+              if node["parent"] is None or node["parent"] == ".":
+                  gm = local
+                  gz = node["z_index"]
+              else:
+                  parent = path_map[node["parent"]]
+                  pm, pz = resolve(parent)
+                  gm = mul(pm, local)
+                  gz = pz + node["z_index"]
+
+              global_matrix[path] = gm
+              global_z[path] = gz
+              return gm, gz
+
+          def checker():
+              im = Image.new("RGBA", (W, H), (226, 226, 226, 255))
+              d = ImageDraw.Draw(im)
+              cell = 32
+              for y in range(0, H, cell):
+                  for x in range(0, W, cell):
+                      if ((x // cell) + (y // cell)) % 2:
+                          d.rectangle((x, y, x+cell-1, y+cell-1), fill=(198, 198, 198, 255))
+              return im
+
+          image_cache = {}
+          def load_ext(ext_id):
+              if ext_id not in image_cache:
+                  image_cache[ext_id] = Image.open(ROOT / ext[ext_id]).convert("RGBA")
+              return image_cache[ext_id]
+
+          def node_image(node):
+              if node["texture_kind"] == "ext":
+                  return load_ext(node["texture_id"]).copy()
+              if node["texture_kind"] == "sub":
+                  sub = atlas[node["texture_id"]]
+                  src = load_ext(sub["atlas_id"])
+                  x, y, w, h = sub["region"]
+                  return src.crop((round(x), round(y), round(x+w), round(y+h)))
+              return None
+
+          def draw_sprite(dst, node):
+              im = node_image(node)
+              if im is None:
+                  return
+
+              gm, _ = resolve(node)
+              sx = math.hypot(gm[0], gm[2])
+              sy = math.hypot(gm[1], gm[3])
+              rot = math.atan2(gm[2], gm[0])
+              nw = max(1, round(im.width * sx))
+              nh = max(1, round(im.height * sy))
+              im = im.resize((nw, nh), Image.Resampling.LANCZOS)
+              if abs(rot) > 1e-10:
+                  im = im.rotate(-math.degrees(rot), resample=Image.Resampling.BICUBIC, expand=True)
+
+              cx = ORIGIN[0] + gm[4]
+              cy = ORIGIN[1] + gm[5]
+              dst.alpha_composite(im, (round(cx - im.width/2), round(cy - im.height/2)))
+
+          master_src = Image.open(ROOT / "assets/horse/horse_master_standing_v01.png").convert("RGBA")
+          master = master_src.resize((W, H), Image.Resampling.LANCZOS)
+
+          ref = checker()
+          ref.alpha_composite(master)
+
+          rig = checker()
+          sprites = []
+          for node in nodes:
+              if node["type"] == "Sprite2D" and node["texture_kind"] is not None:
+                  _, gz = resolve(node)
+                  sprites.append((gz, node["order"], node))
+          for _, _, node in sorted(sprites, key=lambda x: (x[0], x[1])):
+              draw_sprite(rig, node)
+
+          overlay = checker()
+          faded_master = master.copy()
+          faded_master.putalpha(faded_master.getchannel("A").point(lambda a: round(a * 0.45)))
+          overlay.alpha_composite(faded_master)
+          faded_rig = rig.copy()
+          faded_rig.putalpha(faded_rig.getchannel("A").point(lambda a: round(a * 0.70)))
+          overlay.alpha_composite(faded_rig)
+
+          panel_size = (724, 543)
+          panels = [
+              ("MASTER", ref.resize(panel_size, Image.Resampling.LANCZOS)),
+              ("CUTOUT RIG", rig.resize(panel_size, Image.Resampling.LANCZOS)),
+              ("OVERLAY", overlay.resize(panel_size, Image.Resampling.LANCZOS)),
+          ]
+          out = Image.new("RGB", (panel_size[0] * 3, panel_size[1]), "black")
+          od = ImageDraw.Draw(out)
+          for i, (label, panel) in enumerate(panels):
+              x = i * panel_size[0]
+              out.paste(panel.convert("RGB"), (x, 0))
+              od.rectangle((x, 0, x + 220, 34), fill=(0, 0, 0))
+              od.text((x + 10, 9), label, fill="white")
+
+          Path("debug").mkdir(exist_ok=True)
+          out.save("debug/static_horse_rig_preview.jpg", quality=82, optimize=True)
+
+          print("Rendered sprites in z/order:")
+          for z, order, node in sorted(sprites, key=lambda x: (x[0], x[1])):
+              gm, _ = resolve(node)
+              print(
+                  f"{z:>3} {node_path(node, nodes):<48} "
+                  f"center=({ORIGIN[0]+gm[4]:.2f},{ORIGIN[1]+gm[5]:.2f})"
+              )
+          PY
+
+      - name: Commit preview
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add debug/static_horse_rig_preview.jpg
+          if git diff --cached --quiet; then
+            echo "Preview unchanged."
+            exit 0
+          fi
+          git commit -m "Record full static horse rig comparison"
+          git push origin HEAD:main
