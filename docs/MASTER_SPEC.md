@@ -154,7 +154,8 @@ Stand auf `main`:
 - Heuballen links und rechter Unterstand/Balken können nicht mehr optisch als schwebende Standfläche benutzt werden
 - Godot-4.3-Headless-Validierung läuft in GitHub Actions
 - Android-Debug-APK wird automatisiert gebaut
-- separate Rig-Testszene `scenes/horse_cutout_rig.tscn` als reine, noch untexturierte Cutout-Hierarchie angelegt; Farm-/Perspektivsystem bleibt dabei unangetastet
+- separate Rig-Testszene `scenes/horse_cutout_rig.tscn` angelegt; Farm-/Perspektivsystem bleibt dabei unangetastet
+- erster Cutout-Baustein ist implementiert und getestet: bestätigter Körper + oberer Kopf + Unterkiefer sind als unveränderte Runtime-Texturen eingebunden, statisch ausgerichtet und über getrennte Head-/Jaw-Pivots vorbereitet; Schweif und Beine sind weiterhin noch nicht angebunden
 
 ## Technischer Test-Meilenstein — erster Android-Build
 
@@ -224,10 +225,51 @@ Erreicht am 2026-09-27:
   - `horse_hind_legs_segments_sheet_v01.png`
 - Materialisierungs-Commit: `c2fb613e987636b74877b2913d202544a8fa135d`
 
+## Rig-Meilenstein — Körper + oberer Kopf + Unterkiefer
+
+Erreicht am 2026-09-27:
+
+- Ausschließlich die drei bestätigten Runtime-Assets wurden verwendet:
+  - `assets/horse/rig/horse_body_v01.png`
+  - `assets/horse/rig/horse_head_upper_v01.png`
+  - `assets/horse/rig/horse_jaw_v01.png`
+- Die PNG-Dateien wurden nicht verändert, neu encodiert oder ersetzt. Die gesamte Ausrichtung liegt ausschließlich in Godot-Node-Transforms.
+- Die statische Ausrichtung wurde gegen die bestätigte 1448×1086-Master-Pose kalibriert; der Rig-Root verwendet dabei deren Bildmitte als lokalen Referenznullpunkt.
+- Body:
+  - Position: `(-76.5412, -101.756)`
+  - Rotation: `0.0239099 rad` ≈ `1.36994°`
+  - Scale: `0.695201`
+- HeadPivot:
+  - Position: `(321.171, -194.253)`
+  - Rotation: `-0.00592869 rad` ≈ `-0.339689°`
+  - Scale: `0.42439`
+  - Halsansatz entspricht ungefähr Quellkoordinate `(250, 900)` im 1122×1402-Head-Asset.
+- HeadUpper:
+  - lokaler Offset: `(311, -199)`
+  - relativer `z_index = 1`
+- JawPivot:
+  - lokaler Pivot-Offset unter HeadPivot: `(340, -110)`
+  - entspricht ungefähr dem hinteren Mundwinkel bei Head-Quellkoordinate `(590, 790)`
+  - Ruhe-Rotation: `-0.244346 rad` = `-14°`
+- Jaw:
+  - lokaler Offset: `(260.624, 174.613)`
+  - Asset-Ausrichtungsrotation: `0.0299578 rad` ≈ `1.71645°`
+  - Scale relativ zu HeadPivot: `0.27589`
+- Layering:
+  - Body bleibt auf Basis-Z
+  - HeadPivot liegt bei `z_index = 10`
+  - HeadUpper liegt relativ eine Ebene über dem Jaw, damit der hochgeklappte Unterkiefer sauber hinter der festen oberen Kopfform verschwinden kann
+- Noch **nicht** integriert: Schweif, Beine, Laufanimation, Sprachsystem, Farm-Integration.
+- Scene-Commit: `eb7188ad112214b8e4557ff9275f6be02a80382b`
+- Godot-4.3-Headless-Validierung: Run `36330114083` — **success**
+- Automatischer Android-Debug-Build derselben Commit-Basis: Run `36330114109` — **success**
+
 ## Aktuell nächste technische Aufgabe
 
 Die bestätigte Farm-/Perspektivgrundlage bleibt unverändert.
 
-Als nächster kleiner Schritt werden ausschließlich **Körper + oberer Kopf + Unterkiefer** in der separaten Rig-Testszene aus den nun verifizierten Runtime-Assets zusammengesetzt und ausgerichtet. Schweif und Beine bleiben dabei zunächst unangetastet.
+Der erste statische Cutout-Baustein **Körper + oberer Kopf + Unterkiefer** ist abgeschlossen und getestet.
+
+Als nächster kleiner Schritt wird ausschließlich der bestätigte **Schweif** angebunden und ein sinnvoller `TailPivot` festgelegt. Beine, Laufanimation und Farm-Integration bleiben dabei weiterhin unangetastet.
 
 Danach sofort speichern/committen und erst anschließend den nächsten Rig-Baustein bearbeiten.
