@@ -162,16 +162,24 @@ jobs:
           place_center(right,crops["lower"],lower_center,0.5,0.0)
           place_center(right,crops["hoof"],hoof_center,0.5,0.0)
 
-          out_im=Image.new("RGBA",(W*2,H),(0,0,0,255))
+          behind = checker.copy()
+          place_center(behind,crops["upper"],upper_center,0.5,0.0)
+          place_center(behind,crops["lower"],lower_center,0.5,0.0)
+          place_center(behind,crops["hoof"],hoof_center,0.5,0.0)
+          place_center(behind, body, (724-76.5412,543-101.756), 0.695201, math.degrees(0.0239099))
+
+          out_im=Image.new("RGBA",(W*3,H),(0,0,0,255))
           out_im.alpha_composite(left,(0,0))
           out_im.alpha_composite(right,(W,0))
+          out_im.alpha_composite(behind,(W*2,0))
           od=ImageDraw.Draw(out_im)
           od.rectangle((0,0,410,45),fill=(0,0,0,180)); od.text((12,12),"MASTER 1448x1086 reference",fill="white")
-          od.rectangle((W,0,W+510,45),fill=(0,0,0,180)); od.text((W+12,12),"CUTOUT body + FrontLeftColumn",fill="white")
+          od.rectangle((W,0,W+520,45),fill=(0,0,0,180)); od.text((W+12,12),"FrontLeftColumn IN FRONT of Body",fill="white")
+          od.rectangle((W*2,0,W*2+530,45),fill=(0,0,0,180)); od.text((W*2+12,12),"FrontLeftColumn BEHIND Body",fill="white")
           Path("debug").mkdir(exist_ok=True)
           out_im.convert("RGB").save("debug/first_front_leg_preview.png",optimize=True)
-          small = out_im.convert("RGB").resize((1448,543),Image.Resampling.LANCZOS)
-          small.save("debug/first_front_leg_preview.jpg",quality=72,optimize=True)
+          small = out_im.convert("RGB").resize((2172,543),Image.Resampling.LANCZOS)
+          small.save("debug/first_front_leg_preview.jpg",quality=70,optimize=True)
           PY
 
       - name: Commit calibration evidence
