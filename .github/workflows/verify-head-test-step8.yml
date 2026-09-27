@@ -1,0 +1,245 @@
+name: Verify head test step 8
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-head-test-step8.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify approved rig assets
+        run: python tools/materialize_verified_rig_assets.py
+
+      - name: Download Godot 4.3
+        shell: bash
+        run: |
+          curl -L --fail --retry 3 -o godot.zip "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          chmod +x Godot_v4.3-stable_linux.x86_64
+
+      - name: Validate Godot project headlessly
+        run: ./Godot_v4.3-stable_linux.x86_64 --headless --path . --editor --quit
+
+      - name: Verify head and jaw animation runtime data
+        shell: bash
+        run: |
+          cat > tools/_verify_step8_runtime.gd <<'GDSCRIPT'
+          extends SceneTree
+
+          func fail(message: String) -> void:
+              push_error(message)
+              quit(1)
+
+          func close_enough(a: float, b: float) -> bool:
+              return absf(a - b) <= 0.00001
+
+          func verify_track(animation: Animation, path: NodePath, expected_times: Array, expected_values: Array, label: String) -> void:
+              var track := animation.find_track(path, Animation.TYPE_VALUE)
+              if track < 0:
+                  fail("%s track missing" % label)
+                  return
+              if animation.track_get_key_count(track) != expected_values.size():
+                  fail("%s key count mismatch" % label)
+                  return
+              for i in expected_values.size():
+                  var actual_time := animation.track_get_key_time(track, i)
+                  var actual_value := float(animation.track_get_key_value(track, i))
+                  if not close_enough(actual_time, float(expected_times[i])):
+                      fail("%s key time mismatch at %d" % [label, i])
+                      return
+                  if not close_enough(actual_value, float(expected_values[i])):
+                      fail("%s key value mismatch at %d" % [label, i])
+                      return
+
+          func _init() -> void:
+              var packed := load("res://scenes/horse_cutout_rig.tscn") as PackedScene
+              if packed == null:
+                  fail("Could not load horse_cutout_rig.tscn")
+                  return
+
+              var root := packed.instantiate()
+              var head := root.get_node_or_null("HeadPivot") as Node2D
+              var jaw := root.get_node_or_null("HeadPivot/JawPivot") as Node2D
+              var player := root.get_node_or_null("AnimationPlayer") as AnimationPlayer
+              if head == null or jaw == null or player == null:
+                  fail("HeadPivot, JawPivot or AnimationPlayer missing")
+                  return
+
+              if jaw.get_parent() != head:
+                  fail("JawPivot is not a direct child of HeadPivot")
+                  return
+
+              if not close_enough(head.rotation, -0.00592869):
+                  fail("HeadPivot static rest rotation mismatch")
+                  return
+
+              if not close_enough(jaw.rotation, -0.331613):
+                  fail("JawPivot static rest rotation mismatch")
+                  return
+
+              if String(player.autoplay) != "jaw_test":
+                  fail("jaw_test is not autoplay")
+                  return
+
+              var animation := player.get_animation("jaw_test")
+              if animation == null:
+                  fail("jaw_test animation missing")
+                  return
+
+              if not close_enough(animation.length, 0.6):
+                  fail("jaw_test length mismatch")
+                  return
+
+              if animation.loop_mode != Animation.LOOP_LINEAR:
+                  fail("jaw_test is not looping")
+                  return
+
+              verify_track(
+                  animation,
+                  NodePath("HeadPivot/JawPivot:rotation"),
+                  [0.0, 0.15, 0.3, 0.42, 0.6],
+                  [-0.331613, -0.15708, -0.331613, -0.226893, -0.331613],
+                  "JawPivot"
+              )
+              verify_track(
+                  animation,
+                  NodePath("HeadPivot:rotation"),
+                  [0.0, 0.18, 0.38, 0.6],
+                  [-0.00592869, -0.05828857, 0.04643119, -0.00592869],
+                  "HeadPivot"
+              )
+
+              var reset := player.get_animation("RESET")
+              if reset == null:
+                  fail("RESET animation missing")
+                  return
+              verify_track(
+                  reset,
+                  NodePath("HeadPivot/JawPivot:rotation"),
+                  [0.0],
+                  [-0.331613],
+                  "RESET JawPivot"
+              )
+              verify_track(
+                  reset,
+                  NodePath("HeadPivot:rotation"),
+                  [0.0],
+                  [-0.00592869],
+                  "RESET HeadPivot"
+              )
+
+              print("PASS step8 head and jaw runtime data")
+              root.free()
+              quit(0)
+          GDSCRIPT
+          ./Godot_v4.3-stable_linux.x86_64 --headless --path . --script res://tools/_verify_step8_runtime.gd
+          rm tools/_verify_step8_runtime.gd
+
+      - name: Install Godot 4.3 export templates
+        shell: bash
+        run: |
+          curl -L --fail --retry 3 -o templates.tpz "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz"
+          unzip -q templates.tpz -d templates-unpacked
+          mkdir -p "$HOME/.local/share/godot/export_templates/4.3.stable"
+          cp -a templates-unpacked/templates/. "$HOME/.local/share/godot/export_templates/4.3.stable/"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Ensure Android SDK packages
+        shell: bash
+        run: |
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+          if [ ! -d "$SDK_ROOT/build-tools/34.0.0" ] || [ ! -d "$SDK_ROOT/platforms/android-34" ]; then
+            SDKMANAGER="$(find "$SDK_ROOT" -type f -name sdkmanager 2>/dev/null | head -n 1)"
+            test -n "$SDKMANAGER"
+            yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses >/dev/null || true
+            "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platform-tools" "build-tools;34.0.0" "platforms;android-34"
+          fi
+
+      - name: Prepare debug keystore
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.android"
+          if [ ! -f "$HOME/.android/debug.keystore" ]; then
+            keytool -genkeypair -v -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          fi
+
+      - name: Configure Android editor settings
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.config/godot"
+          {
+            echo '[gd_resource type="EditorSettings" format=3]'
+            echo
+            echo '[resource]'
+            echo "export/android/android_sdk_path = \"$ANDROID_HOME\""
+            echo "export/android/java_sdk_path = \"$JAVA_HOME\""
+            echo "export/android/debug_keystore = \"$HOME/.android/debug.keystore\""
+            echo 'export/android/debug_keystore_user = "androiddebugkey"'
+            echo 'export/android/debug_keystore_pass = "android"'
+          } > "$HOME/.config/godot/editor_settings-4.tres"
+
+      - name: Import project
+        run: ./Godot_v4.3-stable_linux.x86_64 --headless --path . --import
+
+      - name: Export Android debug APK
+        env:
+          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: /home/runner/.android/debug.keystore
+          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
+        run: |
+          mkdir -p build
+          ./Godot_v4.3-stable_linux.x86_64 --headless --path . --export-debug "Android Debug" build/Pferd-und-Steve-step8-debug.apk
+
+      - name: Record validation result
+        shell: bash
+        run: |
+          APK_SHA="$(sha256sum build/Pferd-und-Steve-step8-debug.apk | awk '{print $1}')"
+          mkdir -p debug
+          cat > debug/head_test_android_validation.txt <<EOF
+          source_commit=$GITHUB_SHA
+          asset_integrity=success
+          godot_4_3_headless=success
+          runtime_scene_load=success
+          jaw_runtime_track_unchanged=success
+          jaw_child_of_head=success
+          head_runtime_track=success
+          head_rest_rotation=-0.00592869
+          head_up_rotation=-0.05828857
+          head_down_rotation=0.04643119
+          head_key_times=0.0,0.18,0.38,0.6
+          animation_length_seconds=0.6
+          autoplay=jaw_test
+          android_debug_export=success
+          apk_sha256=$APK_SHA
+          EOF
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add debug/head_test_android_validation.txt
+          git commit -m "Record head animation Android validation"
+          git push origin HEAD:main
+
+      - name: Upload test APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Pferd-und-Steve-step8-debug
+          path: build/Pferd-und-Steve-step8-debug.apk
+          if-no-files-found: error
