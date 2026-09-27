@@ -1,0 +1,10 @@
+source_commit=a81a01b810613a0024bbbee7f147b3aa52fce608
+asset_integrity=success
+godot_4_3_headless=success
+walk_track_count=4
+walk_animation_length=1.2
+preview_head_jaw_tail_state=static_scene_rest
+track=FrontNear:rotation times=[0.0, 0.28, 0.58, 0.88, 1.2] values=[0.0, 0.10472, 0.0, -0.0872665, 0.0]
+track=HindFar:rotation times=[0.0, 0.34, 0.64, 0.94, 1.2] values=[0.0, 0.0872665, 0.0, -0.0698132, 0.0]
+track=FrontFar:rotation times=[0.0, 0.3, 0.6, 0.9, 1.2] values=[0.0, -0.0872665, 0.0, 0.10472, 0.0]
+track=HindNear:rotation times=[0.0, 0.36, 0.66, 0.96, 1.2] values=[0.0, -0.0698132, 0.0, 0.0872665, 0.0]
