@@ -170,6 +170,8 @@ jobs:
           od.rectangle((W,0,W+510,45),fill=(0,0,0,180)); od.text((W+12,12),"CUTOUT body + FrontLeftColumn",fill="white")
           Path("debug").mkdir(exist_ok=True)
           out_im.convert("RGB").save("debug/first_front_leg_preview.png",optimize=True)
+          small = out_im.convert("RGB").resize((1448,543),Image.Resampling.LANCZOS)
+          small.save("debug/first_front_leg_preview.jpg",quality=72,optimize=True)
           PY
 
       - name: Commit calibration evidence
@@ -177,7 +179,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/FIRST_FRONT_LEG_CALIBRATION.md debug/first_front_leg_preview.png
+          git add docs/FIRST_FRONT_LEG_CALIBRATION.md debug/first_front_leg_preview.png debug/first_front_leg_preview.jpg
           if git diff --cached --quiet; then
             echo "No calibration change."
           else
