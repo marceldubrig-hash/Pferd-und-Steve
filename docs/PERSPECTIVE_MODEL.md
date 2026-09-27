@@ -107,3 +107,26 @@ Aus dem transparenten Canon-Asset wurden lediglich dimensionslose Ankerwerte abg
 - Bodenkontakt/Hufe: `1055 / 1086` der Texturhöhe
 
 Dadurch bleibt die Verankerung korrekt, auch wenn dieselbe Mastergrafik intern auf eine andere Auflösung skaliert wird.
+
+
+## Hindernis-Kalibrierung aus Gerätetest 2026-09-27
+
+Der zweite Fold-Test bestätigte die Perspektive grundsätzlich. Das verbleibende Problem war nicht die Skalierung, sondern die bisher gerade hintere Bodengrenze: An den Heuballen links und am rechten Unterstand konnte der Hufpunkt zu weit nach hinten wandern. Dadurch wirkte das Pferd optisch, als würde es auf den Objekten bzw. leicht in der Luft stehen.
+
+Die vom Nutzer bewusst an die physischen Grenzstellen gesetzten Testpositionen wurden pixelbasiert ausgewertet (Screenshot 1536×1384):
+
+- freier hinterer Hof: Huflinie ungefähr y=781 px → ca. 0,565 × Bildschirmhöhe
+- Heuballen-Grenze links: Huflinie ungefähr y=809 px → ca. 0,585 × Bildschirmhöhe
+- rechter Unterstand/Balken: Huflinie ungefähr y=809 px → ca. 0,585 × Bildschirmhöhe
+
+Daraus folgt jetzt eine gekrümmte/ortsabhängige hintere Laufgrenze statt einer einzigen horizontalen Linie.
+
+Kalibrierte X-Bereiche:
+
+- links außen bis x≈0,36: hintere Bodenlinie ca. 0,585–0,600
+- Übergang x≈0,36–0,43: weich zurück auf 0,565
+- offener Hof x≈0,43–0,80: 0,565
+- Übergang x≈0,80–0,87: weich auf 0,585
+- rechter Unterstand ab x≈0,87: ca. 0,585–0,600
+
+Die Bewegung wird nicht hart an einer unsichtbaren Wand gestoppt. Stattdessen wird ein Versuch, hinter ein Hindernis zu laufen, auf den nächstliegenden legalen Bodenpunkt davor projiziert. Dadurch bleibt das Pferd beweglich, steht aber niemals optisch auf Heuballen, Pfosten oder Unterstand.
