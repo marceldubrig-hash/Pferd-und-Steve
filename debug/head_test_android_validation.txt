@@ -1,0 +1,15 @@
+source_commit=433f5e8ef1c40c4100d4c02ad89a9bdb9ad0e3c7
+asset_integrity=success
+godot_4_3_headless=success
+runtime_scene_load=success
+jaw_runtime_track_unchanged=success
+jaw_child_of_head=success
+head_runtime_track=success
+head_rest_rotation=-0.00592869
+head_up_rotation=-0.05828857
+head_down_rotation=0.04643119
+head_key_times=0.0,0.18,0.38,0.6
+animation_length_seconds=0.6
+autoplay=jaw_test
+android_debug_export=success
+apk_sha256=e7b953dd702ecf8c4f1743db06769619cec3cc2a3248f2a4d6782e11f0588e60
