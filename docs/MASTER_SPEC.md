@@ -331,10 +331,31 @@ Erreicht am 2026-09-27:
 - Test-APK SHA-256: `5a8c519bdfe87fde09ba64b90f0975b81167549018b2468d112de017105493b5`
 - keine Animation und keine Farm-Integration begonnen
 
+## Rig-Meilenstein — beide Vorderbeine vollständig
+
+Erreicht am 2026-09-27:
+
+- `FrontNear` und `FrontFar` sind als vollständige 3-Segment-Ketten montiert
+- beide Ketten verwenden verlustfrei `AtlasTexture` direkt aus dem unveränderten bestätigten Front-Sheet
+- Front-Sheet SHA-256 bleibt `21003a4575973514be9f1508e828c0f90c2f0d12f3f519188b4e1b495eb96e8a`
+- `FrontFar`: Position `(247, -53)`, Scale `0.5`, `z_index = -1`
+- FrontFar Upper: Offset `(28.522, 268.645)`
+- FrontFar LowerPivot: `(-25.791, 269.543)`
+- FrontFar Lower: Offset `(0.943, 138.502)`
+- FrontFar HoofPivot: `(4.488, 140.352)`
+- FrontFar Hoof: Offset `(41.127, 131.459)`
+- kontrollierter Master-Vergleich bestätigt die statische Standpose
+- Godot 4.3 Headless: **success**
+- Android Debug Export: **success**
+- Validierungs-Commit: `eeb764fca324e009efe5fe4012c3d568106bfb28`
+- Test-APK SHA-256: `94bc4edc898cc33dd102a0cfd272be823794468de2da4f93037b310be4b69710`
+- beide Hinterbeine bleiben weiterhin untexturiert
+- keine Animation und keine Farm-Integration begonnen
+
 ## Aktuell nächste technische Aufgabe
 
 Die bestätigte Farm-/Perspektivgrundlage bleibt unverändert.
 
-Die statischen Cutout-Bausteine **Körper + oberer Kopf + Unterkiefer + Schweif + FrontNear-Bein** sind abgeschlossen und getestet. Die FrontNear-Kette besteht vollständig aus drei Segmenten und ist gegen die Master-Pose kontrolliert.
+Die statischen Cutout-Bausteine **Körper + oberer Kopf + Unterkiefer + Schweif + beide Vorderbeine** sind abgeschlossen und getestet.
 
-Als nächster Schritt folgt **Schritt 5: Übertragung auf die übrigen drei Beine**. Dieser Schritt wurde bewusst noch nicht begonnen.
+Als nächster kleiner Schritt wird **genau ein Hinterbein** aus einer vollständigen Hind-Sheet-Spalte montiert und kontrolliert gegen die Master-Pose verglichen. Die Hind-Near/Far-Zuordnung wird dabei weiterhin nicht geraten, sondern erst nach dem Montagevergleich festgeschrieben.
