@@ -260,9 +260,9 @@ jobs:
               return crop.resize((608, 470), Image.Resampling.LANCZOS)
 
           poses = [
-              ("REST -19 deg", rest),
-              ("OPEN A -7 deg", primary_open),
-              ("OPEN B -10 deg", secondary_open),
+              (f"REST {math.degrees(rest):.0f} deg", rest),
+              (f"OPEN A {math.degrees(primary_open):.0f} deg", primary_open),
+              (f"OPEN B {math.degrees(secondary_open):.0f} deg", secondary_open),
           ]
 
           out = Image.new("RGB", (608*3, 470), "black")
