@@ -1,0 +1,8 @@
+source_commit=6436e3dae6b445e0ebc287562eeea4865ed0bc26
+godot_4_3_headless=success
+asset_integrity=success
+rest_rotation=-0.331613
+primary_open_rotation=-0.122173
+secondary_open_rotation=-0.174533
+animation_length=0.6
+autoplay=jaw_test
