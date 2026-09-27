@@ -159,7 +159,7 @@ Stand auf `main`:
 - alle vier Beine sind vollständig als `Upper → LowerPivot → Lower → HoofPivot → Hoof` montiert; insgesamt sind damit alle 12 Beinsegmente angebunden
 - vollständige statische Pferdefigur wurde in Schritt 6 gegen die Master-Pose geprüft; einzige nötige Transformkorrektur war die Ruhe-Rotation von `JawPivot` von ursprünglich `-14°` über einen kontrollierten Zwischenstand `-17°` auf final `-19°`
 - Body, Tail, HeadPivot/HeadUpper sowie alle vier Bein-Roots, Pivotwerte, Scales und Layer blieben in Schritt 6 unverändert
-- erster minimaler Jaw-Test ist in der Standalone-Rig-Szene aktiv; Kopf-, Schweif- und Walk-Animation sowie Farm-Integration bleiben weiterhin unbegonnen
+- erster minimaler Jaw-Test und minimale HeadPivot-Kopfrotation sind in der Standalone-Rig-Szene aktiv; Schweif- und Walk-Animation sowie Farm-Integration bleiben weiterhin unbegonnen
 
 ## Technischer Test-Meilenstein — erster Android-Build
 
@@ -577,10 +577,123 @@ Damit ist **Schritt 7 abgeschlossen**.
 
 Es wurde ausdrücklich **keine** Kopfanimation, Schweifanimation, Walk-Animation oder Farm-Integration begonnen.
 
+## Rig-Meilenstein — minimale Kopfrotation
+
+Abgeschlossen am 2026-09-27.
+
+### Ziel
+
+Der komplette bereits ausgeschnittene Kopf soll ausschließlich über `HeadPivot.rotation` leicht hoch/runter wackeln. Die Bewegung bleibt bewusst simpel und puppig. Es wurde kein Neck-Rig, keine IK, keine neue Perspektive und keine Asset-Bearbeitung eingeführt.
+
+### Ausgangszustand
+
+Vor Schritt 8 wurde GitHub `main` direkt geprüft:
+
+- Ausgangs-HEAD: `1be8af6c8e902adcc60f549e45c2da4a609e8a1e`
+- der Übergabeanker war damit exakt aktuell; keine späteren Runtime-Änderungen lagen vor
+- statische HeadPivot-Ruhe-Rotation: `-0.00592869 rad` ≈ `-0.339689°`
+- Step-7-Jaw-Track blieb exakt bei:
+  - Zeiten: `0.00 / 0.15 / 0.30 / 0.42 / 0.60 s`
+  - Werte: `-0.331613 / -0.15708 / -0.331613 / -0.226893 / -0.331613 rad`
+  - entsprechend ungefähr `-19° / -9° / -19° / -13° / -19°`
+
+### Erster getesteter und finaler Bewegungsbereich
+
+Der erste Test verwendete einen symmetrischen Ausschlag von ungefähr `±3°` relativ zur bestätigten Ruheposition.
+
+Finale HeadPivot-Keyframes innerhalb der bestehenden `jaw_test`-Animation:
+
+- `0.00 s` → `-0.00592869 rad` ≈ `-0.339689°` — Ruhe
+- `0.18 s` → `-0.05828857 rad` ≈ `-3.339689°` — Kopf leicht hoch
+- `0.38 s` → `0.04643119 rad` ≈ `+2.660311°` — Kopf leicht runter
+- `0.60 s` → `-0.00592869 rad` ≈ `-0.339689°` — Ruhe
+
+Animationslänge bleibt `0.6 s`, Loop bleibt aktiv und Autoplay bleibt `jaw_test`.
+
+Der Head-Track wurde als zweiter Value-Track in die bereits laufende `jaw_test`-Animation aufgenommen. Dadurch läuft die Step-7-Unterkieferbewegung parallel weiter, ohne ihre fünf Zeiten oder Rotationswerte zu verändern.
+
+Die `RESET`-Animation setzt zusätzlich `HeadPivot.rotation` wieder exakt auf `-0.00592869 rad`.
+
+### Visuelle Prüfung
+
+Temporärer Preview-Workflow:
+
+- Workflow-Commit: `5327cd314366e5bdc001a66d612d496bf529e31c`
+- Preview-Ergebnis: `a847becc8081aae6a3ed855f53a885acdf76d458`
+- Preview-Run: `36349188668` — **success**
+- Asset-Integrität: **success**
+- Vergleich zeigte Ruhe, Kopf hoch und Kopf runter; der Unterkiefer wurde für diesen Vergleich bewusst in statischer Ruhe gehalten
+
+Ergebnis:
+
+- Halsanschluss bleibt geschlossen/plausibel
+- kein sichtbares Ausrenken
+- Ausschlag ist deutlich genug lesbar
+- der primitive Cutout-/Puppeneffekt bleibt erhalten
+
+Der erste getestete Bereich wurde deshalb direkt als final übernommen. Es gab **keinen verworfenen Head-Winkelbereich** und keine zusätzliche Transformkorrektur.
+
+### Runtime-Änderung
+
+Scene-Commit:
+
+- `14eb13dd8d6c5e6c4d3097778a848aa00b6f4918` — `Add minimal head rotation test`
+
+Zwischen Ausgangs-HEAD und diesem Runtime-Commit wurde ausschließlich `scenes/horse_cutout_rig.tscn` verändert. Der Scene-Diff enthält nur die zusätzlichen HeadPivot-Animationseinträge; keine Asset-, Script-, Farm- oder Bein-Datei wurde verändert.
+
+Unverändert blieben insbesondere:
+
+- `HeadPivot.position = (321.171, -194.253)`
+- `HeadPivot.scale = 0.42439`
+- `HeadPivot.z_index = 10`
+- `HeadUpper.position = (311, -199)`
+- kompletter Jaw-Track aus Schritt 7
+- `JawPivot.position = (340, -110)`
+- statische Jaw-Ruhe-Rotation `-0.331613 rad`
+- Jaw-Asset-Offset, -Rotation und -Scale
+- Body
+- Tail
+- alle vier Beine und alle zwölf Beinsegmente
+- sämtliche Near/Far-Layer
+- `scenes/main.tscn`
+- `scripts/main.gd`
+- Farm-/Perspektivsystem
+- alle bestätigten Runtime-Assets
+
+`docs/HORSE_LEG_RIG.md` wurde bewusst nicht geändert, weil kein Beinwert betroffen war.
+
+### Finale technische Validierung
+
+Separater Step-8-Workflow:
+
+- Workflow-Commit: `433f5e8ef1c40c4100d4c02ad89a9bdb9ad0e3c7`
+- Workflow-Run: `36349290047` — **success**
+- Ergebnis-Commit: `aad0cb473b6a15a65c70b301ed13156a676ead42`
+
+Bestätigt:
+
+- Asset-Integrität: **success**
+- Godot 4.3 Headless: **success**
+- Runtime-Scene lädt: **success**
+- `AnimationPlayer` vorhanden
+- Autoplay `jaw_test` bestätigt
+- Loop und Länge `0.6 s` bestätigt
+- Step-7-Jaw-Track vollständig unverändert bestätigt
+- `JawPivot` ist weiterhin direktes Kind von `HeadPivot`
+- neuer `HeadPivot:rotation`-Track vorhanden
+- alle vier Head-Keyframe-Zeiten und -Werte bestätigt
+- RESET-Werte für Jaw und Head bestätigt
+- Android Debug Export: **success**
+- APK SHA-256: `e7b953dd702ecf8c4f1743db06769619cec3cc2a3248f2a4d6782e11f0588e60`
+
+Damit ist **Schritt 8 abgeschlossen**.
+
+Es wurde ausdrücklich **keine** Schweifanimation, Walk-Animation oder Farm-Integration begonnen.
+
 ## Aktuell nächste technische Aufgabe
 
 Die bestätigte Farm-/Perspektivgrundlage bleibt unverändert.
 
-Erst nach ausdrücklichem `weiter` folgt **Schritt 8: minimale Kopfrotation**.
+Erst nach ausdrücklichem `weiter` folgt **Schritt 9: primitive Schweifbewegung**.
 
-Ziel: kompletter ausgeschnittener Kopf leicht hoch/runter rotieren; absichtlich primitive Puppenbewegung.
+Ziel: ausschließlich einfache Rotation um `TailPivot`; keine Physiksimulation und kein komplexes Secondary-Motion-System.
