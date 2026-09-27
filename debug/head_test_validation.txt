@@ -1,0 +1,9 @@
+source_commit=5327cd314366e5bdc001a66d612d496bf529e31c
+asset_integrity=success
+head_times=[0.0, 0.18, 0.38, 0.6]
+head_values=[-0.00592869, -0.05828857, 0.04643119, -0.00592869]
+jaw_times=[0.0, 0.15, 0.3, 0.42, 0.6]
+jaw_values=[-0.331613, -0.15708, -0.331613, -0.226893, -0.331613]
+preview_jaw_state=static_scene_rest
+animation_length=0.6
+autoplay=jaw_test
