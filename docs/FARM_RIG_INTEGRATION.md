@@ -88,9 +88,11 @@ Zusätzlich gemessene SHA-256:
 
 ## Fortschritt
 
-- 11A Audit abgeschlossen. **Noch keine Runtime-Änderung.**
-- Nächster Mini-Schritt: parallele unsichtbare Scene-Instanz, separater Commit,
-  danach Godot-Headless-Prüfung vor Bodenanker-/Scale-Änderungen.
+- 11A Audit abgeschlossen und auf `main`: `a0b15b1282ebcd788ea1df17bd3e474947316ad8`.
+- 11B: `HorseRoot/HorseVisual/RigSpace/HorseCutoutRig` als echte PackedScene-Instanz
+  ergänzt. `HorseVisual.visible = false` für den parallelen Aufbau; Master bleibt
+  sichtbar, `main.gd` unverändert. Alle drei Player behalten ihr Autoplay.
+- Nächster Mini-Schritt: Godot-Headless-Prüfung, erst danach Bodenanker.
 
 ### Arbeitsumgebung
 

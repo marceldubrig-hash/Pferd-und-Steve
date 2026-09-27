@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="PackedScene" path="res://scenes/horse_cutout_rig.tscn" id="2_cutout"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_main")
@@ -11,3 +12,10 @@ position = Vector2(640, 360)
 [node name="HorseRoot" type="Node2D" parent="."]
 
 [node name="HorseMaster" type="Sprite2D" parent="HorseRoot"]
+
+[node name="HorseVisual" type="Node2D" parent="HorseRoot"]
+visible = false
+
+[node name="RigSpace" type="Node2D" parent="HorseRoot/HorseVisual"]
+
+[node name="HorseCutoutRig" parent="HorseRoot/HorseVisual/RigSpace" instance=ExtResource("2_cutout")]
