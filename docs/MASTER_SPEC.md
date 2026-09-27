@@ -159,7 +159,7 @@ Stand auf `main`:
 - alle vier Beine sind vollständig als `Upper → LowerPivot → Lower → HoofPivot → Hoof` montiert; insgesamt sind damit alle 12 Beinsegmente angebunden
 - vollständige statische Pferdefigur wurde in Schritt 6 gegen die Master-Pose geprüft; einzige nötige Transformkorrektur war die Ruhe-Rotation von `JawPivot` von ursprünglich `-14°` über einen kontrollierten Zwischenstand `-17°` auf final `-19°`
 - Body, Tail, HeadPivot/HeadUpper sowie alle vier Bein-Roots, Pivotwerte, Scales und Layer blieben in Schritt 6 unverändert
-- erster minimaler Jaw-Test und minimale HeadPivot-Kopfrotation sind in der Standalone-Rig-Szene aktiv; Schweif- und Walk-Animation sowie Farm-Integration bleiben weiterhin unbegonnen
+- erster minimaler Jaw-Test, minimale HeadPivot-Kopfrotation und primitive TailPivot-Schweifrotation sind in der Standalone-Rig-Szene aktiv; Walk-Animation und Farm-Integration bleiben weiterhin unbegonnen
 
 ## Technischer Test-Meilenstein — erster Android-Build
 
@@ -690,10 +690,145 @@ Damit ist **Schritt 8 abgeschlossen**.
 
 Es wurde ausdrücklich **keine** Schweifanimation, Walk-Animation oder Farm-Integration begonnen.
 
+## Rig-Meilenstein — primitive Schweifrotation
+
+Abgeschlossen am 2026-09-27.
+
+### Ziel
+
+Der bereits montierte Schweif bewegt sich ausschließlich durch einfache Rotation von `TailPivot`. Die Bewegung bleibt bewusst primitiv und etwas unregelmäßig. Es wurde keine Physiksimulation, kein Bone-System und kein Secondary-Motion-System eingeführt.
+
+### Ausgangszustand
+
+Vor Schritt 9 wurde GitHub `main` erneut direkt geprüft:
+
+- Ausgangs-HEAD: `846badeadbe696238e13042ba48f7b0d1c3b6e50`
+- `main` war exakt identisch mit dem Step-8-Cleanup-HEAD
+- `TailPivot.position = (-449, -198)`
+- `TailPivot.rotation = 0 rad`
+- `TailPivot.z_index = -1`
+- `Tail.position = (-102.18, 270.66)`
+- `Tail.scale = 0.39`
+- Head- und Jaw-Animation aus Schritt 8/7 waren unverändert vorhanden
+
+### Implementierung
+
+Damit der Schweif unabhängig vom bestehenden Jaw-/Head-Test laufen kann, wurde ein eigener zweiter `AnimationPlayer` ergänzt:
+
+- Node: `TailAnimationPlayer`
+- Autoplay: `tail_test`
+- Loop: aktiv
+- Länge: `1.1 s`
+- Track: `TailPivot:rotation`
+- Interpolation: einfache lineare Value-Interpolation
+
+Zusätzlich existiert für diesen Player eine eigene `RESET`-Animation, die `TailPivot.rotation` exakt auf `0 rad` setzt.
+
+Scene-Commit:
+
+- `cfd7bb9d2aff2866fc7f7497251ff8e6c88fb062` — `Add primitive tail rotation test`
+
+Erster getesteter Bewegungsbereich:
+
+- `0.00 s` → `0 rad` = `0°` Ruhe
+- `0.30 s` → `0.0872665 rad` ≈ `+5°`
+- `0.68 s` → `-0.0698132 rad` ≈ `-4°`
+- `0.88 s` → `0.0349066 rad` ≈ `+2°`
+- `1.10 s` → `0 rad` = `0°` Ruhe
+
+Die asymmetrischen Winkel und Zeiten sind absichtlich gewählt, damit der Schweif nicht wie ein perfekt gleichmäßiges Pendel wirkt.
+
+### Erste technische CI des Runtime-Commits
+
+Direkt auf dem Scene-Commit liefen die bestehenden Projektprüfungen erfolgreich:
+
+- Godot-Projektvalidierung: Run `36350141541` — **success**
+- Android-Debug-Build: Run `36350141595` — **success**
+
+Damit war bereits vor der visuellen Prüfung bestätigt, dass der neue `TailAnimationPlayer` die Scene nicht technisch beschädigt.
+
+### Visuelle Prüfung
+
+Temporärer Preview-Workflow:
+
+- Workflow-Commit: `7413945b3971ad924b070779c14a7db9b447f7ac`
+- Preview-Ergebnis: `68d0fd0eeb33de4aed8be97b59e882ef8b144e42`
+- Preview-Run: `36350245797` — **success**
+- Asset-Integrität: **success**
+- Godot 4.3 Headless: **success**
+
+Der Vergleich zeigte:
+
+- Ruhe bei `0°`
+- positiven Ausschlag bei `+5°`
+- negativen Ausschlag bei `-4°`
+- Kopf und Unterkiefer für den visuellen Vergleich bewusst statisch in Ruhe
+
+Ergebnis:
+
+- Schweifansatz bleibt sauber hinter dem Körper verdeckt
+- keine sichtbare Lücke am Ansatz
+- Bewegung ist klar erkennbar, aber nicht übertrieben
+- der Cutout-/Puppencharakter bleibt erhalten
+
+Der erste getestete Bereich wurde deshalb direkt als final übernommen. Es gab **keinen verworfenen Tail-Winkelbereich** und keinen Korrekturcommit.
+
+### Unverändert
+
+Schritt 9 verändert ausschließlich die primitive Schweifanimation und ergänzt dafür den separaten `TailAnimationPlayer`.
+
+Unverändert blieben insbesondere:
+
+- `TailPivot.position = (-449, -198)`
+- `TailPivot.z_index = -1`
+- `Tail.position = (-102.18, 270.66)`
+- `Tail.scale = 0.39`
+- gesamter Step-7-Jaw-Track
+- gesamter Step-8-Head-Track
+- `HeadPivot`- und `JawPivot`-Transforms
+- Body
+- alle vier Beine und alle zwölf Beinsegmente
+- sämtliche Near/Far-Layer
+- `scenes/main.tscn`
+- `scripts/main.gd`
+- Farm-/Perspektivsystem
+- alle bestätigten Runtime-Assets
+
+`docs/HORSE_LEG_RIG.md` wurde bewusst nicht geändert, weil kein Beinwert betroffen war.
+
+### Finale technische Validierung
+
+Separater Step-9-Workflow:
+
+- Workflow-Commit: `f73d1136059821a5ca92c40e78f1d01b541b434e`
+- Workflow-Run: `36350319921` — **success**
+- Ergebnis-Commit: `2fe032e831c8332227a65cf835ec125513534721`
+
+Bestätigt:
+
+- Asset-Integrität: **success**
+- Godot 4.3 Headless: **success**
+- Runtime-Scene lädt: **success**
+- bestehender Jaw-Track vollständig unverändert: **success**
+- bestehender Head-Track vollständig unverändert: **success**
+- `TailAnimationPlayer` vorhanden
+- Autoplay `tail_test` bestätigt
+- Loop und Länge `1.1 s` bestätigt
+- Track `TailPivot:rotation` bestätigt
+- alle fünf Tail-Keyframe-Zeiten und -Werte bestätigt
+- Tail-RESET auf `0 rad` bestätigt
+- statische TailPivot-Position und Layering bestätigt
+- Android Debug Export: **success**
+- APK SHA-256: `d0f4c21f8681179c150277cfe5e22a569ac5c5527166a0218eda2c32ecc6a9ea`
+
+Damit ist **Schritt 9 abgeschlossen**.
+
+Es wurde ausdrücklich **keine** Walk-Animation und keine Farm-Integration begonnen.
+
 ## Aktuell nächste technische Aufgabe
 
 Die bestätigte Farm-/Perspektivgrundlage bleibt unverändert.
 
-Erst nach ausdrücklichem `weiter` folgt **Schritt 9: primitive Schweifbewegung**.
+Erst nach ausdrücklichem `weiter` folgt **Schritt 10: erster bewusst billiger Walk-Test**.
 
-Ziel: ausschließlich einfache Rotation um `TailPivot`; keine Physiksimulation und kein komplexes Secondary-Motion-System.
+Ziel: einfache Segmentrotationen mit leichter Asynchronität und kleinem Puppen-Wackeln. Keine IK-Pflicht und keine realistische Pferde-Ganganalyse; der Cutout-/Bastelcharakter bleibt wichtiger als anatomische Perfektion.
