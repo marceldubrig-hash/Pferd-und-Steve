@@ -1,0 +1,30 @@
+name: Audit Rig Source Assets
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/audit-rig-source-assets.yml"
+      - "tools/audit_rig_source_assets.py"
+      - "asset_packs/Pferd-und-Steve-source-core-v01.zip"
+      - "asset_packs/Pferd-und-Steve-source-head-core-v01.zip"
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Audit confirmed rig source assets
+        run: python tools/audit_rig_source_assets.py
