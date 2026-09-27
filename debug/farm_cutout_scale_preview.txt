@@ -1,8 +1,0 @@
-viewport=1536x1384
-x_ratio=0.6
-rig_scale=0.701686000
-rig_offset=(0.0, -516.7995)
-old_visible_source_height=734.762430939
-FAR: depth_t=0.000 z=12.000 root=(921.600,781.960) target_height=214.927059 horse_root_scale=0.292512314
-MID: depth_t=0.500 z=6.700 root=(921.600,957.129) target_height=384.943986 horse_root_scale=0.523902652
-NEAR: depth_t=1.000 z=1.400 root=(921.600,2458.577) target_height=1842.231933 horse_root_scale=2.507248405
