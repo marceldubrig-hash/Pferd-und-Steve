@@ -218,3 +218,26 @@ kein Perspektiv- oder Scale-Fehler. **Keine weitere Scale-Korrektur erforderlich
 
 Damit ist 11D abgeschlossen. Nächster isolierter Runtime-Schritt: Ganzrig-Flip auf
 `HorseVisual`; das alte sichtbare Master-Sprite bleibt dabei noch als Referenz erhalten.
+
+
+## 11E — Ganzrig-Flip
+
+Die bestehende Richtungsentscheidung in `_move_horse_to()` bleibt unverändert.
+`set_horse_facing_right()` spiegelt jetzt zusätzlich ausschließlich den äußeren
+`HorseVisual`-Container:
+
+- RIGHT → `HorseVisual.scale = (1, 1)`
+- LEFT → `HorseVisual.scale = (-1, 1)`
+
+Damit werden Body, Kopf, Jaw, Schweif und alle vier vollständigen Beinketten als
+eine Einheit gespiegelt. `RigSpace.scale = 0.701686` bleibt positiv und unverändert;
+es gibt keine Einzelbein-, Kopf- oder Animationsspiegelung.
+
+Das alte `HorseMaster.flip_h` wird **vorübergehend ebenfalls weiter gesetzt**, weil
+der Master in diesem Parallelstadium noch die sichtbare Vergleichsreferenz ist.
+Das ist kein Doppel-Flip des Cutout-Rigs: Master und `HorseVisual` sind Geschwister.
+Beim eigentlichen Austausch in 11F entfällt die Master-Zeile vollständig.
+
+Sonst keine Änderung an Bewegung, Perspektive, Bodenanker, Hindernisgrenzen oder
+Animationen. Vor 11F müssen die automatischen Godot-/Android-Prüfungen dieses
+Script-Updates grün sein.

@@ -49,6 +49,7 @@ const RIGHT_OUTER_X_RATIO := 1.00
 @onready var background: Sprite2D = $Background
 @onready var horse_root: Node2D = $HorseRoot
 @onready var horse_master: Sprite2D = $HorseRoot/HorseMaster
+@onready var horse_visual: Node2D = $HorseRoot/HorseVisual
 
 var is_night := false
 var mouse_dragging := false
@@ -131,7 +132,10 @@ func show_night() -> void:
 
 func set_horse_facing_right(facing_right: bool) -> void:
 	# Canon: RIGHT = Original, LEFT = horizontal gespiegelt.
+	# During the parallel-integration stage the visible master stays in sync,
+	# while the complete cutout is mirrored only once at its outer visual container.
 	horse_master.flip_h = not facing_right
+	horse_visual.scale = Vector2(1.0 if facing_right else -1.0, 1.0)
 
 
 func set_horse_position(new_position: Vector2) -> void:
