@@ -1,9 +1,14 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/horse/rig/horse_body_v01.png" id="1_body"]
 [ext_resource type="Texture2D" path="res://assets/horse/rig/horse_head_upper_v01.png" id="2_head"]
 [ext_resource type="Texture2D" path="res://assets/horse/rig/horse_jaw_v01.png" id="3_jaw"]
 [ext_resource type="Texture2D" path="res://assets/horse/rig/horse_tail_v01.png" id="4_tail"]
+[ext_resource type="Texture2D" path="res://assets/horse/rig/horse_front_legs_segments_sheet_v01.png" id="5_front_sheet"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_front_left_upper"]
+atlas = ExtResource("5_front_sheet")
+region = Rect2(183, 32, 361, 608)
 
 [node name="HorseCutoutRig" type="Node2D"]
 
@@ -34,17 +39,21 @@ texture = ExtResource("1_body")
 
 [node name="Hoof" type="Sprite2D" parent="HindFar/Upper/LowerPivot/Lower/HoofPivot"]
 
-[node name="FrontFar" type="Node2D" parent="."]
+[node name="FrontLeftColumn" type="Node2D" parent="."]
+position = Vector2(155, -53)
+scale = Vector2(0.5, 0.5)
 
-[node name="Upper" type="Sprite2D" parent="FrontFar"]
+[node name="Upper" type="Sprite2D" parent="FrontLeftColumn"]
+position = Vector2(-19.75, 275.924)
+texture = SubResource("AtlasTexture_front_left_upper")
 
-[node name="LowerPivot" type="Node2D" parent="FrontFar/Upper"]
+[node name="LowerPivot" type="Node2D" parent="FrontLeftColumn/Upper"]
 
-[node name="Lower" type="Sprite2D" parent="FrontFar/Upper/LowerPivot"]
+[node name="Lower" type="Sprite2D" parent="FrontLeftColumn/Upper/LowerPivot"]
 
-[node name="HoofPivot" type="Node2D" parent="FrontFar/Upper/LowerPivot/Lower"]
+[node name="HoofPivot" type="Node2D" parent="FrontLeftColumn/Upper/LowerPivot/Lower"]
 
-[node name="Hoof" type="Sprite2D" parent="FrontFar/Upper/LowerPivot/Lower/HoofPivot"]
+[node name="Hoof" type="Sprite2D" parent="FrontLeftColumn/Upper/LowerPivot/Lower/HoofPivot"]
 
 [node name="HindNear" type="Node2D" parent="."]
 
