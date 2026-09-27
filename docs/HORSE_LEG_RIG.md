@@ -455,6 +455,89 @@ Technische Validierung des Drei-Bein-Stands:
 
 Damit sind drei von vier Beinen vollständig montiert. `HindFar` bleibt noch untexturiert.
 
+## Schritt 5C — HindFar vollständig montiert
+
+Die rechte Hind-Sheet-Spalte ist als letztes Bein montiert:
+
+`HindFar → Upper → LowerPivot → Lower → HoofPivot → Hoof`
+
+### Texturquelle
+
+Alle drei Segmente verwenden `AtlasTexture` direkt aus dem unveränderten Hind-Sheet:
+
+- Upper: `Rect2(646, 65, 353, 515)`
+- Lower: `Rect2(764, 553, 226, 356)`
+- Hoof: `Rect2(751, 916, 262, 407)`
+- Hind-Sheet SHA-256: `d24aba84e51075cdd1e5c83d12432d2d7a1731c8c9bbb522c2db731bc04744e3`
+
+Keine Einzel-PNGs wurden erzeugt und kein Quellasset verändert.
+
+### Bestätigte Godot-Transforms
+
+`HindFar`:
+
+- Position im Rig-Root: `(-262, -77)`
+- Rotation: `0 rad`
+- Scale: `(0.5, 0.5)`
+- `z_index = -1` — hinter dem Body
+
+`Upper`:
+
+- lokaler Offset: `(32.071, 233.122)`
+- Rotation: `0 rad`
+
+`LowerPivot`:
+
+- finaler lokaler Offset: `(7.159, 219.652)`
+- ursprünglicher Ankerwert war `(7.159, 235.652)`
+- um `16` lokale Pixel nach oben verschoben, damit Upper und Lower sichtbar überlappen statt eine transparente Schnittlücke zu erzeugen
+
+`Lower`:
+
+- lokaler Offset: `(38.005, 165.058)`
+
+`HoofPivot`:
+
+- lokaler Offset: `(31.74, 160.626)`
+
+`Hoof`:
+
+- lokaler Offset: `(-49.206, 182.544)`
+
+Zur Kompensation der `LowerPivot`-Überlappung wurde der `HindFar`-Root von `y = -85` auf `y = -77` verschoben. Dadurch bleiben Lower, Hoof und Fußpunkt global unverändert, während nur das Upper tiefer über den nächsten Abschnitt greift.
+
+### Vier-Bein-Vergleich
+
+Der vollständige statische Vergleich gegen die Master-Pose bestätigt:
+
+- alle vier Hufe liegen auf plausibler Master-Fußhöhe
+- FrontNear / HindNear liegen vor dem Body
+- FrontFar / HindFar liegen hinter dem Body
+- die Seitwärtsabstände der vier Beine entsprechen der Master-Pose ausreichend genau
+- nach dem HindFar-Overlap-Fix ist keine transparente Lücke mehr sichtbar
+- keine weitere Rotation oder Scale-Korrektur ist für Schritt 5 nötig
+
+Finaler Preview-Commit:
+
+- `7115f64f856977cfa232bdf9dfb27e646e6d2e1f`
+
+Aufbau-/Korrektur-Commits:
+
+- `872cc4186a535f630745081de71ebeb0a53c12f5` — HindFar Upper
+- `66344e493cfdde4cd4bb5c12db8c9f5532c10efd` — HindFar Lower
+- `c9e1d114addf9a4c20659783b84fcc64e3fd51e5` — HindFar Hoof
+- `a697cf5f294ee2af6ce4a431a05ae8239d7e046e` — Upper/Lower-Overlap korrigiert
+
+### Finale technische Validierung für Schritt 5
+
+- verifizierte Workflow-Basis: `a6706e83e95bda12d81ac72d09ffcdd2e3bf1c22`
+- Godot 4.3 Headless Parse/Import: **success**
+- Android Debug Export: **success**
+- Validierungs-Commit: `04c9a06b69147845727d47a58b3c12c7cb50aeaa`
+- Test-APK SHA-256: `eda1d08a2f3fad3011109d0322d4c122c035b4d4e9ff7c143063656dace7fd0c`
+
+Damit ist **Schritt 5 abgeschlossen**: alle vier Beine und alle zwölf Beinsegmente sind statisch montiert.
+
 ## Nächster technischer Schritt
 
-Zuerst wird der Drei-Bein-Stand technisch validiert. Danach folgt als letzter Rig-Bein-Schritt ausschließlich `HindFar`.
+**Schritt 6:** vollständige statische Pferdefigur gegen die Master-Pose prüfen. Dabei dürfen ausschließlich Node-Transforms/Pivots korrigiert werden. Keine Asset-Neugenerierung und noch keine Animation.
