@@ -1,0 +1,5 @@
+source_commit=1303fe7500d46ba67aa5459aa037f6ad92370bcb
+asset_integrity=success
+godot_4_3_headless=success
+android_debug_export=success
+apk_sha256=78ca4078c154854c9daed1aef82e9ff3d13ccd44ffe9cae0f9ed68f9fab3d0b5
