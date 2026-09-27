@@ -427,3 +427,19 @@ Der finale temporäre Workflow prüft fail-closed:
 Der Workflow speichert sein Ergebnis vor dem Cleanup unter
 `debug/farm_cutout_final_validation.txt`. Bei irgendeinem roten Schritt wird nicht
 weitergebaut, sondern nur der kleinste Prüf-/Runtimefehler isoliert.
+
+
+### 11K — erster Validierungslauf fehlgeschlagen (Prüfwerkzeug, nicht Runtime)
+
+Workflow-Run `36354205085` — **failed** im Schritt
+`Verify exact Step-10 rig and integration invariants`.
+
+Vor dem Fehler war der fail-closed Asset-Materializer erfolgreich. Der Validator
+stoppte anschließend bei der Track-Anzahl. Ursache ist ausschließlich der neue
+Python-Prüfregex: im Raw-String wurde `\\d` statt `\d` verwendet und damit nach
+einem literalen Backslash gesucht. Die Runtime-Scene wurde in diesem Lauf noch gar
+nicht gestartet; Android wurde folgerichtig übersprungen. Es gibt **keinen** Hinweis
+auf einen Rig-/Animationsfehler und keine Runtime-Datei wird zurückgerollt.
+
+Nächster Schritt: nur diesen Regex im temporären Validator korrigieren, separat
+committen und denselben finalen Workflow erneut laufen lassen.
