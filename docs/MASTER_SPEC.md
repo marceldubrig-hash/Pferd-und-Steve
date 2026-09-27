@@ -156,7 +156,8 @@ Stand auf `main`:
 - Android-Debug-APK wird automatisiert gebaut
 - separate Rig-Testszene `scenes/horse_cutout_rig.tscn` angelegt; Farm-/Perspektivsystem bleibt dabei unangetastet
 - erster Cutout-Baustein ist implementiert und getestet: bestätigter Körper + oberer Kopf + Unterkiefer sind als unveränderte Runtime-Texturen eingebunden, statisch ausgerichtet und über getrennte Head-/Jaw-Pivots vorbereitet
-- bestätigter Schweif ist ebenfalls implementiert und getestet; `TailPivot` sitzt am Schweifansatz, der Schweif liegt hinter dem Körper; Beine sind weiterhin noch nicht angebunden
+- bestätigter Schweif ist ebenfalls implementiert und getestet; `TailPivot` sitzt am Schweifansatz, der Schweif liegt hinter dem Körper
+- erstes vollständiges Bein ist implementiert und getestet: linke Front-Sheet-Kette = `FrontNear`, als `Upper → LowerPivot → Lower → HoofPivot → Hoof`; die übrigen drei Beine bleiben untexturiert
 
 ## Technischer Test-Meilenstein — erster Android-Build
 
@@ -307,12 +308,33 @@ Erreicht am 2026-09-27:
 - verfeinerter Analyse-Run `36331705192`: **success**
 - keine Runtime-Szene und kein Asset wurde in diesem Analyseschritt verändert
 
+## Rig-Meilenstein — erstes vollständiges FrontNear-Bein
+
+Erreicht am 2026-09-27:
+
+- ausschließlich die bestätigte linke Kette aus `horse_front_legs_segments_sheet_v01.png` wurde verwendet
+- keine Einzel-PNGs wurden erzeugt; die drei Segmente werden verlustfrei per `AtlasTexture` direkt aus dem unveränderten Sheet gelesen
+- Front-Sheet SHA-256 bleibt `21003a4575973514be9f1508e828c0f90c2f0d12f3f519188b4e1b495eb96e8a`
+- der kontrollierte Vor-/Hinter-Body-Vergleich bestätigt die linke Front-Sheet-Spalte als `FrontNear`
+- `FrontNear`: Position `(155, -53)`, Scale `0.5`, `z_index = 1`
+- Upper: Offset `(-19.75, 275.924)`
+- LowerPivot: `(-33.065, 274.582)`
+- Lower: Offset `(-3.209, 148.182)`
+- HoofPivot: `(-21.145, 149.993)`
+- Hoof: Offset `(67.359, 138.418)`
+- Detaildokumentation: `docs/HORSE_LEG_RIG.md`
+- Parent-Pfad-Korrektur: `b1b86e94d2c9f9e8d320bddbfc7142ca7e0e2639`
+- finale Verifikationsbasis: `efba8db681ad6ab575ebeced78f8e968fa6c9536`
+- Godot 4.3 Headless: **success**
+- Android Debug Export: **success**
+- Validierungs-Commit: `9971aceae4f80023ac630f36bbebd066eeefc6a4`
+- Test-APK SHA-256: `5a8c519bdfe87fde09ba64b90f0975b81167549018b2468d112de017105493b5`
+- keine Animation und keine Farm-Integration begonnen
+
 ## Aktuell nächste technische Aufgabe
 
 Die bestätigte Farm-/Perspektivgrundlage bleibt unverändert.
 
-Die statischen Cutout-Bausteine **Körper + oberer Kopf + Unterkiefer + Schweif** sind abgeschlossen und getestet. Die Bein-Sheets sind jetzt technisch eindeutig in zwei komplette 3-Segment-Ketten pro Sheet zerlegt und dokumentiert.
+Die statischen Cutout-Bausteine **Körper + oberer Kopf + Unterkiefer + Schweif + FrontNear-Bein** sind abgeschlossen und getestet. Die FrontNear-Kette besteht vollständig aus drei Segmenten und ist gegen die Master-Pose kontrolliert.
 
-Als nächster kleiner Schritt wird **genau ein Bein** aus einer vollständig identifizierten Sheet-Spalte als `Upper → LowerPivot → Lower → HoofPivot → Hoof` aufgebaut und statisch gegen die Master-Pose verglichen. Erst bei diesem kontrollierten Montagevergleich wird die betreffende Spalte verbindlich als `Near` oder `Far` zugeordnet.
-
-Danach sofort speichern/committen und erst anschließend das Prinzip auf die übrigen drei Beine übertragen.
+Als nächster Schritt folgt **Schritt 5: Übertragung auf die übrigen drei Beine**. Dieser Schritt wurde bewusst noch nicht begonnen.
