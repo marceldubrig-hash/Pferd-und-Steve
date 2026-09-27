@@ -370,3 +370,38 @@ Die MID-Frames suchen deterministisch `jaw_test@0.15s`, `tail_test@0.30s` und
 im selben Bild prüfbar. Die AnimationPlayer werden nicht umgebaut; nur der temporäre
 Preview-Runner pausiert sie auf den Prüfzeitpunkten. Erst nach gespeichertem Ergebnis
 wird bewertet, ob überhaupt ein Runtime-Fix nötig ist.
+
+
+### Ergebnis 11I/11J — visuelle Runtime-Prüfung
+
+Preview-Runner-Commit: `c59f9a6357024766e9462b31fe18c23d24de5212`.
+Workflow-Run: `36354027200` — **success**.
+Ergebnis-Commit: `7fb064f69d0c3f0f9871a6ee45e1ce6f3f17e95a`.
+
+Der echte Godot-Render bestätigt alle sechs Pflichtfälle:
+
+- FAR RIGHT: Cutout steht auf der hinteren Bodenlinie; Größe und Hufanker plausibel
+- FAR LEFT: vollständige Figur sauber als Gesamt-Rig gespiegelt
+- MID RIGHT: Walk-Ausschlag sichtbar, Jaw geöffnet, Tail ausgeschlagen; kein externer
+  Perspektiv- oder Anchor-Sprung
+- MID LEFT: derselbe Animationszustand bleibt nach Gesamt-Flip intakt; keine
+  Doppelspiegelung einzelner Teile
+- NEAR RIGHT: extreme Kameranähe funktioniert wie im alten Farm-Canon; Hufpunkt liegt
+  weit unter dem Viewport, Oberkörper/Kopf werden massiv angeschnitten dargestellt
+- NEAR LEFT: gleiche Nahprojektion gespiegelt, ohne Scale- oder Anchor-Wechsel
+
+Gemessene Runtime-Werte im Preview:
+
+- FAR: HorseRoot-Scale `0.292512327`, z `0`
+- MID: HorseRoot-Scale `0.523902655`, z `50`
+- NEAR: HorseRoot-Scale `2.507248402`, z `100`
+- RIGHT: `HorseVisual.scale.x = +1`
+- LEFT: `HorseVisual.scale.x = -1`
+
+Die sichtbare primitive Segmentstellung im MID-Walk ist der ausdrücklich gewünschte
+billige Cutout-/Puppenstil. Es ist kein Integrationsfehler erkennbar, der eine
+Änderung an Walk, Pivots, Perspektive, Bodenanker oder Flip rechtfertigt.
+
+Damit sind 11I und 11J ohne Runtime-Korrektur abgeschlossen. Als nächstes folgt nur
+noch die finale technische 11K-Validierung inklusive unveränderter Animationsdaten
+und Android-Debug-SHA.
