@@ -122,7 +122,7 @@ Spätere Gelenk-Paare:
 - Upper → Lower: Upper-Bottom `(829.659, 558.152)` ↔ Lower-Top `(838.995, 565.942)`
 - Lower → Hoof: Lower-Bottom `(908.740, 891.626)` ↔ Hoof-Top `(931.206, 936.956)`
 
-## Near/Far-Zuordnung — bewusst noch nicht kanonisiert
+## Near/Far-Zuordnung — ursprünglicher Analyse-Stand
 
 Technisch eindeutig bestätigt ist:
 
@@ -139,7 +139,7 @@ Es gibt:
 - keine bereits vorhandene Texturzuweisung in `horse_cutout_rig.tscn`
 - nur eine flach gerenderte Master-Pose, aus der die ursprüngliche Z-Reihenfolge der beiden Beine nicht beweissicher rekonstruiert werden kann
 
-Deshalb wird an dieser Stelle **keine** Near/Far-Zuordnung erfunden. Die Nodes `FrontNear`, `FrontFar`, `HindNear`, `HindFar` bleiben bis zum ersten kontrollierten Montagevergleich untexturiert.
+Deshalb wurde im reinen Analyseschritt **keine** Near/Far-Zuordnung erfunden. Diese Aussage beschreibt den Stand vor Schritt 4; der kontrollierte Montagevergleich aus Schritt 4 hat die Front-Zuordnung inzwischen aufgelöst.
 
 ## Wiederverwendung / Spiegelung
 
@@ -198,8 +198,96 @@ Kalibrierhinweis:
 - die Master-Alpha-Silhouette trennt die beiden Vorderbeine ab ungefähr `y = 520` klar in zwei Läufe; die linke sichtbare Vorderbeinspur liegt dort ungefähr bei `x = 601…652`
 - dieser Vergleich dient nur der statischen Montageposition; er beweist **keine** Near/Far-Z-Reihenfolge
 
+## Schritt 4B–4E — erstes vollständiges Bein montiert und validiert
+
+Die linke Front-Sheet-Kette ist jetzt als vollständige statische Godot-Kette montiert:
+
+`FrontNear → Upper → LowerPivot → Lower → HoofPivot → Hoof`
+
+### Texturquelle
+
+Es wurden **keine Einzel-PNGs exportiert**. Alle drei Segmente verwenden `AtlasTexture` direkt aus dem unveränderten bestätigten Front-Sheet:
+
+- Upper: Region `Rect2(183, 32, 361, 608)`
+- Lower: Region `Rect2(208, 651, 171, 330)`
+- Hoof: Region `Rect2(240, 1000, 222, 305)`
+- Quell-Sheet SHA-256 bleibt `21003a4575973514be9f1508e828c0f90c2f0d12f3f519188b4e1b495eb96e8a`
+
+### Bestätigte Godot-Transforms
+
+`FrontNear`:
+
+- Position im Rig-Root: `(155, -53)`
+- Rotation: `0 rad`
+- Scale: `(0.5, 0.5)`
+- `z_index = 1` — vor dem Body
+
+`Upper`:
+
+- lokaler Offset: `(-19.75, 275.924)`
+- Rotation: `0 rad`
+- eigene Scale: `1` — erbt die `0.5` des FrontNear-Roots
+
+`LowerPivot`:
+
+- lokaler Offset unter Upper: `(-33.065, 274.582)`
+- abgeleitet aus dem dokumentierten Upper-Bottom-Anker `(147.435, 578.582)` relativ zur Upper-Regionmitte
+
+`Lower`:
+
+- lokaler Offset unter LowerPivot: `(-3.209, 148.182)`
+- damit liegt der dokumentierte Lower-Top-Anker `(88.709, 16.818)` auf dem Pivot
+
+`HoofPivot`:
+
+- lokaler Offset unter Lower: `(-21.145, 149.993)`
+- abgeleitet aus dem dokumentierten Lower-Bottom-Anker `(64.355, 314.993)`
+
+`Hoof`:
+
+- lokaler Offset unter HoofPivot: `(67.359, 138.418)`
+- damit liegt der dokumentierte Hoof-Top-Anker `(43.641, 14.082)` auf dem Pivot
+
+Die Ankerüberlappung ist absichtlich leicht positiv; sie versteckt die künstlichen Schnittkanten ohne Bildbearbeitung.
+
+### Near/Far-Ergebnis
+
+Der kontrollierte Montagevergleich wurde mit drei Ansichten durchgeführt:
+
+1. bestätigte Master-Pose
+2. dieselbe linke Front-Kette **vor** dem Body
+3. dieselbe Kette **hinter** dem Body
+
+Nur die Variante **vor dem Body** reproduziert die sichtbare Schulter-/Beinform der Master-Pose. Hinter dem Body wird der relevante obere Beinbereich abgeschnitten.
+
+Damit ist für das Front-Sheet bestätigt:
+
+- **linke Sheet-Spalte = FrontNear**
+- **rechte Sheet-Spalte = FrontFar** (durch die bestätigte Zweierstruktur des Front-Sheets logisch verbleibende Variante; noch nicht montiert)
+
+Die Hind-Sheet-Near/Far-Zuordnung bleibt weiterhin offen, bis deren kontrollierter Montagevergleich erfolgt.
+
+### Commits des Aufbaus
+
+- `0b623c415d6a41b33b2d306d987de36b73d3a505` — neutrale erste Front-Kette festgelegt
+- `531feb24ddad9a10772c680ec05fb91be17d90c1` — Upper angebunden
+- `61b37bed4c69567b60d213e3384dc666dab803e4` — Lower angebunden
+- `bd9142964778da6cc05df6682e05de070aa41087` — Hoof angebunden
+- `757f910c99cb82b395bd450327d058c862bff39d` — linke Front-Kette als `FrontNear` bestätigt
+- `b1b86e94d2c9f9e8d320bddbfc7142ca7e0e2639` — verbliebene Upper-Parent-Referenz nach Umbenennung korrigiert
+
+### Technische Validierung
+
+Nach der Parent-Korrektur wurde der Stand erneut vollständig geprüft:
+
+- verifizierte Workflow-Basis: `efba8db681ad6ab575ebeced78f8e968fa6c9536`
+- Godot 4.3 Headless Parse/Import: **success**
+- Android Debug Export: **success**
+- Validierungs-Commit: `9971aceae4f80023ac630f36bbebd066eeefc6a4`
+- erzeugtes Test-APK SHA-256: `5a8c519bdfe87fde09ba64b90f0975b81167549018b2468d112de017105493b5`
+
+Die übrigen drei Beine sind weiterhin untexturiert. Es wurde keine Walk-Animation und keine Farm-Integration begonnen.
+
 ## Nächster technischer Schritt
 
-Ein einziges vollständiges Bein als 3-Segment-Kette aufbauen.
-
-Die sicherste Basis ist eine der jetzt exakt identifizierten vollständigen Sheet-Spalten. Beim statischen Vergleich gegen die Master-Pose wird dabei zuerst geklärt und dokumentiert, ob diese konkrete Spalte `Near` oder `Far` ist. Erst danach wird das Prinzip auf die übrigen drei Beine übertragen.
+**Schritt 5** ist das Übertragen desselben Prinzips auf die übrigen drei Beine. Dieser Schritt ist noch **nicht** begonnen.
