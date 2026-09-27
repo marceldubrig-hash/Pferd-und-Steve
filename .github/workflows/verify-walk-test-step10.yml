@@ -1,0 +1,368 @@
+name: Verify walk test step 10
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-walk-test-step10.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify approved rig assets
+        run: python tools/materialize_verified_rig_assets.py
+
+      - name: Download Godot 4.3
+        shell: bash
+        run: |
+          curl -L --fail --retry 3 -o godot.zip "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          chmod +x Godot_v4.3-stable_linux.x86_64
+
+      - name: Validate Godot project headlessly
+        run: ./Godot_v4.3-stable_linux.x86_64 --headless --path . --editor --quit
+
+      - name: Verify walk plus existing animation runtime data
+        shell: bash
+        run: |
+          cat > tools/_verify_step10_runtime.gd <<'GDSCRIPT'
+          extends SceneTree
+
+          const EPS := 0.00002
+
+          func fail(message: String) -> void:
+              push_error(message)
+              quit(1)
+
+          func close_enough(a: float, b: float) -> bool:
+              return absf(a - b) <= EPS
+
+          func vec_close(a: Vector2, b: Vector2) -> bool:
+              return a.distance_to(b) <= EPS
+
+          func verify_scalar_track(animation: Animation, path: NodePath, expected_times: Array, expected_values: Array, label: String) -> void:
+              var track := animation.find_track(path, Animation.TYPE_VALUE)
+              if track < 0:
+                  fail("%s track missing" % label)
+                  return
+              if animation.track_get_key_count(track) != expected_values.size():
+                  fail("%s key count mismatch" % label)
+                  return
+              for i in expected_values.size():
+                  var actual_time := animation.track_get_key_time(track, i)
+                  var actual_value := float(animation.track_get_key_value(track, i))
+                  if not close_enough(actual_time, float(expected_times[i])):
+                      fail("%s key time mismatch at %d" % [label, i])
+                      return
+                  if not close_enough(actual_value, float(expected_values[i])):
+                      fail("%s key value mismatch at %d" % [label, i])
+                      return
+
+          func verify_vector_track(animation: Animation, path: NodePath, expected_times: Array, expected_values: Array, label: String) -> void:
+              var track := animation.find_track(path, Animation.TYPE_VALUE)
+              if track < 0:
+                  fail("%s track missing" % label)
+                  return
+              if animation.track_get_key_count(track) != expected_values.size():
+                  fail("%s key count mismatch" % label)
+                  return
+              for i in expected_values.size():
+                  var actual_time := animation.track_get_key_time(track, i)
+                  var actual_value: Vector2 = animation.track_get_key_value(track, i)
+                  var expected_value: Vector2 = expected_values[i]
+                  if not close_enough(actual_time, float(expected_times[i])):
+                      fail("%s key time mismatch at %d" % [label, i])
+                      return
+                  if not vec_close(actual_value, expected_value):
+                      fail("%s key value mismatch at %d" % [label, i])
+                      return
+
+          func _init() -> void:
+              var packed := load("res://scenes/horse_cutout_rig.tscn") as PackedScene
+              if packed == null:
+                  fail("Could not load horse_cutout_rig.tscn")
+                  return
+
+              var root := packed.instantiate()
+
+              var jaw_player := root.get_node_or_null("AnimationPlayer") as AnimationPlayer
+              var tail_player := root.get_node_or_null("TailAnimationPlayer") as AnimationPlayer
+              var walk_player := root.get_node_or_null("WalkAnimationPlayer") as AnimationPlayer
+              if jaw_player == null or tail_player == null or walk_player == null:
+                  fail("Required AnimationPlayer missing")
+                  return
+
+              var head := root.get_node_or_null("HeadPivot") as Node2D
+              var jaw := root.get_node_or_null("HeadPivot/JawPivot") as Node2D
+              var tail := root.get_node_or_null("TailPivot") as Node2D
+              var body := root.get_node_or_null("Body") as Node2D
+              if head == null or jaw == null or tail == null or body == null:
+                  fail("Required body/head/jaw/tail node missing")
+                  return
+
+              if jaw.get_parent() != head:
+                  fail("JawPivot is not a direct child of HeadPivot")
+                  return
+
+              # Existing Step 7/8 jaw + head animation must remain exact.
+              if String(jaw_player.autoplay) != "jaw_test":
+                  fail("jaw_test autoplay changed")
+                  return
+              var jaw_anim := jaw_player.get_animation("jaw_test")
+              if jaw_anim == null or not close_enough(jaw_anim.length, 0.6) or jaw_anim.loop_mode != Animation.LOOP_LINEAR:
+                  fail("jaw_test metadata changed")
+                  return
+              verify_scalar_track(
+                  jaw_anim,
+                  NodePath("HeadPivot/JawPivot:rotation"),
+                  [0.0, 0.15, 0.3, 0.42, 0.6],
+                  [-0.331613, -0.15708, -0.331613, -0.226893, -0.331613],
+                  "JawPivot"
+              )
+              verify_scalar_track(
+                  jaw_anim,
+                  NodePath("HeadPivot:rotation"),
+                  [0.0, 0.18, 0.38, 0.6],
+                  [-0.00592869, -0.05828857, 0.04643119, -0.00592869],
+                  "HeadPivot"
+              )
+
+              # Existing Step 9 tail animation must remain exact.
+              if String(tail_player.autoplay) != "tail_test":
+                  fail("tail_test autoplay changed")
+                  return
+              var tail_anim := tail_player.get_animation("tail_test")
+              if tail_anim == null or not close_enough(tail_anim.length, 1.1) or tail_anim.loop_mode != Animation.LOOP_LINEAR:
+                  fail("tail_test metadata changed")
+                  return
+              verify_scalar_track(
+                  tail_anim,
+                  NodePath("TailPivot:rotation"),
+                  [0.0, 0.3, 0.68, 0.88, 1.1],
+                  [0.0, 0.0872665, -0.0698132, 0.0349066, 0.0],
+                  "TailPivot"
+              )
+
+              # Static rig transforms must still match the confirmed standing rig.
+              if not vec_close(body.position, Vector2(-76.5412, -101.756)):
+                  fail("Body static position changed")
+                  return
+              if not vec_close(head.position, Vector2(321.171, -194.253)):
+                  fail("HeadPivot static position changed")
+                  return
+              if not vec_close(tail.position, Vector2(-449, -198)):
+                  fail("TailPivot static position changed")
+                  return
+              if not close_enough(head.rotation, -0.00592869):
+                  fail("HeadPivot static rotation changed")
+                  return
+              if not close_enough(jaw.rotation, -0.331613):
+                  fail("JawPivot static rotation changed")
+                  return
+              if not close_enough(tail.rotation, 0.0):
+                  fail("TailPivot static rotation changed")
+                  return
+
+              var root_expectations := {
+                  "FrontNear": [Vector2(155, -53), Vector2(0.5, 0.5), 1],
+                  "FrontFar": [Vector2(247, -53), Vector2(0.5, 0.5), -1],
+                  "HindNear": [Vector2(-446, -74), Vector2(0.5, 0.5), 1],
+                  "HindFar": [Vector2(-262, -77), Vector2(0.5, 0.5), -1],
+              }
+              for path in root_expectations:
+                  var leg := root.get_node_or_null(path) as Node2D
+                  if leg == null:
+                      fail("%s missing" % path)
+                      return
+                  var expected: Array = root_expectations[path]
+                  if not vec_close(leg.position, expected[0]) or not vec_close(leg.scale, expected[1]) or leg.z_index != expected[2]:
+                      fail("%s static transform changed" % path)
+                      return
+
+              if String(walk_player.autoplay) != "walk_test":
+                  fail("walk_test is not autoplay")
+                  return
+              var walk := walk_player.get_animation("walk_test")
+              if walk == null:
+                  fail("walk_test animation missing")
+                  return
+              if not close_enough(walk.length, 1.2):
+                  fail("walk_test length mismatch")
+                  return
+              if walk.loop_mode != Animation.LOOP_LINEAR:
+                  fail("walk_test is not looping")
+                  return
+              if walk.get_track_count() != 15:
+                  fail("walk_test track count mismatch")
+                  return
+
+              # Upper/root swing.
+              verify_scalar_track(walk, NodePath("FrontNear:rotation"), [0.0,0.28,0.58,0.88,1.2], [0.0,0.10472,0.0,-0.0872665,0.0], "FrontNear root")
+              verify_scalar_track(walk, NodePath("HindFar:rotation"), [0.0,0.34,0.64,0.94,1.2], [0.0,0.0872665,0.0,-0.0698132,0.0], "HindFar root")
+              verify_scalar_track(walk, NodePath("FrontFar:rotation"), [0.0,0.3,0.6,0.9,1.2], [0.0,-0.0872665,0.0,0.10472,0.0], "FrontFar root")
+              verify_scalar_track(walk, NodePath("HindNear:rotation"), [0.0,0.36,0.66,0.96,1.2], [0.0,-0.0698132,0.0,0.0872665,0.0], "HindNear root")
+
+              # Lower counter swing.
+              verify_scalar_track(walk, NodePath("FrontNear/Upper/LowerPivot:rotation"), [0.0,0.28,0.58,0.88,1.2], [0.0,-0.139626,0.0,0.10472,0.0], "FrontNear lower")
+              verify_scalar_track(walk, NodePath("HindFar/Upper/LowerPivot:rotation"), [0.0,0.34,0.64,0.94,1.2], [0.0,-0.10472,0.0,0.0872665,0.0], "HindFar lower")
+              verify_scalar_track(walk, NodePath("FrontFar/Upper/LowerPivot:rotation"), [0.0,0.3,0.6,0.9,1.2], [0.0,0.10472,0.0,-0.139626,0.0], "FrontFar lower")
+              verify_scalar_track(walk, NodePath("HindNear/Upper/LowerPivot:rotation"), [0.0,0.36,0.66,0.96,1.2], [0.0,0.0872665,0.0,-0.10472,0.0], "HindNear lower")
+
+              # Hoof counter rotation.
+              verify_scalar_track(walk, NodePath("FrontNear/Upper/LowerPivot/Lower/HoofPivot:rotation"), [0.0,0.28,0.58,0.88,1.2], [0.0,0.0698132,0.0,-0.0523599,0.0], "FrontNear hoof")
+              verify_scalar_track(walk, NodePath("HindFar/Upper/LowerPivot/Lower/HoofPivot:rotation"), [0.0,0.34,0.64,0.94,1.2], [0.0,0.0523599,0.0,-0.0349066,0.0], "HindFar hoof")
+              verify_scalar_track(walk, NodePath("FrontFar/Upper/LowerPivot/Lower/HoofPivot:rotation"), [0.0,0.3,0.6,0.9,1.2], [0.0,-0.0523599,0.0,0.0698132,0.0], "FrontFar hoof")
+              verify_scalar_track(walk, NodePath("HindNear/Upper/LowerPivot/Lower/HoofPivot:rotation"), [0.0,0.36,0.66,0.96,1.2], [0.0,-0.0349066,0.0,0.0523599,0.0], "HindNear hoof")
+
+              # Tiny torso group bob, without moving the rig root.
+              var body_times := [0.0,0.3,0.6,0.9,1.2]
+              verify_vector_track(walk, NodePath("Body:position"), body_times, [
+                  Vector2(-76.5412,-101.756), Vector2(-76.5412,-104.756),
+                  Vector2(-76.5412,-99.756), Vector2(-76.5412,-103.756),
+                  Vector2(-76.5412,-101.756)
+              ], "Body bob")
+              verify_vector_track(walk, NodePath("HeadPivot:position"), body_times, [
+                  Vector2(321.171,-194.253), Vector2(321.171,-197.253),
+                  Vector2(321.171,-192.253), Vector2(321.171,-196.253),
+                  Vector2(321.171,-194.253)
+              ], "HeadPivot bob")
+              verify_vector_track(walk, NodePath("TailPivot:position"), body_times, [
+                  Vector2(-449,-198), Vector2(-449,-201), Vector2(-449,-196),
+                  Vector2(-449,-200), Vector2(-449,-198)
+              ], "TailPivot bob")
+
+              var reset := walk_player.get_animation("RESET")
+              if reset == null or reset.get_track_count() != 15:
+                  fail("walk RESET missing or track count mismatch")
+                  return
+              verify_scalar_track(reset, NodePath("FrontNear:rotation"), [0.0], [0.0], "RESET FrontNear root")
+              verify_scalar_track(reset, NodePath("HindFar:rotation"), [0.0], [0.0], "RESET HindFar root")
+              verify_scalar_track(reset, NodePath("FrontFar:rotation"), [0.0], [0.0], "RESET FrontFar root")
+              verify_scalar_track(reset, NodePath("HindNear:rotation"), [0.0], [0.0], "RESET HindNear root")
+              verify_scalar_track(reset, NodePath("FrontNear/Upper/LowerPivot:rotation"), [0.0], [0.0], "RESET FrontNear lower")
+              verify_scalar_track(reset, NodePath("HindFar/Upper/LowerPivot:rotation"), [0.0], [0.0], "RESET HindFar lower")
+              verify_scalar_track(reset, NodePath("FrontFar/Upper/LowerPivot:rotation"), [0.0], [0.0], "RESET FrontFar lower")
+              verify_scalar_track(reset, NodePath("HindNear/Upper/LowerPivot:rotation"), [0.0], [0.0], "RESET HindNear lower")
+              verify_scalar_track(reset, NodePath("FrontNear/Upper/LowerPivot/Lower/HoofPivot:rotation"), [0.0], [0.0], "RESET FrontNear hoof")
+              verify_scalar_track(reset, NodePath("HindFar/Upper/LowerPivot/Lower/HoofPivot:rotation"), [0.0], [0.0], "RESET HindFar hoof")
+              verify_scalar_track(reset, NodePath("FrontFar/Upper/LowerPivot/Lower/HoofPivot:rotation"), [0.0], [0.0], "RESET FrontFar hoof")
+              verify_scalar_track(reset, NodePath("HindNear/Upper/LowerPivot/Lower/HoofPivot:rotation"), [0.0], [0.0], "RESET HindNear hoof")
+              verify_vector_track(reset, NodePath("Body:position"), [0.0], [Vector2(-76.5412,-101.756)], "RESET Body")
+              verify_vector_track(reset, NodePath("HeadPivot:position"), [0.0], [Vector2(321.171,-194.253)], "RESET HeadPivot position")
+              verify_vector_track(reset, NodePath("TailPivot:position"), [0.0], [Vector2(-449,-198)], "RESET TailPivot position")
+
+              print("PASS step10 walk plus existing animation runtime data")
+              root.free()
+              quit(0)
+          GDSCRIPT
+          ./Godot_v4.3-stable_linux.x86_64 --headless --path . --script res://tools/_verify_step10_runtime.gd
+          rm tools/_verify_step10_runtime.gd
+
+      - name: Install Godot 4.3 export templates
+        shell: bash
+        run: |
+          curl -L --fail --retry 3 -o templates.tpz "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz"
+          unzip -q templates.tpz -d templates-unpacked
+          mkdir -p "$HOME/.local/share/godot/export_templates/4.3.stable"
+          cp -a templates-unpacked/templates/. "$HOME/.local/share/godot/export_templates/4.3.stable/"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Ensure Android SDK packages
+        shell: bash
+        run: |
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+          if [ ! -d "$SDK_ROOT/build-tools/34.0.0" ] || [ ! -d "$SDK_ROOT/platforms/android-34" ]; then
+            SDKMANAGER="$(find "$SDK_ROOT" -type f -name sdkmanager 2>/dev/null | head -n 1)"
+            test -n "$SDKMANAGER"
+            yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses >/dev/null || true
+            "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platform-tools" "build-tools;34.0.0" "platforms;android-34"
+          fi
+
+      - name: Prepare debug keystore
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.android"
+          if [ ! -f "$HOME/.android/debug.keystore" ]; then
+            keytool -genkeypair -v -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          fi
+
+      - name: Configure Android editor settings
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.config/godot"
+          {
+            echo '[gd_resource type="EditorSettings" format=3]'
+            echo
+            echo '[resource]'
+            echo "export/android/android_sdk_path = \"$ANDROID_HOME\""
+            echo "export/android/java_sdk_path = \"$JAVA_HOME\""
+            echo "export/android/debug_keystore = \"$HOME/.android/debug.keystore\""
+            echo 'export/android/debug_keystore_user = "androiddebugkey"'
+            echo 'export/android/debug_keystore_pass = "android"'
+          } > "$HOME/.config/godot/editor_settings-4.tres"
+
+      - name: Import project
+        run: ./Godot_v4.3-stable_linux.x86_64 --headless --path . --import
+
+      - name: Export Android debug APK
+        env:
+          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: /home/runner/.android/debug.keystore
+          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
+        run: |
+          mkdir -p build
+          ./Godot_v4.3-stable_linux.x86_64 --headless --path . --export-debug "Android Debug" build/Pferd-und-Steve-step10-debug.apk
+
+      - name: Record validation result
+        shell: bash
+        run: |
+          APK_SHA="$(sha256sum build/Pferd-und-Steve-step10-debug.apk | awk '{print $1}')"
+          mkdir -p debug
+          cat > debug/walk_test_android_validation.txt <<EOF
+          source_commit=$GITHUB_SHA
+          asset_integrity=success
+          godot_4_3_headless=success
+          runtime_scene_load=success
+          existing_jaw_track_unchanged=success
+          existing_head_track_unchanged=success
+          existing_tail_track_unchanged=success
+          walk_runtime_track_count=15
+          walk_reset_track_count=15
+          walk_animation_length_seconds=1.2
+          walk_autoplay=walk_test
+          upper_root_tracks=4
+          lower_pivot_tracks=4
+          hoof_pivot_tracks=4
+          torso_position_tracks=3
+          android_debug_export=success
+          apk_sha256=$APK_SHA
+          EOF
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add debug/walk_test_android_validation.txt
+          git commit -m "Record walk animation Android validation"
+          git push origin HEAD:main
+
+      - name: Upload test APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Pferd-und-Steve-step10-debug
+          path: build/Pferd-und-Steve-step10-debug.apk
+          if-no-files-found: error
