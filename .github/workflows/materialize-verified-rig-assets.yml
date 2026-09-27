@@ -1,0 +1,44 @@
+name: Materialize Verified Rig Assets
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "tools/materialize_verified_rig_assets.py"
+      - ".github/workflows/materialize-verified-rig-assets.yml"
+      - "asset_packs/Pferd-und-Steve-source-head-core-v01.zip"
+      - "asset_packs/Pferd-und-Steve-source-rig-missing-v01.zip"
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Materialize exact approved rig assets
+        run: python tools/materialize_verified_rig_assets.py
+
+      - name: Commit materialized rig assets
+        run: |
+          if git diff --quiet -- assets/horse/rig && [ -z "$(git status --porcelain -- assets/horse/rig)" ]; then
+            echo "No rig asset changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/horse/rig
+          git commit -m "Materialize verified canonical rig assets"
+          git push
