@@ -1,0 +1,108 @@
+name: Verify four legs milestone
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-four-legs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Godot 4.3
+        shell: bash
+        run: |
+          curl -L --fail --retry 3 -o godot.zip "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          chmod +x Godot_v4.3-stable_linux.x86_64
+
+      - name: Validate Godot project headlessly
+        run: ./Godot_v4.3-stable_linux.x86_64 --headless --path . --editor --quit
+
+      - name: Install Godot 4.3 export templates
+        shell: bash
+        run: |
+          curl -L --fail --retry 3 -o templates.tpz "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz"
+          unzip -q templates.tpz -d templates-unpacked
+          mkdir -p "$HOME/.local/share/godot/export_templates/4.3.stable"
+          cp -a templates-unpacked/templates/. "$HOME/.local/share/godot/export_templates/4.3.stable/"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Ensure Android SDK packages
+        shell: bash
+        run: |
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+          if [ ! -d "$SDK_ROOT/build-tools/34.0.0" ] || [ ! -d "$SDK_ROOT/platforms/android-34" ]; then
+            SDKMANAGER="$(find "$SDK_ROOT" -type f -name sdkmanager 2>/dev/null | head -n 1)"
+            test -n "$SDKMANAGER"
+            yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses >/dev/null || true
+            "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platform-tools" "build-tools;34.0.0" "platforms;android-34"
+          fi
+
+      - name: Prepare debug keystore
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.android"
+          if [ ! -f "$HOME/.android/debug.keystore" ]; then
+            keytool -genkeypair -v -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          fi
+
+      - name: Configure Android editor settings
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.config/godot"
+          {
+            echo '[gd_resource type="EditorSettings" format=3]'
+            echo
+            echo '[resource]'
+            echo "export/android/android_sdk_path = \"$ANDROID_HOME\""
+            echo "export/android/java_sdk_path = \"$JAVA_HOME\""
+            echo "export/android/debug_keystore = \"$HOME/.android/debug.keystore\""
+            echo 'export/android/debug_keystore_user = "androiddebugkey"'
+            echo 'export/android/debug_keystore_pass = "android"'
+          } > "$HOME/.config/godot/editor_settings-4.tres"
+
+      - name: Import project
+        run: ./Godot_v4.3-stable_linux.x86_64 --headless --path . --import
+
+      - name: Export Android debug APK
+        env:
+          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: /home/runner/.android/debug.keystore
+          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
+        run: |
+          mkdir -p build
+          ./Godot_v4.3-stable_linux.x86_64 --headless --path . --export-debug "Android Debug" build/Pferd-und-Steve-debug.apk
+
+      - name: Persist validation
+        shell: bash
+        run: |
+          APK_SHA="$(sha256sum build/Pferd-und-Steve-debug.apk | awk '{print $1}')"
+          cat > docs/FOUR_LEGS_VALIDATION.md <<EOF
+          # Four legs validation
+
+          Verified source commit: \`$GITHUB_SHA\`
+
+          - Godot 4.3 headless editor parse/import: **success**
+          - Android Debug export: **success**
+          - APK SHA-256: \`$APK_SHA\`
+          - Scope: FrontNear + FrontFar + HindNear + HindFar complete
+          EOF
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/FOUR_LEGS_VALIDATION.md
+          git commit -m "Record four legs validation"
+          git push origin HEAD:main
