@@ -155,7 +155,8 @@ Stand auf `main`:
 - Godot-4.3-Headless-Validierung läuft in GitHub Actions
 - Android-Debug-APK wird automatisiert gebaut
 - separate Rig-Testszene `scenes/horse_cutout_rig.tscn` angelegt; Farm-/Perspektivsystem bleibt dabei unangetastet
-- erster Cutout-Baustein ist implementiert und getestet: bestätigter Körper + oberer Kopf + Unterkiefer sind als unveränderte Runtime-Texturen eingebunden, statisch ausgerichtet und über getrennte Head-/Jaw-Pivots vorbereitet; Schweif und Beine sind weiterhin noch nicht angebunden
+- erster Cutout-Baustein ist implementiert und getestet: bestätigter Körper + oberer Kopf + Unterkiefer sind als unveränderte Runtime-Texturen eingebunden, statisch ausgerichtet und über getrennte Head-/Jaw-Pivots vorbereitet
+- bestätigter Schweif ist ebenfalls implementiert und getestet; `TailPivot` sitzt am Schweifansatz, der Schweif liegt hinter dem Körper; Beine sind weiterhin noch nicht angebunden
 
 ## Technischer Test-Meilenstein — erster Android-Build
 
@@ -259,17 +260,42 @@ Erreicht am 2026-09-27:
   - Body bleibt auf Basis-Z
   - HeadPivot liegt bei `z_index = 10`
   - HeadUpper liegt relativ eine Ebene über dem Jaw, damit der hochgeklappte Unterkiefer sauber hinter der festen oberen Kopfform verschwinden kann
-- Noch **nicht** integriert: Schweif, Beine, Laufanimation, Sprachsystem, Farm-Integration.
+- Noch **nicht** integriert: Beine, Laufanimation, Sprachsystem, Farm-Integration.
 - Scene-Commit: `eb7188ad112214b8e4557ff9275f6be02a80382b`
 - Godot-4.3-Headless-Validierung: Run `36330114083` — **success**
 - Automatischer Android-Debug-Build derselben Commit-Basis: Run `36330114109` — **success**
+
+## Rig-Meilenstein — Schweif + TailPivot
+
+Erreicht am 2026-09-27:
+
+- Ausschließlich das bestätigte Runtime-Asset wurde verwendet:
+  - `assets/horse/rig/horse_tail_v01.png`
+- Das verwendete Schweif-Original wurde vor der Ausrichtung erneut gegen den festgeschriebenen SHA-256 geprüft:
+  - `b608633b49b8cf6eb3dd612cf2482d9b482c4bfc7d8a72dbf9a4ecb1c7d58fe1`
+- Das PNG wurde nicht verändert, neu encodiert, beschnitten oder ersetzt. Die gesamte Ausrichtung liegt ausschließlich in Godot-Node-Transforms.
+- Die statische Ausrichtung wurde gegen die bestätigte Master-Pose kalibriert.
+- TailPivot:
+  - Position im Rig-Root: `(-449, -198)`
+  - entspricht ungefähr dem Schweifansatz/Dock der Master-Pose
+  - `z_index = -1`, damit der Schweif hinter dem Körper liegt und der Ansatz sauber vom Rumpf verdeckt wird
+- Tail:
+  - lokaler Offset relativ zu TailPivot: `(-102.18, 270.66)`
+  - Scale: `0.39`
+  - keine Ruhe-Rotation; `TailPivot` bleibt damit für eine spätere primitive Schweifrotation vorbereitet
+- Referenzpunkt im 1086×1448-Quellasset für den Pivot liegt ungefähr bei `(805, 30)`.
+- Die LEFT/RIGHT-Regel bleibt unverändert: später wird das **gesamte Rig** gespiegelt; der Schweif benötigt keine eigene Spiegelungslogik.
+- Noch **nicht** integriert: Beine, Laufanimation, Sprachsystem, Farm-Integration.
+- Scene-Commit: `df1f778f218b50ca2aa0db226a3a78bbe4d5d056`
+- Godot-4.3-Headless-Validierung: Run `36330979600` — **success**
+- Automatischer Android-Debug-Build derselben Commit-Basis: Run `36330979638` — **success**
 
 ## Aktuell nächste technische Aufgabe
 
 Die bestätigte Farm-/Perspektivgrundlage bleibt unverändert.
 
-Der erste statische Cutout-Baustein **Körper + oberer Kopf + Unterkiefer** ist abgeschlossen und getestet.
+Die statischen Cutout-Bausteine **Körper + oberer Kopf + Unterkiefer + Schweif** sind abgeschlossen und getestet.
 
-Als nächster kleiner Schritt wird ausschließlich der bestätigte **Schweif** angebunden und ein sinnvoller `TailPivot` festgelegt. Beine, Laufanimation und Farm-Integration bleiben dabei weiterhin unangetastet.
+Als nächster kleiner Schritt werden ausschließlich die beiden bestätigten **Bein-Segment-Sheets technisch untersucht** und exakt dokumentiert, welches Segment zu welchem Beinabschnitt gehört. Dabei wird noch kein vollständiges Bein-Rig erzwungen und die Farm-Integration bleibt unangetastet.
 
 Danach sofort speichern/committen und erst anschließend den nächsten Rig-Baustein bearbeiten.
