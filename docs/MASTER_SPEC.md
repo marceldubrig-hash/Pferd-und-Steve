@@ -372,10 +372,37 @@ Erreicht am 2026-09-27:
 - `HindFar` bleibt als einziges Bein untexturiert
 - keine Animation und keine Farm-Integration begonnen
 
+## Rig-Meilenstein — alle vier Beine vollständig
+
+Erreicht am 2026-09-27:
+
+- alle vier Beine sind als vollständige 3-Segment-Ketten montiert
+- insgesamt sind damit alle **12 Beinsegmente** im Cutout-Rig angebunden
+- Front-Sheet: linke Spalte = `FrontNear`, rechte Spalte = `FrontFar`
+- Hind-Sheet: linke Spalte = `HindNear`, rechte Spalte = `HindFar`
+- Near-Beine liegen mit `z_index = 1` vor dem Body
+- Far-Beine liegen mit `z_index = -1` hinter dem Body
+- keine Beinsegmente wurden gespiegelt oder neu gerendert
+- alle Segmente verwenden `AtlasTexture` direkt aus den unveränderten bestätigten Sheets
+- `HindFar` final: Position `(-262, -77)`, Scale `0.5`, `z_index = -1`
+- HindFar Upper: Offset `(32.071, 233.122)`
+- HindFar LowerPivot: `(7.159, 219.652)`
+- HindFar Lower: Offset `(38.005, 165.058)`
+- HindFar HoofPivot: `(31.74, 160.626)`
+- HindFar Hoof: Offset `(-49.206, 182.544)`
+- eine transparente Upper/Lower-Lücke bei HindFar wurde ausschließlich durch Pivot-/Root-Überlappung korrigiert; Quellbilder blieben unverändert
+- finaler Vier-Bein-Mastervergleich: plausibel und ohne sichtbare transparente Gelenklücke
+- Godot 4.3 Headless: **success**
+- Android Debug Export: **success**
+- Validierungs-Commit: `04c9a06b69147845727d47a58b3c12c7cb50aeaa`
+- Test-APK SHA-256: `eda1d08a2f3fad3011109d0322d4c122c035b4d4e9ff7c143063656dace7fd0c`
+- keine Walk-Animation und keine Farm-Integration begonnen
+- Detaildokumentation: `docs/HORSE_LEG_RIG.md`
+
 ## Aktuell nächste technische Aufgabe
 
 Die bestätigte Farm-/Perspektivgrundlage bleibt unverändert.
 
-Die statischen Cutout-Bausteine **Körper + oberer Kopf + Unterkiefer + Schweif + FrontNear + FrontFar + HindNear** sind abgeschlossen und getestet.
+Die statischen Cutout-Bausteine **Körper + oberer Kopf + Unterkiefer + Schweif + alle vier Beine / zwölf Beinsegmente** sind abgeschlossen und technisch getestet.
 
-Als nächster kleiner Schritt folgt ausschließlich das letzte untexturierte Bein **HindFar** aus der rechten Hind-Sheet-Spalte. Danach wird die vollständige statische Vier-Bein-Figur gegen die Master-Pose geprüft.
+Als nächster Schritt folgt **Schritt 6: vollständige statische Pferdefigur gegen die Master-Pose prüfen**. Dabei nur Node-Transforms/Pivots korrigieren; keine Asset-Neugenerierung und noch keine Animation.
