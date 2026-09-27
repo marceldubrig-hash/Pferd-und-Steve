@@ -1,4 +1,4 @@
-source_commit=a659d41dfe39cc46cf40955047225db249a852a6
+source_commit=d10aa0f2123cd1bbb19cce0dcbbd3d46c94b7f18
 asset_integrity=success
 godot_4_3_headless=success
 walk_track_count=12
