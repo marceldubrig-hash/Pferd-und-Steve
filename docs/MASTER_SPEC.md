@@ -134,11 +134,25 @@ Es ist nicht wichtig, dass die Bewegung elegant aussieht; der primitive Sticker-
 - große überladene Asset-Sheets als Hauptworkflow
 - realistischer/aufwendiger Pferdegang
 
+## Technischer Implementierungsstand
+
+Stand auf `main`:
+- minimales Godot-4-Projekt (`project.godot`) angelegt
+- `scenes/main.tscn` als Einstiegsszene angelegt
+- `scripts/main.gd` angelegt
+- Einstiegsszene in `project.godot` registriert
+- Testcontroller kennt bereits die verbindlichen Runtime-Pfade für Tag-Farm, Nacht-Farm und Master-Pferd
+- horizontales Spiegeln des Master-Pferds ist als RIGHT = Original / LEFT = Flip vorbereitet
+- Y-basierte Skalierung ist mit 70 % hinten bis 130 % vorne vorbereitet
+- fehlende Runtime-Bilder führen nur zu Warnungen und nicht zu einem absichtlichen Neudesign
+
+Die bestätigten Binär-Assets liegen derzeit weiterhin in versionierten ZIP-Paketen unter `asset_packs/`. Sie sind noch nicht als einzelne PNG-Dateien in die verbindlichen `assets/...`-Runtime-Pfade entpackt.
+
 ## Aktuell nächste technische Aufgabe
 
-Assets sauber ins Repository legen und anschließend eine minimale Mobile-App-Szene bauen, in der:
-1. Farm-Hintergrund angezeigt wird,
-2. Master-Pferd auf dem Hof steht,
-3. das Pferd horizontal gespiegelt werden kann,
-4. Y-Position die Größe steuert,
-5. Kopf/Unterkiefer/Schweif/Beinsegmente als primitives Cutout-Rig testbar werden.
+Nur die bereits bestätigten Assets aus den vorhandenen Paketen in ihre verbindlichen Runtime-Pfade übernehmen. Zuerst ausschließlich:
+1. `assets/backgrounds/farm_day_v01.png`
+2. `assets/backgrounds/farm_night_v01.png`
+3. `assets/horse/horse_master_standing_v01.png`
+
+Danach die erste minimale Farm-Szene mit diesen drei Canon-Assets testen. Erst nach erfolgreichem Test wird das eigentliche Cutout-Rig aus Kopf, Unterkiefer, Schweif und Beinsegmenten eingebaut.
