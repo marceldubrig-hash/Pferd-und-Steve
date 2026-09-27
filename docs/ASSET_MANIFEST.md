@@ -35,6 +35,22 @@ Vom Master-Pferd sollen zusätzlich reine Skalierungsvarianten ohne Designänder
 
 Keine bestätigten Assets neu erfinden. Varianten werden nur durch Skalieren, Spiegeln, Zuschneiden oder gezielte Korrektur des bestehenden Canon-Assets erstellt.
 
+## Bestätigte Quelldateien für den ersten Runtime-Test
+
+Die drei Canon-Quellen wurden in der ChatGPT-Dateibibliothek wiedergefunden und visuell gegen die Spezifikation geprüft:
+
+| Zielpfad | Quelldatei | Maße | Alpha |
+|---|---|---:|---|
+| assets/backgrounds/farm_day_v01.png | image-gen-1(2).png | 1672×941 | nein |
+| assets/backgrounds/farm_night_v01.png | image-gen-2(2).png | 1672×941 | nein |
+| assets/horse/horse_master_standing_v01.png | image-gen-1(3).png | 1448×1086 | ja |
+
+Die Tag-/Nacht-Farm ist dieselbe bestätigte Szene mit großer roter Scheune links, freiem Hof in der Mitte, weißem Zaun und offenem Unterstand rechts. Das Master-Pferd ist die bestätigte rechte Seitenansicht mit transparentem Hintergrund.
+
 ## Technischer Importstatus
 
-Die Projektstruktur und Spezifikation sind im Repository gesichert. Die binären Bilddateien werden separat in die oben definierten Zielpfade importiert; bis dahin gelten die hier dokumentierten Namen als verbindlich.
+- Projektstruktur und Spezifikation sind im Repository gesichert.
+- Die ursprünglichen Binärpakete liegen zusätzlich versioniert unter `asset_packs/`.
+- Die drei oben genannten Canon-Quelldateien sind eindeutig identifiziert und damit nicht mehr vom Dateinamen-Raten abhängig.
+- Sie müssen noch als einzelne PNG-Dateien in die verbindlichen `assets/...`-Runtime-Pfade geschrieben werden.
+- Bis dieser Binärimport erfolgt ist, erzeugt `scripts/main.gd` bewusst nur Warnungen für fehlende Runtime-Dateien.
