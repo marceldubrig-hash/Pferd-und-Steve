@@ -4,9 +4,29 @@ const FARM_DAY := "res://assets/backgrounds/farm_day_v01.png"
 const FARM_NIGHT := "res://assets/backgrounds/farm_night_v01.png"
 const HORSE_MASTER := "res://assets/horse/horse_master_standing_v01.png"
 
-const HORSE_BASE_SCALE := 0.28
-const PLAYFIELD_Y_MIN_RATIO := 0.43
-const PLAYFIELD_Y_MAX_RATIO := 0.92
+# Perspective model:
+# A pinhole camera projects apparent size proportional to 1 / distance.
+# The background is treated as a flat ground plane with a calibrated horizon.
+const GROUND_BACK_TOUCH_Y_RATIO := 0.565
+const GROUND_FRONT_TOUCH_Y_RATIO := 0.985
+const PERSPECTIVE_HORIZON_Y_RATIO := 0.405
+
+# Approximate camera/horse dimensions used only for the projection ratio.
+# 1.65 m is a plausible full-size horse height; 1.70 m approximates a human-height camera.
+const HORSE_WORLD_HEIGHT_M := 1.65
+const CAMERA_HEIGHT_M := 1.70
+
+# The user's vertical drag is mapped to a real-ish depth interval.
+# At the near limit the projected hoof point deliberately lies below the viewport,
+# so only the upper part of the horse remains visible very close to the camera.
+const FAR_DISTANCE_M := 12.0
+const NEAR_DISTANCE_M := 1.40
+const FAR_PROJECTED_FOOT_Y_RATIO := GROUND_BACK_TOUCH_Y_RATIO
+
+# Canon master alpha calibration, expressed as fractions so it stays correct
+# if the runtime source is resized. Original canonical source: 1448 x 1086.
+const HORSE_VISIBLE_HEIGHT_TEXTURE_RATIO := 1039.0 / 1086.0
+const HORSE_FOOT_ANCHOR_TEXTURE_RATIO := 1055.0 / 1086.0
 
 @onready var background: Sprite2D = $Background
 @onready var horse_root: Node2D = $HorseRoot
@@ -15,18 +35,19 @@ const PLAYFIELD_Y_MAX_RATIO := 0.92
 var is_night := false
 var mouse_dragging := false
 
+# Persist movement in normalized screen/depth coordinates so resize/fold changes
+# do not destroy the world position.
+var horse_x_ratio := 0.5
+var horse_depth_t := 0.28
+
 
 func _ready() -> void:
 	get_viewport().size_changed.connect(_layout_scene)
 	_load_texture_if_available(background, FARM_DAY)
 	_load_texture_if_available(horse_master, HORSE_MASTER)
+	_configure_horse_foot_anchor()
 	_layout_scene()
-	_place_horse_initially()
-	_apply_depth_scale()
-
-
-func _process(_delta: float) -> void:
-	_apply_depth_scale()
+	_apply_perspective()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -61,6 +82,23 @@ func _load_texture_if_available(target: Sprite2D, path: String) -> void:
 		push_warning("Runtime-Asset fehlt: %s" % path)
 
 
+func _configure_horse_foot_anchor() -> void:
+	if horse_master.texture == null:
+		return
+
+	var texture_size := horse_master.texture.get_size()
+	var foot_y := texture_size.y * HORSE_FOOT_ANCHOR_TEXTURE_RATIO
+
+	# Keep the visual centered horizontally, but move its pivot vertically
+	# from the image centre to the actual hoof/ground contact.
+	horse_master.centered = true
+	horse_master.position = Vector2.ZERO
+	horse_master.offset = Vector2(
+		0.0,
+		texture_size.y * 0.5 - foot_y
+	)
+
+
 func show_day() -> void:
 	is_night = false
 	_load_texture_if_available(background, FARM_DAY)
@@ -80,19 +118,27 @@ func set_horse_facing_right(facing_right: bool) -> void:
 
 func set_horse_position(new_position: Vector2) -> void:
 	var size := get_viewport_rect().size
-	var min_y := size.y * PLAYFIELD_Y_MIN_RATIO
-	var max_y := size.y * PLAYFIELD_Y_MAX_RATIO
+	if size.x <= 0.0 or size.y <= 0.0:
+		return
 
-	horse_root.position = Vector2(
-		clampf(new_position.x, 0.0, size.x),
-		clampf(new_position.y, min_y, max_y)
+	var min_y := size.y * GROUND_BACK_TOUCH_Y_RATIO
+	var max_y := size.y * GROUND_FRONT_TOUCH_Y_RATIO
+	var clamped_x := clampf(new_position.x, 0.0, size.x)
+	var clamped_y := clampf(new_position.y, min_y, max_y)
+
+	horse_x_ratio = clamped_x / size.x
+	horse_depth_t = clampf(
+		inverse_lerp(min_y, max_y, clamped_y),
+		0.0,
+		1.0
 	)
-	_apply_depth_scale()
+	_apply_perspective()
 
 
 func _move_horse_to(target_position: Vector2) -> void:
-	if absf(target_position.x - horse_root.position.x) > 1.0:
-		set_horse_facing_right(target_position.x > horse_root.position.x)
+	var current_x := horse_root.position.x
+	if absf(target_position.x - current_x) > 1.0:
+		set_horse_facing_right(target_position.x > current_x)
 	set_horse_position(target_position)
 
 
@@ -109,22 +155,48 @@ func _layout_scene() -> void:
 			)
 			background.scale = Vector2.ONE * cover_scale
 
-	if horse_root.position != Vector2.ZERO:
-		set_horse_position(horse_root.position)
+	_apply_perspective()
 
 
-func _place_horse_initially() -> void:
+func _apply_perspective() -> void:
 	var size := get_viewport_rect().size
-	if horse_root.position == Vector2.ZERO:
-		set_horse_position(Vector2(size.x * 0.5, size.y * 0.68))
+	if size.x <= 0.0 or size.y <= 0.0:
+		return
 
+	# Move linearly in world depth, not linearly in sprite scale.
+	# Perspective itself then naturally grows non-linearly as Z approaches camera.
+	var distance_m := lerpf(FAR_DISTANCE_M, NEAR_DISTANCE_M, horse_depth_t)
+	var inverse_depth_gain := FAR_DISTANCE_M / maxf(distance_m, 0.01)
 
-func _apply_depth_scale() -> void:
-	var size := get_viewport_rect().size
-	var min_y := size.y * PLAYFIELD_Y_MIN_RATIO
-	var max_y := maxf(size.y * PLAYFIELD_Y_MAX_RATIO, min_y + 1.0)
-	var depth_t := clampf(inverse_lerp(min_y, max_y, horse_root.position.y), 0.0, 1.0)
-	var depth_scale := lerpf(0.75, 1.25, depth_t)
+	# Ground-plane projection. At FAR_DISTANCE the hoof sits exactly on the
+	# calibrated rear edge of the playable dirt. Closer distances push the
+	# projected hoof point downward and eventually below the screen.
+	var foot_delta_from_horizon := (
+		FAR_PROJECTED_FOOT_Y_RATIO - PERSPECTIVE_HORIZON_Y_RATIO
+	) * inverse_depth_gain
+	var projected_foot_y_ratio := (
+		PERSPECTIVE_HORIZON_Y_RATIO + foot_delta_from_horizon
+	)
 
-	horse_root.scale = Vector2.ONE * HORSE_BASE_SCALE * depth_scale
-	horse_root.z_index = int(round(horse_root.position.y))
+	# For a vertical object on a flat plane:
+	# projected_height / (foot_y - horizon_y) ~= object_height / camera_height.
+	var projected_horse_height_ratio := (
+		HORSE_WORLD_HEIGHT_M / CAMERA_HEIGHT_M
+	) * maxf(foot_delta_from_horizon, 0.001)
+
+	var visible_source_height := 1.0
+	if horse_master.texture != null:
+		visible_source_height = maxf(
+			horse_master.texture.get_height() * HORSE_VISIBLE_HEIGHT_TEXTURE_RATIO,
+			1.0
+		)
+
+	var target_horse_height_px := size.y * projected_horse_height_ratio
+	var visual_scale := target_horse_height_px / visible_source_height
+
+	horse_root.position = Vector2(
+		size.x * horse_x_ratio,
+		size.y * projected_foot_y_ratio
+	)
+	horse_root.scale = Vector2.ONE * visual_scale
+	horse_root.z_index = int(round(horse_depth_t * 100.0))
