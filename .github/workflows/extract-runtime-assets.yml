@@ -27,6 +27,9 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install image conversion dependency
+        run: python -m pip install --disable-pip-version-check pillow
+
       - name: Extract exact canonical assets
         run: python tools/extract_runtime_assets.py
 
