@@ -1,0 +1,93 @@
+name: Calibrate first front leg
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/calibrate-first-front-leg.yml"
+  workflow_dispatch:
+
+jobs:
+  calibrate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install CV dependency
+        run: python -m pip install --disable-pip-version-check opencv-python-headless numpy
+      - name: Match left front-sheet chain to master pose
+        shell: bash
+        run: |
+          python - <<'PY'
+          import cv2, numpy as np, math
+          from pathlib import Path
+
+          master = cv2.imread("assets/horse/horse_master_standing_v01.png", cv2.IMREAD_UNCHANGED)
+          sheet = cv2.imread("assets/horse/rig/horse_front_legs_segments_sheet_v01.png", cv2.IMREAD_UNCHANGED)
+          assert master is not None and sheet is not None
+          assert sheet.shape[1] == 1122 and sheet.shape[0] == 1402
+
+          boxes = {
+              "upper": (183, 32, 361, 608),
+              "lower": (208, 651, 171, 330),
+              "hoof":  (240, 1000, 222, 305),
+          }
+          anchors = {
+              "upper": {"top": (200.250, 28.076), "bottom": (147.435, 578.582)},
+              "lower": {"top": (88.709, 16.818), "bottom": (64.355, 314.993)},
+              "hoof":  {"top": (43.641, 14.082), "bottom": (142.117, 291.115)},
+          }
+
+          def gray_rgba(im):
+              if im.shape[2] == 4:
+                  rgb = im[:, :, :3]
+              else:
+                  rgb = im
+              return cv2.cvtColor(rgb, cv2.COLOR_BGR2GRAY)
+
+          master_gray = gray_rgba(master)
+          sift = cv2.SIFT_create(nfeatures=10000)
+          km, dm = sift.detectAndCompute(master_gray, None)
+          assert dm is not None and len(km) > 50
+          bf = cv2.BFMatcher(cv2.NORM_L2)
+
+          print("MASTER_SIZE", master.shape[1], master.shape[0])
+          for name, (x,y,w,h) in boxes.items():
+              crop = sheet[y:y+h, x:x+w]
+              alpha = crop[:, :, 3] if crop.shape[2] == 4 else np.full((h,w),255,np.uint8)
+              mask = np.where(alpha >= 16, 255, 0).astype(np.uint8)
+              g = gray_rgba(crop)
+              kc, dc = sift.detectAndCompute(g, mask)
+              if dc is None:
+                  print(name.upper(), "NO_DESCRIPTORS")
+                  continue
+              pairs = bf.knnMatch(dc, dm, k=2)
+              good = [a for a,b in pairs if a.distance < 0.72*b.distance]
+              print(name.upper(), "KEYPOINTS", len(kc), "GOOD", len(good))
+              if len(good) < 6:
+                  continue
+              src = np.float32([kc[m.queryIdx].pt for m in good]).reshape(-1,1,2)
+              dst = np.float32([km[m.trainIdx].pt for m in good]).reshape(-1,1,2)
+              M, inliers = cv2.estimateAffinePartial2D(src, dst, method=cv2.RANSAC, ransacReprojThreshold=4.0, maxIters=10000, confidence=0.999)
+              if M is None:
+                  print(name.upper(), "NO_AFFINE")
+                  continue
+              nin = int(inliers.sum()) if inliers is not None else 0
+              a,b,tx = M[0]
+              c,d,ty = M[1]
+              scale = math.sqrt(a*a + c*c)
+              rot = math.degrees(math.atan2(c,a))
+              pred = cv2.transform(src, M)
+              err = np.linalg.norm((pred-dst).reshape(-1,2), axis=1)
+              if inliers is not None:
+                  e = err[inliers.ravel().astype(bool)]
+              else:
+                  e = err
+              rms = float(np.sqrt(np.mean(e*e))) if len(e) else float("nan")
+              print(name.upper(), "AFFINE", *[f"{v:.9f}" for v in M.flatten()])
+              print(name.upper(), "SCALE", f"{scale:.9f}", "ROT_DEG", f"{rot:.6f}", "INLIERS", nin, "RMS", f"{rms:.4f}")
+              for an, p in anchors[name].items():
+                  q = M @ np.array([p[0], p[1], 1.0])
+                  print(name.upper(), an.upper(), f"{q[0]:.3f}", f"{q[1]:.3f}")
+          PY
