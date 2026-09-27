@@ -146,7 +146,7 @@ Stand auf `main`:
 - `scripts/main.gd` angelegt
 - Einstiegsszene in `project.godot` registriert
 - Canon-Tagfarm, Canon-Nachtfarm und Master-Pferd liegen in den echten `assets/...`-Runtime-Pfaden
-- horizontales Spiegeln des Master-Pferds ist als RIGHT = Original / LEFT = Flip aktiv
+- das sichtbare Farm-Pferd ist das vollständige Cutout-Rig; RIGHT = Original und LEFT = Spiegelung des gesamten äußeren `HorseVisual`-Containers
 - Hufpunkt statt Bildmitte ist der Bodenanker
 - perspektivische 1/Z-Skalierung ist aktiv und auf den realen Fold-Screenshot kalibriert
 - extreme Kameranähe schneidet Unterkörper/Beine natürlich am unteren Viewport ab
@@ -154,12 +154,12 @@ Stand auf `main`:
 - Heuballen links und rechter Unterstand/Balken können nicht mehr optisch als schwebende Standfläche benutzt werden
 - Godot-4.3-Headless-Validierung läuft in GitHub Actions
 - Android-Debug-APK wird automatisiert gebaut
-- separate Rig-Testszene `scenes/horse_cutout_rig.tscn` angelegt; Farm-/Perspektivsystem bleibt dabei unangetastet
+- `scenes/horse_cutout_rig.tscn` ist als PackedScene in die Farm integriert; das bestehende Farm-/Perspektivsystem bleibt dabei mathematisch unverändert
 - Körper, oberer Kopf, Unterkiefer und Schweif sind aus den unveränderten bestätigten Runtime-Assets statisch montiert
 - alle vier Beine sind vollständig als `Upper → LowerPivot → Lower → HoofPivot → Hoof` montiert; insgesamt sind damit alle 12 Beinsegmente angebunden
 - vollständige statische Pferdefigur wurde in Schritt 6 gegen die Master-Pose geprüft; einzige nötige Transformkorrektur war die Ruhe-Rotation von `JawPivot` von ursprünglich `-14°` über einen kontrollierten Zwischenstand `-17°` auf final `-19°`
 - Body, Tail, HeadPivot/HeadUpper sowie alle vier Bein-Roots, Pivotwerte, Scales und Layer blieben in Schritt 6 unverändert
-- minimaler Jaw-Test, minimale HeadPivot-Kopfrotation, primitive TailPivot-Schweifrotation und erster bewusst billiger Walk-Test sind in der Standalone-Rig-Szene aktiv; Farm-Integration bleibt weiterhin unbegonnen
+- minimaler Jaw-Test, minimale HeadPivot-Kopfrotation, primitive TailPivot-Schweifrotation und erster bewusst billiger Walk-Test laufen jetzt im integrierten Farm-Rig; Bodenanker, Perspektive, LEFT/RIGHT, Drag/Touch, Hindernisgrenzen und World-Z sind validiert
 
 ## Technischer Test-Meilenstein — erster Android-Build
 
@@ -981,19 +981,37 @@ Damit ist **Schritt 10 abgeschlossen**.
 
 Es wurde ausdrücklich **keine Farm-Integration** begonnen.
 
+## Farm-Meilenstein — Cutout-Rig in bestehende Farm integriert
+
+Schritt 11 wurde am 2026-09-27 technisch abgeschlossen.
+
+- ursprünglicher sichtbarer Node: `HorseRoot/HorseMaster` (`Sprite2D`)
+- neuer sichtbarer Pfad:
+  `HorseRoot/HorseVisual/RigSpace/HorseCutoutRig`
+- Ground-Anchor-Offset: `(0, -516.7995)`
+- fester Rig-Integrationsscale: `0.701686`
+- die bestehende kalibrierte 1/Z-Perspektivformel bleibt unverändert auf `HorseRoot`
+- RIGHT/LEFT wird ausschließlich durch X-Spiegelung des gesamten `HorseVisual` umgesetzt
+- Touch/Drag, Hindernisgrenzen, extreme Kameranähe und World-Z wurden unter Godot 4.3 Runtime-validiert
+- sechs echte Farm-Runtime-Previewfälle FAR/MID/NEAR × RIGHT/LEFT wurden geprüft
+- `horse_cutout_rig.tscn` blieb bytegenau unverändert gegenüber Step 10:
+  SHA-256 `328edf3d34090b08f4e729c690f04c36ad3f69f4d9d6813145bf73f9315cf96e`
+- finaler Runtime-Commit:
+  `bfba37dbc058de129e2f2605a015241ae6bca2e7`
+- finaler Validierungs-Run: `36354264467` — **success**
+- Android Debug Export: **success**
+- Step-11-APK SHA-256:
+  `782dfed3cb22d7fd38ad52f9402cacacc75a60de86b4be08465266097c4be4de`
+- Detailaudit: `docs/FARM_RIG_INTEGRATION.md`
+
 ## Aktuell nächste technische Aufgabe
 
-Erst nach ausdrücklichem `weiter` folgt **Schritt 11: Cutout-Rig in die bestehende Farm integrieren**.
+Erst nach ausdrücklichem `weiter` folgt **Schritt 12: Android-Gerätetest auf dem
+Samsung Galaxy Z Fold7 / Android 16**.
 
-Dabei muss das bisherige starre Master-Pferd ersetzt werden, während zwingend erhalten bleiben:
+Auf echtem Gerät werden dann ausschließlich Integration und Darstellung geprüft:
+extreme Kameranähe, Touch/Drag, Richtungswechsel, Walk-Lesbarkeit, Tail, Jaw/Head,
+Bodenanker, Perspektivscale, Performance und mögliche Segmentlücken.
 
-- bestehende kalibrierte 1/Z-Perspektivskalierung
-- Huf-/Bodenkontakt als Bodenanker
-- Y-basierte Z-Sortierung
-- Hindernisgrenzen
-- Drag-/Touch-Steuerung
-- extreme Kameranähe
-- RIGHT = Original
-- LEFT = horizontale Spiegelung des **gesamten** fertigen Rigs
-
-Die Farm-/Perspektivlogik darf für diese Integration nicht neu erfunden werden.
+Noch **nicht** automatisch beginnen: State-Machine, bewegungsabhängiges Walk,
+sprechabhängiger Jaw, Steve, Sound oder weiteres Gameplay.

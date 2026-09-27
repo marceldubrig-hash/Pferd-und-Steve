@@ -443,3 +443,73 @@ auf einen Rig-/Animationsfehler und keine Runtime-Datei wird zurückgerollt.
 
 Nächster Schritt: nur diesen Regex im temporären Validator korrigieren, separat
 committen und denselben finalen Workflow erneut laufen lassen.
+
+
+### 11K — finaler erfolgreicher Validierungslauf
+
+Kleinster Prüfwerkzeug-Fix:
+
+- `3ca42b5cec6e214aea1f7e44b2d51ed13e90f954` — `Fix final validator track regex`
+
+Danach lief derselbe finale Workflow vollständig grün:
+
+- Workflow-Run: `36354264467` — **success**
+- Ergebnis-Commit: `ea48f6f6b2110a7982528366c6fe8e6715cfcc2f`
+- Asset-Materializer: **success**, bestätigte Rig-Assets unverändert
+- `horse_cutout_rig.tscn` SHA-256:
+  `328edf3d34090b08f4e729c690f04c36ad3f69f4d9d6813145bf73f9315cf96e`
+  — exakt unverändert gegenüber Step 10
+- Walk: exakt 15 Tracks + 15 RESET-Tracks
+- Jaw-/Head-/Tail-/Walk-Zeiten und -Werte: unverändert
+- alle drei AnimationPlayer im instanziierten Farm-Rig: vorhanden
+- `main.tscn`: lädt unter Godot 4.3
+- `HorseMaster`: weder Scene-Node noch Script-Referenz vorhanden
+- Perspektive/World-Z/Input-/Grenzpfade: vorhanden und Runtime-geprüft
+- LEFT/RIGHT auf Gesamt-`HorseVisual`: Runtime **success**
+- `RigSpace.scale = (0.701686, 0.701686)`: Runtime **success**
+- Ground-Anchor-Offset `(0, -516.7995)`: Runtime **success**
+- Godot 4.3 Headless: **success**
+- Android Debug Export: **success**
+- finale Step-11-APK SHA-256:
+  `782dfed3cb22d7fd38ad52f9402cacacc75a60de86b4be08465266097c4be4de`
+
+Der finale Runtime-Commit bleibt
+`bfba37dbc058de129e2f2605a015241ae6bca2e7`
+(`Replace farm master horse with cutout rig`). Alle danach folgenden Änderungen
+betreffen ausschließlich Prüfwerkzeuge, Nachweise und Dokumentation.
+
+## 11L — abgeschlossener Integrationsstand vor Cleanup
+
+Finale Runtime-Hierarchie:
+
+`HorseRoot`
+→ `HorseVisual`
+→ `RigSpace`
+→ `HorseCutoutRig`.
+
+Verbindliche Integrationswerte:
+
+- Farm-Weltposition: weiterhin ausschließlich `HorseRoot.position`
+- 1/Z-Perspektivscale: weiterhin ausschließlich `HorseRoot.scale`
+- World-Z: weiterhin `round(depth_t × 100)`
+- fester Cutout-Basisscale: `RigSpace.scale = 0.701686`
+- Ground-Anchor: `HorseCutoutRig.position.y = -516.7995`
+- RIGHT: `HorseVisual.scale.x = +1`
+- LEFT: `HorseVisual.scale.x = -1`
+- Drag/Touch: bestehender `_unhandled_input → _move_horse_to → set_horse_position`-Pfad
+- Hindernisgrenzen: bestehende mathematische Farmgrenzen unverändert
+- interne Rig-Layer: Near/Far/Head/Tail unverändert
+- Jaw/Head/Tail/Walk: unverändert, Autoplay für ersten Farm-Test weiterhin aktiv
+
+Nicht verändert wurden insbesondere:
+
+- Perspektivkonstanten und 1/Z-Modell
+- Hindernis-X-Bereiche und Bodenlinien
+- Farm-Hintergrundassets
+- alle Pferde-Bildassets und Atlas-Regions
+- sämtliche Bein-Pivots und statischen Rig-Transforms
+- Jaw-/Head-/Tail-/Walk-Keyframes
+
+Schritt 11M entfernt jetzt nur noch die temporären Preview-, Probe- und
+Validierungsdateien. Die hier dokumentierten Ergebnisse bleiben danach die dauerhafte
+Auditspur.
