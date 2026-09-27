@@ -48,13 +48,17 @@ Komposition:
 
 ## Pseudo-3D
 
-Reines 2D.
+Reines 2D mit perspektivischer Projektion.
 
-- weiter unten/vorne = größer
-- weiter oben/hinten = kleiner
-- grobe Zielwerte: vorne 115–130 %, Mitte 100 %, hinten 70–85 %
-- später Y-basierte Z-Sortierung
-- Schatten kann mitskalieren
+- weiter unten/vorne = deutlich größer
+- weiter oben/hinten = kleiner, aber weiterhin klar lesbar
+- Größe wird nicht mehr linear geschätzt, sondern aus einer kalibrierten 1/Z-Perspektive abgeleitet
+- Huf-/Bodenkontakt ist der vertikale Sprite-Anker
+- direkt vor der Kamera darf der Hufpunkt unterhalb des Viewports liegen; dadurch bleiben nur Kopf/Hals/Oberkörper sichtbar
+- Y-basierte Z-Sortierung ist aktiv
+- die hintere begehbare Bodengrenze ist ortsabhängig: Heuballen links und rechter Unterstand drücken das Pferd nach vorne, statt es optisch auf Hindernissen stehen zu lassen
+- Details siehe `docs/PERSPECTIVE_MODEL.md`
+- Schatten kann später mitskalieren
 
 ## Pferd — verbindliche Regeln
 
@@ -141,12 +145,15 @@ Stand auf `main`:
 - `scenes/main.tscn` als Einstiegsszene angelegt
 - `scripts/main.gd` angelegt
 - Einstiegsszene in `project.godot` registriert
-- Testcontroller kennt bereits die verbindlichen Runtime-Pfade für Tag-Farm, Nacht-Farm und Master-Pferd
-- horizontales Spiegeln des Master-Pferds ist als RIGHT = Original / LEFT = Flip vorbereitet
-- Y-basierte Skalierung ist mit 70 % hinten bis 130 % vorne vorbereitet
-- fehlende Runtime-Bilder führen nur zu Warnungen und nicht zu einem absichtlichen Neudesign
-
-Die bestätigten Binär-Assets liegen derzeit weiterhin in versionierten ZIP-Paketen unter `asset_packs/`. Sie sind noch nicht als einzelne PNG-Dateien in die verbindlichen `assets/...`-Runtime-Pfade entpackt.
+- Canon-Tagfarm, Canon-Nachtfarm und Master-Pferd liegen in den echten `assets/...`-Runtime-Pfaden
+- horizontales Spiegeln des Master-Pferds ist als RIGHT = Original / LEFT = Flip aktiv
+- Hufpunkt statt Bildmitte ist der Bodenanker
+- perspektivische 1/Z-Skalierung ist aktiv und auf den realen Fold-Screenshot kalibriert
+- extreme Kameranähe schneidet Unterkörper/Beine natürlich am unteren Viewport ab
+- die hintere Bodenlinie ist als physische, X-abhängige Laufgrenze modelliert
+- Heuballen links und rechter Unterstand/Balken können nicht mehr optisch als schwebende Standfläche benutzt werden
+- Godot-4.3-Headless-Validierung läuft in GitHub Actions
+- Android-Debug-APK wird automatisiert gebaut
 
 ## Technischer Test-Meilenstein — erster Android-Build
 
@@ -169,15 +176,32 @@ Erreicht am 2026-09-27:
 - Lokaler Prüfsummenwert des heruntergeladenen Test-APK: `SHA-256 3e59b18f166e88be0853922115230080f3ab1f2ed6590e8262440d878c99ee4a`
 - APK-Archivprüfung: keine ZIP-/Kompressionsfehler; die drei Canon-Texturen und die Hauptszene sind im APK enthalten.
 
+## Test-Meilenstein — Perspektive und physische Hofgrenzen
+
+Vom Nutzer auf dem Fold bestätigt:
+
+- Nah-/Fernskalierung wirkt jetzt überzeugend.
+- Sehr nah an der Kamera ist die massive Vordergrunddarstellung ausdrücklich erwünscht.
+- Die Größe im hinteren Hofbereich ist passend.
+- Problem aus dem Gerätetest: an Heuballen links und am rechten Unterstand/Balken konnte das Pferd noch optisch schweben.
+
+Korrektur abgeschlossen:
+
+- offene hintere Hoffläche bleibt bei ca. `y = 0,565 × Bildschirmhöhe`
+- Heuballen- und Unterstandgrenzen wurden aus den ausgewählten 1536×1384-Testbildern auf ca. `y = 0,585 × Bildschirmhöhe` kalibriert
+- zu den äußeren Bildrändern läuft die Grenze weich bis ca. `0,600` nach vorne
+- unerlaubte Zielpunkte werden auf den nächstliegenden legalen Bodenpunkt vor dem Hindernis projiziert
+- Godot-Validierung: erfolgreich
+- Android-Build-Run `36325845081`: erfolgreich
+- Code-Basis der Grenzkorrektur: `d5d3ff9ca32968f035d304176668eb2a326578ad`
+
 ## Aktuell nächste technische Aufgabe
 
-Zuerst den ersten Android-Build auf dem realen Testgerät prüfen. Dabei ausschließlich diese Basisfunktionen kontrollieren:
+Den neuen Grenz-Build auf dem Fold nur an den kritischen Stellen prüfen:
 
-1. App startet ohne Absturz.
-2. Tag-Farm wird korrekt dargestellt.
-3. Master-Pferd steht sichtbar auf dem Hof.
-4. Touch/Drag bewegt das Pferd.
-5. Beim Wechsel nach links/rechts wird nur horizontal gespiegelt.
-6. Beim Verschieben nach oben/unten wird das Pferd plausibel kleiner/größer.
+1. direkt vor den Heuballen links
+2. am linken Scheunenrand
+3. vor dem rechten Unterstand/Balken
+4. vom freien hinteren Hof seitlich in diese Bereiche ziehen
 
-Erst wenn diese Basis bestätigt oder gezielt korrigiert wurde, wird das eigentliche Cutout-Rig aus Kopf, Unterkiefer, Schweif und Beinsegmenten eingebaut.
+Wenn dort kein Schweben/Stehen auf Objekten mehr auftritt, ist die Grundbewegung der Farm bestätigt. Danach beginnt als nächster abgeschlossener Schritt das eigentliche Cutout-Rig aus Körper, oberem Kopf, Unterkiefer, Schweif und Beinsegmenten.
