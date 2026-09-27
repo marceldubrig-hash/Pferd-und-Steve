@@ -9,6 +9,7 @@ on:
       - "tools/audit_rig_source_assets.py"
       - "asset_packs/Pferd-und-Steve-source-core-v01.zip"
       - "asset_packs/Pferd-und-Steve-source-head-core-v01.zip"
+      - "asset_packs/Pferd-und-Steve-source-rig-missing-v01.zip"
 
 permissions:
   contents: read
