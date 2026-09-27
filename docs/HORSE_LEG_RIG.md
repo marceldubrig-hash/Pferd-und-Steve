@@ -541,3 +541,318 @@ Damit ist **Schritt 5 abgeschlossen**: alle vier Beine und alle zwölf Beinsegme
 ## Nächster technischer Schritt
 
 **Schritt 6:** vollständige statische Pferdefigur gegen die Master-Pose prüfen. Dabei dürfen ausschließlich Node-Transforms/Pivots korrigiert werden. Keine Asset-Neugenerierung und noch keine Animation.
+
+
+## Schritt 10 — erster bewusst billiger Walk-Test
+
+Abgeschlossen am 2026-09-27.
+
+### Ausgangsbasis
+
+Schritt 10 startete direkt vom vollständig bereinigten Step-9-HEAD:
+
+- Ausgangs-HEAD: `5026bc227da6dde89a8097226fe0a23988818160`
+- alle vier Beine waren weiterhin in ihren bestätigten statischen Positionen
+- sämtliche statischen Root-, LowerPivot-, HoofPivot-, Scale- und Layerwerte blieben unverändert
+- bestehende Jaw-, Head- und Tail-Animationen blieben unverändert
+
+Für den Walk wurde ein eigener dritter AnimationPlayer ergänzt:
+
+- Node: `WalkAnimationPlayer`
+- Animation: `walk_test`
+- Autoplay: aktiv
+- Loop: aktiv
+- Länge: `1.2 s`
+- eigene `RESET`-Animation
+- kein IK
+- keine Physik
+- keine neue Textur
+- keine Segmentspiegelung
+- keine Farm-Integration
+
+### Mini-Schritt 10A — nur Bein-Roots / Upper-Swing
+
+Erster Runtime-Commit:
+
+- `684642a7e87ba86d9ba854a9484a4bf08008c078` — `Add walk root swing test`
+
+Die vier Bein-Roots dienen als proximale/Upper-Pivots. Diagonale Paare bewegen sich grob gegeneinander, bewusst leicht zeitversetzt.
+
+`FrontNear:rotation`:
+
+- Zeiten: `0.00 / 0.28 / 0.58 / 0.88 / 1.20 s`
+- Winkel: `0° / +6° / 0° / -5° / 0°`
+- rad: `0 / 0.10472 / 0 / -0.0872665 / 0`
+
+`HindFar:rotation`:
+
+- Zeiten: `0.00 / 0.34 / 0.64 / 0.94 / 1.20 s`
+- Winkel: `0° / +5° / 0° / -4° / 0°`
+- rad: `0 / 0.0872665 / 0 / -0.0698132 / 0`
+
+`FrontFar:rotation`:
+
+- Zeiten: `0.00 / 0.30 / 0.60 / 0.90 / 1.20 s`
+- Winkel: `0° / -5° / 0° / +6° / 0°`
+- rad: `0 / -0.0872665 / 0 / 0.10472 / 0`
+
+`HindNear:rotation`:
+
+- Zeiten: `0.00 / 0.36 / 0.66 / 0.96 / 1.20 s`
+- Winkel: `0° / -4° / 0° / +5° / 0°`
+- rad: `0 / -0.0698132 / 0 / 0.0872665 / 0`
+
+Technische Prüfung dieses Mini-Schritts:
+
+- Godot-Run `36351220180`: **success**
+- Android-Run `36351220066`: **success**
+- Preview-Workflow-Commit: `a81a01b810613a0024bbbee7f147b3aa52fce608`
+- erster Root-Preview-Commit: `3a044616e50e5bc8f53a03a9ed6c3872032079b3`
+
+Ergebnis: Die vier Root-Pivots funktionieren als primitive Walk-Basis. Kein Gelenk riss auf, aber die Ketten wirkten erwartbar noch sehr steif.
+
+### Mini-Schritt 10B — LowerPivot-Gegenbewegung
+
+Runtime-Commit:
+
+- `68dfdc73268568a36875344e45f911cf1aac7d56` — `Add lower leg counter swing`
+
+Die LowerPivots rotieren gegen die jeweilige Root-Bewegung:
+
+`FrontNear/Upper/LowerPivot:rotation`:
+
+- Zeiten wie FrontNear Root
+- Winkel: `0° / -8° / 0° / +6° / 0°`
+- rad: `0 / -0.139626 / 0 / 0.10472 / 0`
+
+`HindFar/Upper/LowerPivot:rotation`:
+
+- Zeiten wie HindFar Root
+- Winkel: `0° / -6° / 0° / +5° / 0°`
+- rad: `0 / -0.10472 / 0 / 0.0872665 / 0`
+
+`FrontFar/Upper/LowerPivot:rotation`:
+
+- Zeiten wie FrontFar Root
+- Winkel: `0° / +6° / 0° / -8° / 0°`
+- rad: `0 / 0.10472 / 0 / -0.139626 / 0`
+
+`HindNear/Upper/LowerPivot:rotation`:
+
+- Zeiten wie HindNear Root
+- Winkel: `0° / +5° / 0° / -6° / 0°`
+- rad: `0 / 0.0872665 / 0 / -0.10472 / 0`
+
+Prüfung:
+
+- Godot-Run `36351413903`: **success**
+- Android-Run `36351413823`: **success**
+- Preview-Run `36351413951`: **success**
+- Preview-Ergebnis: `8b4d492ba4ba8b5d3983d5b937ecf84154c0158f`
+
+Ergebnis: Die Lower-Gegenbewegung reduziert die reine „starre Stange“-Optik, ohne Segmentlücken zu erzeugen. Der Bereich wurde ohne Korrektur übernommen.
+
+### Mini-Schritt 10C — HoofPivot-Gegenrotation
+
+Runtime-Commit:
+
+- `a659d41dfe39cc46cf40955047225db249a852a6` — `Add hoof counter rotation`
+
+Die Hufrotation bleibt absichtlich kleiner als Root und Lower:
+
+`FrontNear/.../HoofPivot:rotation`:
+
+- Zeiten wie FrontNear Root
+- Winkel: `0° / +4° / 0° / -3° / 0°`
+- rad: `0 / 0.0698132 / 0 / -0.0523599 / 0`
+
+`HindFar/.../HoofPivot:rotation`:
+
+- Zeiten wie HindFar Root
+- Winkel: `0° / +3° / 0° / -2° / 0°`
+- rad: `0 / 0.0523599 / 0 / -0.0349066 / 0`
+
+`FrontFar/.../HoofPivot:rotation`:
+
+- Zeiten wie FrontFar Root
+- Winkel: `0° / -3° / 0° / +4° / 0°`
+- rad: `0 / -0.0523599 / 0 / 0.0698132 / 0`
+
+`HindNear/.../HoofPivot:rotation`:
+
+- Zeiten wie HindNear Root
+- Winkel: `0° / -2° / 0° / +3° / 0°`
+- rad: `0 / -0.0349066 / 0 / 0.0523599 / 0`
+
+Prüfung:
+
+- Godot-Run `36351496241`: **success**
+- Android-Run `36351496218`: **success**
+- Preview-Run `36351496246`: **success**
+- Preview-Ergebnis: `d362cbf3372277d75756a6fd1e7e0103c08259d2`
+
+Ergebnis: Die Hufe wirken nicht mehr vollständig starr an den Lower-Segmenten, bleiben aber deutlich im absichtlich billigen Cutout-Stil.
+
+### Mini-Schritt 10D — kleiner Torso-Bob
+
+Damit der Walk nicht ausschließlich aus Beinrotation besteht, wurde ein sehr kleiner vertikaler Bob ergänzt.
+
+Wichtig: **Der Rig-Root selbst wird nicht animiert.**
+
+Dadurch bleibt die spätere Farm-/Perspektivpositionierung frei von einem konkurrierenden Walk-Positionstrack.
+
+Stattdessen bewegen sich gemeinsam:
+
+- `Body:position`
+- `HeadPivot:position`
+- `TailPivot:position`
+
+Zeiten für alle drei:
+
+- `0.00 / 0.30 / 0.60 / 0.90 / 1.20 s`
+
+Gemeinsame Y-Deltas gegenüber der bestätigten Ruheposition:
+
+- `0 px / -3 px / +2 px / -2 px / 0 px`
+
+Body:
+
+- `(-76.5412, -101.756)`
+- `(-76.5412, -104.756)`
+- `(-76.5412, -99.756)`
+- `(-76.5412, -103.756)`
+- `(-76.5412, -101.756)`
+
+HeadPivot:
+
+- `(321.171, -194.253)`
+- `(321.171, -197.253)`
+- `(321.171, -192.253)`
+- `(321.171, -196.253)`
+- `(321.171, -194.253)`
+
+TailPivot:
+
+- `(-449, -198)`
+- `(-449, -201)`
+- `(-449, -196)`
+- `(-449, -200)`
+- `(-449, -198)`
+
+Runtime-Commit:
+
+- `bfa96169aae7e1b852a5e0c6133b8e162a8a96d1` — `Add subtle torso bob to walk test`
+
+Technische Runtime-Prüfung dieses Standes:
+
+- Godot-Run `36351647437`: **success**
+- Android-Run `36351647460`: **success**
+
+### Temporärer Preview-Parser-Fehler — bewusst dokumentiert
+
+Vor dem Torso-Bob wurde das temporäre Preview-Werkzeug separat um Positions-Tracks erweitert:
+
+- `d10aa0f2123cd1bbb19cce0dcbbd3d46c94b7f18` — `Extend walk preview for position tracks`
+- Verifikations-Preview: `6f3015a0824818b2f4c8eed7271421d155914d75`
+
+Beim ersten Preview des Torso-Bobs schlug nur das Prüfwerkzeug fehl:
+
+- fehlgeschlagener Preview-Run: `36351647438`
+- Godot-Headless innerhalb dieses Runs war **success**
+- Fehler: Der Python-Regex für `Vector2(...)` war eine Ebene zu stark escaped und erkannte deshalb null Positionswerte
+
+Es wurde **keine Runtime-Änderung zurückgerollt oder verändert**.
+
+Kleinster möglicher Prüfwerkzeug-Fix:
+
+- `d0d3d261c032d7adcef1a55393906034172f6185` — `Fix walk preview Vector2 parser`
+
+Danach:
+
+- korrigierter Preview-Run: `36351702096` — **success**
+- finaler Preview-Ergebnis-Commit: `9b74b73e3229c596aeb13d15c43e8538da06c099`
+
+Die finale Preview bestätigt:
+
+- alle Gelenke bleiben geschlossen
+- keine neue transparente Segmentlücke
+- Root-, Lower- und Hoof-Rotationen sind als simple Puppenbewegung lesbar
+- der Torso-Bob bleibt klein
+- kein Rig-Root-Gleiten wurde eingebaut
+- keine Winkel-/Timing-Korrektur war nach der finalen visuellen Prüfung nötig
+
+### Finale Step-10-Struktur
+
+`WalkAnimationPlayer / walk_test` enthält exakt **15 Tracks**:
+
+- 4 × Bein-Root/Upper-Rotation
+- 4 × LowerPivot-Rotation
+- 4 × HoofPivot-Rotation
+- 3 × Position für Body / HeadPivot / TailPivot
+
+Die separate `RESET`-Animation enthält dieselben 15 Eigenschaften mit ihren bestätigten Ruhewerten.
+
+### Unveränderte statische Rig-Werte
+
+Schritt 10 verändert **keinen** der bestätigten statischen Beinwerte.
+
+Insbesondere unverändert:
+
+- alle vier Bein-Root-Positionen
+- alle vier Bein-Root-Scales
+- Near/Far-`z_index`
+- alle vier Upper-Offsets
+- alle vier LowerPivot-Positionen
+- alle vier Lower-Offsets
+- alle vier HoofPivot-Positionen
+- alle vier Hoof-Offsets
+- HindFar-Sonderwert `LowerPivot = (7.159, 219.652)`
+- HindFar Root `(-262, -77)`
+- alle AtlasTexture-Regions
+- beide Segment-Sheet-Dateien und ihre SHA-256-Werte
+
+### Finale technische Validierung
+
+Finaler Workflow:
+
+- Workflow-Commit: `64aba17d30447a6b15d3ae2f4da013961a4d0651`
+- Workflow-Run: `36351805073` — **success**
+- Ergebnis-Commit: `844f3664edcadcaeac5cefb789f50ac8f1a21e0d`
+
+Bestätigt:
+
+- Asset-Integrität: **success**
+- Godot 4.3 Headless: **success**
+- Runtime-Scene lädt: **success**
+- Step-7-Jaw-Track unverändert: **success**
+- Step-8-Head-Track unverändert: **success**
+- Step-9-Tail-Track unverändert: **success**
+- `WalkAnimationPlayer` vorhanden
+- Autoplay `walk_test`
+- Loop aktiv
+- Länge `1.2 s`
+- Walk-Track-Anzahl: `15`
+- RESET-Track-Anzahl: `15`
+- alle Root-/Lower-/Hoof-Zeiten und Rotationswerte bestätigt
+- alle drei Torso-Positions-Tracks bestätigt
+- statische Standpose-Transforms weiterhin bestätigt
+- Android Debug Export: **success**
+- APK SHA-256: `1f8359f2f6c460b2e3e0fce354148a4ac9b09d8633b83e6468eaba7f7f60e517`
+
+Damit ist **Schritt 10 abgeschlossen**.
+
+## Aktuell nächster technischer Schritt
+
+**Schritt 11:** Erst jetzt darf das bisher starre Master-Pferd in der Farm durch das Cutout-Rig ersetzt werden.
+
+Dabei zwingend erhalten:
+
+- bestehende 1/Z-Perspektivskalierung
+- Huf-/Bodenanker
+- Y-basierte Z-Sortierung
+- Hindernisgrenzen
+- Touch-/Drag-Steuerung
+- RIGHT = Original / LEFT = gesamtes Rig horizontal gespiegelt
+- extreme Kameranähe
+
+Keine dieser Farm-Grundlagen darf für die Rig-Integration neu erfunden werden.
