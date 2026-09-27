@@ -1,0 +1,151 @@
+name: Analyze horse leg sheets
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/analyze-horse-leg-sheets.yml"
+  workflow_dispatch:
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install image analysis dependencies
+        run: python -m pip install --disable-pip-version-check pillow numpy opencv-python-headless
+
+      - name: Analyze confirmed horse leg sheets
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          import cv2
+          import numpy as np
+          from PIL import Image, ImageDraw, ImageFont
+
+          OUT = Path("leg-sheet-analysis")
+          OUT.mkdir(exist_ok=True)
+
+          SHEETS = {
+              "front": Path("assets/horse/rig/horse_front_legs_segments_sheet_v01.png"),
+              "hind": Path("assets/horse/rig/horse_hind_legs_segments_sheet_v01.png"),
+          }
+
+          def checker(size, cell=24):
+              w, h = size
+              arr = np.empty((h, w, 3), dtype=np.uint8)
+              for y in range(h):
+                  for x in range(w):
+                      v = 232 if ((x // cell) + (y // cell)) % 2 == 0 else 202
+                      arr[y, x] = (v, v, v)
+              return Image.fromarray(arr, "RGB")
+
+          def sort_components(comps):
+              # Stable reading order by vertical center, then horizontal center.
+              return sorted(comps, key=lambda c: (c["cy"], c["cx"]))
+
+          all_results = {}
+          for kind, path in SHEETS.items():
+              im = Image.open(path).convert("RGBA")
+              w, h = im.size
+              rgba = np.array(im)
+              alpha = rgba[:, :, 3]
+              mask = (alpha > 0).astype(np.uint8)
+
+              ys, xs = np.nonzero(mask)
+              alpha_bbox = None
+              if len(xs):
+                  alpha_bbox = [int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1]
+
+              count, labels, stats, centroids = cv2.connectedComponentsWithStats(mask, connectivity=8)
+              components = []
+              tiny = []
+              for label in range(1, count):
+                  x, y, cw, ch, area = [int(v) for v in stats[label]]
+                  cx, cy = [float(v) for v in centroids[label]]
+                  item = {
+                      "raw_label": int(label),
+                      "bbox_xywh": [x, y, cw, ch],
+                      "bbox_xyxy_exclusive": [x, y, x + cw, y + ch],
+                      "mask_area_px": area,
+                      "cx": round(cx, 3),
+                      "cy": round(cy, 3),
+                  }
+                  if area >= 200:
+                      components.append(item)
+                  else:
+                      tiny.append(item)
+
+              components = sort_components(components)
+              for i, c in enumerate(components, 1):
+                  c["id"] = f"C{i}"
+
+              nonzero_alpha = alpha[alpha > 0]
+              result = {
+                  "file": str(path),
+                  "native_size_px": [w, h],
+                  "mode": "RGBA",
+                  "alpha_bbox_xyxy_exclusive": alpha_bbox,
+                  "alpha_nonzero_pixels": int(mask.sum()),
+                  "alpha_min_nonzero": int(nonzero_alpha.min()) if nonzero_alpha.size else None,
+                  "alpha_max": int(alpha.max()),
+                  "meaningful_component_count_area_ge_200": len(components),
+                  "tiny_component_count_area_lt_200": len(tiny),
+                  "components": components,
+                  "tiny_components": tiny,
+              }
+              all_results[kind] = result
+
+              # Annotated full-sheet preview.
+              bg = checker(im.size).convert("RGBA")
+              bg.alpha_composite(im)
+              draw = ImageDraw.Draw(bg)
+              font = ImageFont.load_default()
+              for c in components:
+                  x, y, cw, ch = c["bbox_xywh"]
+                  draw.rectangle([x, y, x + cw - 1, y + ch - 1], outline=(255, 0, 0, 255), width=max(3, min(w, h)//300))
+                  draw.rectangle([x, y, x + 54, y + 19], fill=(255, 255, 255, 230))
+                  draw.text((x + 3, y + 3), c["id"], fill=(180, 0, 0, 255), font=font)
+              bg.convert("RGB").save(OUT / f"{kind}_annotated.jpg", quality=88, optimize=True)
+
+              # Component contact sheet using exact alpha boxes.
+              cards = []
+              for c in components:
+                  x1, y1, x2, y2 = c["bbox_xyxy_exclusive"]
+                  crop = im.crop((x1, y1, x2, y2))
+                  max_side = 320
+                  scale = min(max_side / crop.width, max_side / crop.height, 1.0)
+                  resized = crop.resize((max(1, round(crop.width * scale)), max(1, round(crop.height * scale))), Image.Resampling.LANCZOS)
+                  card = checker((360, 390), cell=18).convert("RGBA")
+                  px = (360 - resized.width) // 2
+                  py = 32 + (320 - resized.height) // 2
+                  card.alpha_composite(resized, (px, py))
+                  d = ImageDraw.Draw(card)
+                  d.rectangle([0, 0, 359, 31], fill=(255,255,255,255))
+                  d.text((8, 8), f'{c["id"]}  bbox={c["bbox_xywh"]}  area={c["mask_area_px"]}', fill=(0,0,0,255), font=font)
+                  cards.append(card.convert("RGB"))
+
+              cols = 3
+              rows = max(1, (len(cards) + cols - 1)//cols)
+              sheet = Image.new("RGB", (cols*360, rows*390), "white")
+              for i, card in enumerate(cards):
+                  sheet.paste(card, ((i%cols)*360, (i//cols)*390))
+              sheet.save(OUT / f"{kind}_components.jpg", quality=90, optimize=True)
+
+          (OUT / "leg_sheet_analysis.json").write_text(json.dumps(all_results, indent=2), encoding="utf-8")
+          print(json.dumps(all_results, indent=2))
+          PY
+
+      - name: Upload analysis artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: horse-leg-sheet-analysis
+          path: leg-sheet-analysis/
+          if-no-files-found: error
+          retention-days: 7
