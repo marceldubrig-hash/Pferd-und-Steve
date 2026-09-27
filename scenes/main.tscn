@@ -17,6 +17,7 @@ position = Vector2(640, 360)
 visible = false
 
 [node name="RigSpace" type="Node2D" parent="HorseRoot/HorseVisual"]
+scale = Vector2(0.701686, 0.701686)
 
 [node name="HorseCutoutRig" parent="HorseRoot/HorseVisual/RigSpace" instance=ExtResource("2_cutout")]
 position = Vector2(0, -516.7995)

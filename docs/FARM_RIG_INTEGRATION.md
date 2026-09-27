@@ -146,3 +146,41 @@ folgt vor der separaten Größenanpassung.
 
 Remote-CI der 11B-Instanz zusätzlich bestätigt: Godot-Run `36352833000` **success**,
 Android-Run `36352833014` **success**.
+
+
+## 11D — Perspektiv-Basisscale
+
+Die bestehende 1/Z-Perspektive bleibt vollständig auf `HorseRoot.scale`. Für den
+intern im 1448×1086-Referenzraum montierten Cutout ist nur ein fester,
+tiefenunabhängiger Integrationsfaktor auf `RigSpace` nötig.
+
+Berechnung gegen die bereits kalibrierte sichtbare Masterhöhe:
+
+- bisherige Runtime-Masterhöhe: `768 px`
+- bestehende sichtbare Kalibrierhöhe: `768 × 1039 / 1086 = 734.762430939 px`
+- gemessene Cutout-Höhe vom tiefsten Hufkontakt bis zur robusten Alpha-Oberkante:
+  `1047.138292 px`
+- daraus: `734.762430939 / 1047.138292 = 0.7016861446`
+- gespeicherter Integrationsfaktor: `RigSpace.scale = (0.701686, 0.701686)`
+
+Mit der gespeicherten Rundung ergibt die statische Cutout-Höhe `734.7622795 px`;
+die Abweichung zur bisherigen Kalibrierhöhe beträgt nur rund `0.00015 px` vor dem
+eigentlichen Perspektivscale. Damit bleibt die Farm-Zielhöhe bei jeder Tiefe
+praktisch identisch, ohne die Perspektivformel oder einen Animationstrack anzufassen.
+
+Der reine Referenzraum-Faktor `768/1086 = 0.7071823204` wurde bewusst **nicht**
+blind verwendet: das montierte Cutout misst robust ca. 8.14 Referenzpixel mehr als
+die alte sichtbare Master-Kalibrierhöhe. Der finale Faktor gleicht genau diese
+sichtbare Höhe aus.
+
+Weiterhin unverändert in diesem Mini-Schritt:
+
+- `HorseVisual.visible = false` — Master bleibt noch die sichtbare Runtime-Referenz
+- `HorseRoot.scale` und die komplette 1/Z-Formel
+- Bodenanker-Offset `(0, -516.7995)`
+- LEFT/RIGHT-Logik
+- `scripts/main.gd`
+- alle Rig-Transforms und Animationen
+
+Nächster Prüfpunkt: visueller Alt-vs-Cutout-Vergleich bei ferner, mittlerer und sehr
+naher Tiefe; erst nach erfolgreichem Größenvergleich folgt der Ganzrig-Flip.
