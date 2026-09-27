@@ -370,6 +370,84 @@ Aufbau-Commits:
 
 Damit sind beide Vorderbeine statisch vollständig montiert. Die beiden Hinterbeine bleiben weiterhin untexturiert.
 
+## Schritt 5B — HindNear vollständig montiert
+
+Für das erste Hinterbein wurde zunächst neutral die **linke Hind-Sheet-Spalte** verwendet und erst nach Montagevergleich kanonisiert.
+
+Kette:
+
+`HindNear → Upper → LowerPivot → Lower → HoofPivot → Hoof`
+
+### Texturquelle
+
+Alle drei Segmente verwenden `AtlasTexture` direkt aus dem unveränderten Hind-Sheet:
+
+- Upper: `Rect2(164, 53, 368, 519)`
+- Lower: `Rect2(174, 553, 212, 353)`
+- Hoof: `Rect2(149, 921, 253, 405)`
+- Hind-Sheet SHA-256: `d24aba84e51075cdd1e5c83d12432d2d7a1731c8c9bbb522c2db731bc04744e3`
+
+Keine Einzel-PNGs wurden erzeugt und kein Quellasset verändert.
+
+### Bestätigte Godot-Transforms
+
+`HindNear`:
+
+- Position im Rig-Root: `(-446, -74)`
+- Rotation: `0 rad`
+- Scale: `(0.5, 0.5)`
+- `z_index = 1` — vor dem Body
+
+`Upper`:
+
+- lokaler Offset: `(-20.816, 234.353)`
+- Rotation: `0 rad`
+
+`LowerPivot`:
+
+- lokaler Offset: `(-36.101, 235.597)`
+
+`Lower`:
+
+- lokaler Offset: `(-13.638, 163.241)`
+
+`HoofPivot`:
+
+- lokaler Offset: `(-34.745, 160.511)`
+
+`Hoof`:
+
+- lokaler Offset: `(49.841, 181.998)`
+
+Die Werte sind direkt aus den dokumentierten Top-/Bottom-Ankern der linken Hind-Spalte abgeleitet; die Root-Position wurde gegen Fußhöhe und Master-Silhouette kalibriert.
+
+### Near/Far-Ergebnis
+
+Der kontrollierte Vergleich zeigte dieselbe Kette:
+
+1. vor dem Body
+2. hinter dem Body
+
+Nur **vor dem Body** bleibt die sichtbare äußere Hinterhand-/Oberschenkel-Silhouette der Master-Pose erhalten. Hinter dem Body wird der obere Beinbereich zu stark verdeckt.
+
+Damit ist für das Hind-Sheet bestätigt:
+
+- **linke Sheet-Spalte = HindNear**
+- **rechte Sheet-Spalte = HindFar** (noch nicht montiert)
+
+Die Fußposition der linken Kette trifft die Master-Pose ausreichend genau; keine zusätzliche Root-, Scale- oder Rotationskorrektur wurde nötig.
+
+Aufbau-/Vergleichs-Commits:
+
+- `df117b20506085e454b3895e981cb5f7c392bdbd` — HindLeftColumn Upper
+- `f64db9f829fa5e351e23e0cba10817261d45b904` — Lower
+- `9ee4c7f2297ab96c21794abd597b52544719455e` — Hoof
+- `22ba19c54613815f312548608bb86e899b353968` — Layering-Vorschau
+- `84a8957cf2c1c644d6ba46aab47bfbfcab59f406` — als `HindNear` bestätigt
+- `6e282810862492afb8067ba3b3b20539b660f65c` — Upper-Parent-Pfad nach Umbenennung korrigiert
+
+Damit sind drei von vier Beinen vollständig montiert. `HindFar` bleibt noch untexturiert.
+
 ## Nächster technischer Schritt
 
-Vor dem ersten Hinterbein wird der Zwei-Vorderbein-Stand technisch validiert. Danach folgt **genau ein** Hinterbein als nächste 3-Segment-Kette; Near/Far des Hind-Sheets wird weiterhin nicht geraten.
+Zuerst wird der Drei-Bein-Stand technisch validiert. Danach folgt als letzter Rig-Bein-Schritt ausschließlich `HindFar`.
