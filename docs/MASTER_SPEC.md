@@ -352,10 +352,30 @@ Erreicht am 2026-09-27:
 - beide Hinterbeine bleiben weiterhin untexturiert
 - keine Animation und keine Farm-Integration begonnen
 
+## Rig-Meilenstein — drei von vier Beinen vollständig
+
+Erreicht am 2026-09-27:
+
+- `FrontNear`, `FrontFar` und `HindNear` sind vollständig als 3-Segment-Ketten montiert
+- linke Hind-Sheet-Spalte ist nach kontrolliertem Layervergleich als `HindNear` bestätigt
+- Hind-Sheet SHA-256 bleibt `d24aba84e51075cdd1e5c83d12432d2d7a1731c8c9bbb522c2db731bc04744e3`
+- `HindNear`: Position `(-446, -74)`, Scale `0.5`, `z_index = 1`
+- HindNear Upper: Offset `(-20.816, 234.353)`
+- HindNear LowerPivot: `(-36.101, 235.597)`
+- HindNear Lower: Offset `(-13.638, 163.241)`
+- HindNear HoofPivot: `(-34.745, 160.511)`
+- HindNear Hoof: Offset `(49.841, 181.998)`
+- Parent-Pfad-Korrektur: `6e282810862492afb8067ba3b3b20539b660f65c`
+- Godot 4.3 Headless: **success**
+- Android Debug Export: **success**
+- Test-APK SHA-256: `8b13955688527e79fb3483847694476cbc3c9b825d64a36f142bfa99e44c34f9`
+- `HindFar` bleibt als einziges Bein untexturiert
+- keine Animation und keine Farm-Integration begonnen
+
 ## Aktuell nächste technische Aufgabe
 
 Die bestätigte Farm-/Perspektivgrundlage bleibt unverändert.
 
-Die statischen Cutout-Bausteine **Körper + oberer Kopf + Unterkiefer + Schweif + beide Vorderbeine** sind abgeschlossen und getestet.
+Die statischen Cutout-Bausteine **Körper + oberer Kopf + Unterkiefer + Schweif + FrontNear + FrontFar + HindNear** sind abgeschlossen und getestet.
 
-Als nächster kleiner Schritt wird **genau ein Hinterbein** aus einer vollständigen Hind-Sheet-Spalte montiert und kontrolliert gegen die Master-Pose verglichen. Die Hind-Near/Far-Zuordnung wird dabei weiterhin nicht geraten, sondern erst nach dem Montagevergleich festgeschrieben.
+Als nächster kleiner Schritt folgt ausschließlich das letzte untexturierte Bein **HindFar** aus der rechten Hind-Sheet-Spalte. Danach wird die vollständige statische Vier-Bein-Figur gegen die Master-Pose geprüft.
