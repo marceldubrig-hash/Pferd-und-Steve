@@ -1,0 +1,65 @@
+[gd_scene format=3]
+
+[node name="HorseCutoutRig" type="Node2D"]
+
+[node name="TailPivot" type="Node2D" parent="."]
+
+[node name="Tail" type="Sprite2D" parent="TailPivot"]
+
+[node name="Body" type="Sprite2D" parent="."]
+
+[node name="HindFar" type="Node2D" parent="."]
+
+[node name="Upper" type="Sprite2D" parent="HindFar"]
+
+[node name="LowerPivot" type="Node2D" parent="HindFar/Upper"]
+
+[node name="Lower" type="Sprite2D" parent="HindFar/Upper/LowerPivot"]
+
+[node name="HoofPivot" type="Node2D" parent="HindFar/Upper/LowerPivot/Lower"]
+
+[node name="Hoof" type="Sprite2D" parent="HindFar/Upper/LowerPivot/Lower/HoofPivot"]
+
+[node name="FrontFar" type="Node2D" parent="."]
+
+[node name="Upper" type="Sprite2D" parent="FrontFar"]
+
+[node name="LowerPivot" type="Node2D" parent="FrontFar/Upper"]
+
+[node name="Lower" type="Sprite2D" parent="FrontFar/Upper/LowerPivot"]
+
+[node name="HoofPivot" type="Node2D" parent="FrontFar/Upper/LowerPivot/Lower"]
+
+[node name="Hoof" type="Sprite2D" parent="FrontFar/Upper/LowerPivot/Lower/HoofPivot"]
+
+[node name="HindNear" type="Node2D" parent="."]
+
+[node name="Upper" type="Sprite2D" parent="HindNear"]
+
+[node name="LowerPivot" type="Node2D" parent="HindNear/Upper"]
+
+[node name="Lower" type="Sprite2D" parent="HindNear/Upper/LowerPivot"]
+
+[node name="HoofPivot" type="Node2D" parent="HindNear/Upper/LowerPivot/Lower"]
+
+[node name="Hoof" type="Sprite2D" parent="HindNear/Upper/LowerPivot/Lower/HoofPivot"]
+
+[node name="FrontNear" type="Node2D" parent="."]
+
+[node name="Upper" type="Sprite2D" parent="FrontNear"]
+
+[node name="LowerPivot" type="Node2D" parent="FrontNear/Upper"]
+
+[node name="Lower" type="Sprite2D" parent="FrontNear/Upper/LowerPivot"]
+
+[node name="HoofPivot" type="Node2D" parent="FrontNear/Upper/LowerPivot/Lower"]
+
+[node name="Hoof" type="Sprite2D" parent="FrontNear/Upper/LowerPivot/Lower/HoofPivot"]
+
+[node name="HeadPivot" type="Node2D" parent="."]
+
+[node name="HeadUpper" type="Sprite2D" parent="HeadPivot"]
+
+[node name="JawPivot" type="Node2D" parent="HeadPivot"]
+
+[node name="Jaw" type="Sprite2D" parent="HeadPivot/JawPivot"]
