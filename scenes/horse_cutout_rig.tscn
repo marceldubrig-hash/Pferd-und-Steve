@@ -52,7 +52,7 @@ position = Vector2(155, -53)
 scale = Vector2(0.5, 0.5)
 z_index = 1
 
-[node name="Upper" type="Sprite2D" parent="FrontLeftColumn"]
+[node name="Upper" type="Sprite2D" parent="FrontNear"]
 position = Vector2(-19.75, 275.924)
 texture = SubResource("AtlasTexture_front_left_upper")
 
