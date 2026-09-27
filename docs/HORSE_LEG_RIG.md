@@ -176,6 +176,28 @@ Sobald die Zuweisung bestätigt ist, gilt als geplantes Prinzip:
 - keine Walk-Animation gebaut
 - keine Farm-/Perspektivdatei verändert
 
+## Schritt 4A — erste Kette festgelegt
+
+Für den ersten kontrollierten Montageversuch wird ausschließlich die **linke Spalte des Front-Sheets** verwendet. Diese Kette bleibt semantisch neutral und heißt während der Montage **FrontLeftColumn**; sie wird ausdrücklich noch **nicht** als Near oder Far kanonisiert.
+
+Quelle:
+
+- Sheet: `assets/horse/rig/horse_front_legs_segments_sheet_v01.png`
+- gepinnter SHA-256: `21003a4575973514be9f1508e828c0f90c2f0d12f3f519188b4e1b495eb96e8a`
+- Upper: `T16_C1`, Region `(183, 32, 361, 608)`
+- Lower: `T16_C3`, Region `(208, 651, 171, 330)`
+- Hoof: `T16_C5`, Region `(240, 1000, 222, 305)`
+
+Es werden **keine neuen PNG-Dateien** erzeugt. Die Scene verwendet `AtlasTexture`-Regions direkt aus dem unveränderten bestätigten Front-Sheet. Dadurch bleiben die Originalbytes unangetastet und es findet weder Re-Encoding noch Redraw statt.
+
+Kalibrierhinweis:
+
+- die Repository-Masterdatei wird technisch als `1024 × 768` gelesen
+- die bereits bestätigten Cutout-Transforms verwenden den bisherigen `1448 × 1086`-Referenzraum
+- beide Seitenverhältnisse sind identisch; der lineare Referenzfaktor beträgt exakt `1.4140625`
+- die Master-Alpha-Silhouette trennt die beiden Vorderbeine ab ungefähr `y = 520` klar in zwei Läufe; die linke sichtbare Vorderbeinspur liegt dort ungefähr bei `x = 601…652`
+- dieser Vergleich dient nur der statischen Montageposition; er beweist **keine** Near/Far-Z-Reihenfolge
+
 ## Nächster technischer Schritt
 
 Ein einziges vollständiges Bein als 3-Segment-Kette aufbauen.
