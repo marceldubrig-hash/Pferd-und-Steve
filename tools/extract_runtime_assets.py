@@ -1,24 +1,28 @@
 #!/usr/bin/env python3
-"""Extract only the already-approved canonical runtime PNGs from the v01 asset pack.
+"""Extract the already-approved canonical runtime assets from the v01 pack.
 
-This script deliberately refuses to guess. If the ZIP does not contain the exact
-canonical basenames, it exits without writing substitute assets.
+The pack currently stores the approved images as WebP. Runtime paths remain PNG,
+so WebP sources are converted losslessly *from the existing approved source* to
+PNG. No asset is regenerated or guessed.
 """
 
 from __future__ import annotations
 
-import shutil
+import io
 import sys
 import zipfile
 from pathlib import Path
 
+from PIL import Image
+
 ROOT = Path(__file__).resolve().parents[1]
 PACK = ROOT / "asset_packs" / "Pferd-und-Steve-runtime-assets-v01.zip"
+ALLOWED_SOURCE_EXTENSIONS = {".png", ".webp"}
 
 TARGETS = {
-    "farm_day_v01.png": ROOT / "assets" / "backgrounds" / "farm_day_v01.png",
-    "farm_night_v01.png": ROOT / "assets" / "backgrounds" / "farm_night_v01.png",
-    "horse_master_standing_v01.png": ROOT / "assets" / "horse" / "horse_master_standing_v01.png",
+    "farm_day_v01": ROOT / "assets" / "backgrounds" / "farm_day_v01.png",
+    "farm_night_v01": ROOT / "assets" / "backgrounds" / "farm_night_v01.png",
+    "horse_master_standing_v01": ROOT / "assets" / "horse" / "horse_master_standing_v01.png",
 }
 
 
@@ -29,42 +33,40 @@ def main() -> int:
 
     with zipfile.ZipFile(PACK) as zf:
         files = [n for n in zf.namelist() if not n.endswith("/")]
-        by_basename: dict[str, list[str]] = {}
-        for name in files:
-            by_basename.setdefault(Path(name).name, []).append(name)
-
         print("Runtime ZIP contents:")
         for name in files:
             print(f"  - {name}")
 
-        missing: list[str] = []
-        ambiguous: list[tuple[str, list[str]]] = []
+        resolved: dict[str, str] = {}
 
-        for basename in TARGETS:
-            matches = by_basename.get(basename, [])
-            if not matches:
-                missing.append(basename)
-            elif len(matches) > 1:
-                ambiguous.append((basename, matches))
+        for stem in TARGETS:
+            matches = [
+                name for name in files
+                if Path(name).stem == stem
+                and Path(name).suffix.lower() in ALLOWED_SOURCE_EXTENSIONS
+            ]
+            if len(matches) != 1:
+                print(
+                    f"ERROR: expected exactly one approved source for {stem}, got {matches}",
+                    file=sys.stderr,
+                )
+                print("No runtime assets were written. Refusing to guess.", file=sys.stderr)
+                return 3
+            resolved[stem] = matches[0]
 
-        if missing or ambiguous:
-            if missing:
-                print("\nERROR: exact canonical basenames missing:", file=sys.stderr)
-                for name in missing:
-                    print(f"  - {name}", file=sys.stderr)
-            if ambiguous:
-                print("\nERROR: canonical basename appears more than once:", file=sys.stderr)
-                for basename, matches in ambiguous:
-                    print(f"  - {basename}: {matches}", file=sys.stderr)
-            print("\nNo runtime assets were written. Refusing to guess.", file=sys.stderr)
-            return 3
-
-        for basename, target in TARGETS.items():
-            source = by_basename[basename][0]
+        for stem, target in TARGETS.items():
+            source = resolved[stem]
             target.parent.mkdir(parents=True, exist_ok=True)
-            with zf.open(source) as src, target.open("wb") as dst:
-                shutil.copyfileobj(src, dst)
-            print(f"Extracted {source} -> {target.relative_to(ROOT)}")
+            source_bytes = zf.read(source)
+            source_ext = Path(source).suffix.lower()
+
+            if source_ext == ".png":
+                target.write_bytes(source_bytes)
+            else:
+                with Image.open(io.BytesIO(source_bytes)) as image:
+                    image.save(target, format="PNG", optimize=True)
+
+            print(f"Imported {source} -> {target.relative_to(ROOT)}")
 
     return 0
 
