@@ -446,6 +446,13 @@ Aufbau-/Vergleichs-Commits:
 - `84a8957cf2c1c644d6ba46aab47bfbfcab59f406` — als `HindNear` bestätigt
 - `6e282810862492afb8067ba3b3b20539b660f65c` — Upper-Parent-Pfad nach Umbenennung korrigiert
 
+Technische Validierung des Drei-Bein-Stands:
+
+- verifizierte Workflow-Basis: `4d463d08ca5014a068e076d6b1eccf16ab9c28c7`
+- Godot 4.3 Headless Parse/Import: **success**
+- Android Debug Export: **success**
+- Test-APK SHA-256: `8b13955688527e79fb3483847694476cbc3c9b825d64a36f142bfa99e44c34f9`
+
 Damit sind drei von vier Beinen vollständig montiert. `HindFar` bleibt noch untexturiert.
 
 ## Nächster technischer Schritt
