@@ -85,7 +85,7 @@ tracks/0/keys = {
 "times": PackedFloat32Array(0, 0.15, 0.3, 0.42, 0.6),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
-"values": [-0.331613, -0.122173, -0.331613, -0.174533, -0.331613]
+"values": [-0.331613, -0.15708, -0.331613, -0.226893, -0.331613]
 }
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_jaw"]
