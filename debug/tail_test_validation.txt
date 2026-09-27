@@ -1,0 +1,8 @@
+source_commit=7413945b3971ad924b070779c14a7db9b447f7ac
+asset_integrity=success
+godot_4_3_headless=success
+tail_times=[0.0, 0.3, 0.68, 0.88, 1.1]
+tail_values=[0.0, 0.0872665, -0.0698132, 0.0349066, 0.0]
+preview_head_and_jaw_state=static_scene_rest
+tail_animation_length=1.1
+autoplay=tail_test
