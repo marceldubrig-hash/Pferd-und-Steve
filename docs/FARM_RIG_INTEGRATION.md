@@ -289,3 +289,17 @@ und kein Runtime-Zustand verändert; der Guard wurde präzisiert und derselbe is
 Patch danach erneut aufgebaut.
 
 Nächster Prüfpunkt vor weiteren Änderungen: Godot + Android für genau diesen Austausch.
+
+
+### 11F technische Prüfung
+
+Austausch-Commit: `bfba37dbc058de129e2f2605a015241ae6bca2e7`.
+
+- Godot-4.3-Validierung: Run `36353732804` — **success**
+- Android-Debug-Build: Run `36353732782` — **success**
+- temporärer 11D-Scale-Preview-Workflow lief auf derselben Scene erneut: Run
+  `36353732793` — **success**; die Scale-/Anchor-Ausgabe blieb unverändert
+
+Damit lädt die Farm nach vollständiger Entfernung von `HorseMaster` technisch sauber
+und lässt sich als Android-Debug-Build exportieren. Noch keine Movement-, Grenz- oder
+World-Z-Logik wurde in 11F verändert.
