@@ -177,7 +177,7 @@ texture = ExtResource("2_head")
 
 [node name="JawPivot" type="Node2D" parent="HeadPivot"]
 position = Vector2(340, -110)
-rotation = -0.296706
+rotation = -0.331613
 
 [node name="Jaw" type="Sprite2D" parent="HeadPivot/JawPivot"]
 position = Vector2(260.624, 174.613)
