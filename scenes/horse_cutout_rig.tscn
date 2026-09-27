@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/horse/rig/horse_body_v01.png" id="1_body"]
 [ext_resource type="Texture2D" path="res://assets/horse/rig/horse_head_upper_v01.png" id="2_head"]
@@ -35,6 +35,10 @@ region = Rect2(766, 1007, 220, 289)
 atlas = ExtResource("6_hind_sheet")
 region = Rect2(164, 53, 368, 519)
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_hind_left_lower"]
+atlas = ExtResource("6_hind_sheet")
+region = Rect2(174, 553, 212, 353)
+
 [node name="HorseCutoutRig" type="Node2D"]
 
 [node name="TailPivot" type="Node2D" parent="."]
@@ -61,8 +65,11 @@ position = Vector2(-20.816, 234.353)
 texture = SubResource("AtlasTexture_hind_left_upper")
 
 [node name="LowerPivot" type="Node2D" parent="HindLeftColumn/Upper"]
+position = Vector2(-36.101, 235.597)
 
 [node name="Lower" type="Sprite2D" parent="HindLeftColumn/Upper/LowerPivot"]
+position = Vector2(-13.638, 163.241)
+texture = SubResource("AtlasTexture_hind_left_lower")
 
 [node name="HoofPivot" type="Node2D" parent="HindLeftColumn/Upper/LowerPivot/Lower"]
 
