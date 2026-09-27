@@ -288,6 +288,80 @@ Nach der Parent-Korrektur wurde der Stand erneut vollständig geprüft:
 
 Die übrigen drei Beine sind weiterhin untexturiert. Es wurde keine Walk-Animation und keine Farm-Integration begonnen.
 
+## Schritt 5A — FrontFar vollständig montiert
+
+Die rechte Front-Sheet-Kette ist jetzt als zweites vollständiges Vorderbein montiert:
+
+`FrontFar → Upper → LowerPivot → Lower → HoofPivot → Hoof`
+
+### Texturquelle
+
+Wie beim FrontNear-Bein werden **keine Einzel-PNGs exportiert**. Verwendet werden `AtlasTexture`-Regions direkt aus dem unveränderten Front-Sheet:
+
+- Upper: `Rect2(715, 64, 274, 592)`
+- Lower: `Rect2(767, 675, 143, 309)`
+- Hoof: `Rect2(766, 1007, 220, 289)`
+- Quell-Sheet SHA-256: `21003a4575973514be9f1508e828c0f90c2f0d12f3f519188b4e1b495eb96e8a`
+
+### Bestätigte Godot-Transforms
+
+`FrontFar`:
+
+- Position im Rig-Root: `(247, -53)`
+- Rotation: `0 rad`
+- Scale: `(0.5, 0.5)`
+- `z_index = -1` — hinter dem Body
+
+`Upper`:
+
+- lokaler Offset: `(28.522, 268.645)`
+- Rotation: `0 rad`
+
+`LowerPivot`:
+
+- lokaler Offset unter Upper: `(-25.791, 269.543)`
+- aus dem dokumentierten Upper-Bottom-Anker der rechten Front-Spalte abgeleitet
+
+`Lower`:
+
+- lokaler Offset: `(0.943, 138.502)`
+- legt den dokumentierten Lower-Top-Anker auf `LowerPivot`
+
+`HoofPivot`:
+
+- lokaler Offset unter Lower: `(4.488, 140.352)`
+
+`Hoof`:
+
+- lokaler Offset: `(41.127, 131.459)`
+- legt den dokumentierten Hoof-Top-Anker auf `HoofPivot`
+
+### Montagevergleich
+
+Ein kontrollierter Vergleich aus:
+
+1. Master-Pose
+2. Body + FrontNear + FrontFar
+
+bestätigt für die statische Standpose:
+
+- Fußhöhe stimmt mit der Master-Pose überein
+- Beinlänge und seitlicher Versatz sind plausibel
+- der obere Bereich von FrontFar verschwindet korrekt hinter dem Body
+- keine zusätzliche Rotation oder Scale-Korrektur ist für die Standpose nötig
+
+Preview-Commit:
+
+- `8f663311cedbef7ec93a461d80d3c2a6e8306457`
+
+Aufbau-Commits:
+
+- `547c845e3ff65f3c0c12c5d9d9fd3de601e1c157` — FrontFar Upper
+- `60c63545bbb73e64ae546bd703c82fca26e5d573` — FrontFar Lower
+- `dc35fb7cec06f862fa79823ff0affe2e066d081b` — FrontFar Hoof
+
+Damit sind beide Vorderbeine statisch vollständig montiert. Die beiden Hinterbeine bleiben weiterhin untexturiert.
+
 ## Nächster technischer Schritt
 
-**Schritt 5** ist das Übertragen desselben Prinzips auf die übrigen drei Beine. Dieser Schritt ist noch **nicht** begonnen.
+Vor dem ersten Hinterbein wird der Zwei-Vorderbein-Stand technisch validiert. Danach folgt **genau ein** Hinterbein als nächste 3-Segment-Kette; Near/Far des Hind-Sheets wird weiterhin nicht geraten.
