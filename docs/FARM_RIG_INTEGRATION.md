@@ -194,3 +194,27 @@ Assets drei Tiefen (`depth_t = 0 / 0.5 / 1`) jeweils als alten Master, Cutout un
 Überlagerung bei Fold-Testgröße `1536×1384`. Die Farm-Projektionsformel wird dabei
 mit den unveränderten Canon-Konstanten ausgewertet. Das Werkzeug schreibt nur unter
 `debug/`; Runtime-Dateien und Assets werden nicht verändert.
+
+
+### Ergebnis des 11D-Größenvergleichs
+
+Preview-Workflow-Commit: `e2486a9e1abe33bbf9cc1f9b43ed15dd1e5108f6`.
+Preview-Run: `36353521554` — **success**.
+Ergebnis-Commit: `7e9960e59b0fb7ed021fa7dc7d0712fa5dca504b`.
+
+Geprüft wurden FAR (`depth_t=0`), MID (`0.5`) und NEAR (`1.0`) bei
+`1536×1384`. Die berechneten Zielhöhen/äußeren HorseRoot-Scales waren:
+
+- FAR: `214.927059 px`, Scale `0.292512314`
+- MID: `384.943986 px`, Scale `0.523902652`
+- NEAR: `1842.231933 px`, Scale `2.507248405`
+
+Der direkte Master/Cutout/Overlay-Vergleich bestätigt den Integrationsfaktor
+`0.701686`: die vertikale Gesamtgröße folgt in allen drei Tiefen der bisherigen
+Farm-Kalibrierung, der gemessene Hufkontakt bleibt auf demselben projizierten
+Bodenpunkt und die extreme Nahansicht schneidet den Unterkörper wie zuvor am
+Viewport ab. Sichtbare Konturabweichungen sind die erwarteten Segment-/Cutout-Formen,
+kein Perspektiv- oder Scale-Fehler. **Keine weitere Scale-Korrektur erforderlich.**
+
+Damit ist 11D abgeschlossen. Nächster isolierter Runtime-Schritt: Ganzrig-Flip auf
+`HorseVisual`; das alte sichtbare Master-Sprite bleibt dabei noch als Referenz erhalten.
