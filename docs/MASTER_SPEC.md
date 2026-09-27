@@ -196,14 +196,38 @@ Korrektur abgeschlossen:
 - Android-Build-Run `36325845081`: erfolgreich
 - Code-Basis der Grenzkorrektur: `d5d3ff9ca32968f035d304176668eb2a326578ad`
 
+## Rig-Asset-Meilenstein — Canon wiederhergestellt
+
+Erreicht am 2026-09-27:
+
+- Recovery-Paket liegt unverändert auf `main`:
+  - `asset_packs/Pferd-und-Steve-source-rig-missing-v01.zip`
+  - Upload-Commit: `bea7227181fd2eafc1d64b15d3bd87ff2c9c4d65`
+- Rig-Source-Audit lief danach erfolgreich:
+  - Run `36328975035`
+  - Ergebnis: **success**
+- Ein fail-closed Materializer wurde hinzugefügt:
+  - `tools/materialize_verified_rig_assets.py`
+  - prüft die sechs Recovery-Dateien gegen die festgeschriebenen SHA-256-Werte
+  - schreibt nur exakte Originalbytes und überschreibt niemals abweichende bestehende Dateien
+- Materializer-Workflow:
+  - Run `36329092128`
+  - Ergebnis: **success**
+- Acht bestätigte Rig-Dateien liegen nun unverändert unter `assets/horse/rig/`:
+  - `horse_body_v01.png`
+  - `horse_tail_v01.png`
+  - `horse_head_upper_v01.png`
+  - `horse_jaw_v01.png`
+  - `horse_head_talk_halfopen_preview_v01.png`
+  - `horse_head_talk_open_preview_v01.png`
+  - `horse_front_legs_segments_sheet_v01.png`
+  - `horse_hind_legs_segments_sheet_v01.png`
+- Materialisierungs-Commit: `c2fb613e987636b74877b2913d202544a8fa135d`
+
 ## Aktuell nächste technische Aufgabe
 
-Die bestätigte Farm-/Perspektivgrundlage bleibt unverändert. Für das Cutout-Rig ist jetzt die Scene-Hierarchie separat angelegt.
+Die bestätigte Farm-/Perspektivgrundlage bleibt unverändert.
 
-Nächster erlaubter Schritt:
+Als nächster kleiner Schritt werden ausschließlich **Körper + oberer Kopf + Unterkiefer** in der separaten Rig-Testszene aus den nun verifizierten Runtime-Assets zusammengesetzt und ausgerichtet. Schweif und Beine bleiben dabei zunächst unangetastet.
 
-1. die sechs anhand ihrer bereits dokumentierten SHA-256-Werte eindeutig wiedergefundenen Originaldateien unverändert als `asset_packs/Pferd-und-Steve-source-rig-missing-v01.zip` auf `main` versionieren
-2. den bestehenden Rig-Source-Audit erneut grün laufen lassen
-3. erst danach die bestätigten Texturen an die vorbereitete Rig-Testszene binden
-
-Keine der Chat-/Preview-Kopien darf ersatzweise als Canon verwendet werden, wenn ihre Binär-Hashes von den dokumentierten Originalen abweichen.
+Danach sofort speichern/committen und erst anschließend den nächsten Rig-Baustein bearbeiten.
