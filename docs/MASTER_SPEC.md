@@ -290,12 +290,29 @@ Erreicht am 2026-09-27:
 - Godot-4.3-Headless-Validierung: Run `36330979600` — **success**
 - Automatischer Android-Debug-Build derselben Commit-Basis: Run `36330979638` — **success**
 
+## Rig-Meilenstein — Bein-Segment-Sheets technisch verifiziert
+
+Erreicht am 2026-09-27:
+
+- Detaildokumentation: `docs/HORSE_LEG_RIG.md`
+- beide bestätigten Sheets sind native `1122×1402`-RGBA-PNGs
+- Front-Sheet SHA-256: `21003a4575973514be9f1508e828c0f90c2f0d12f3f519188b4e1b495eb96e8a`
+- Hind-Sheet SHA-256: `d24aba84e51075cdd1e5c83d12432d2d7a1731c8c9bbb522c2db731bc04744e3`
+- die Hashes stimmen mit den bereits gepinnten Materializer-Werten überein
+- jedes Sheet enthält exakt zwei vollständige 3-Segment-Ketten: Upper + Lower + Hoof
+- die beiden Varianten pro Sheet sind echte unterschiedliche Formen/Texturen und werden nicht durch segmentweises Spiegeln ersetzt
+- robuste Segmentboxen und Pivot-Ankerkandidaten wurden pixelbasiert dokumentiert
+- wichtiges Alpha-Artefakt: beim Hind-Sheet können extrem schwache Alpha-Reste bei `alpha > 0` Upper und Lower scheinbar verbinden; ab `alpha >= 4` werden stabil sechs große Segmente erkannt
+- die Near/Far-Semantik der linken/rechten Sheet-Spalten ist in den Quelldateien nicht beschriftet und wird deshalb noch **nicht** geraten oder als Canon festgeschrieben
+- verfeinerter Analyse-Run `36331705192`: **success**
+- keine Runtime-Szene und kein Asset wurde in diesem Analyseschritt verändert
+
 ## Aktuell nächste technische Aufgabe
 
 Die bestätigte Farm-/Perspektivgrundlage bleibt unverändert.
 
-Die statischen Cutout-Bausteine **Körper + oberer Kopf + Unterkiefer + Schweif** sind abgeschlossen und getestet.
+Die statischen Cutout-Bausteine **Körper + oberer Kopf + Unterkiefer + Schweif** sind abgeschlossen und getestet. Die Bein-Sheets sind jetzt technisch eindeutig in zwei komplette 3-Segment-Ketten pro Sheet zerlegt und dokumentiert.
 
-Als nächster kleiner Schritt werden ausschließlich die beiden bestätigten **Bein-Segment-Sheets technisch untersucht** und exakt dokumentiert, welches Segment zu welchem Beinabschnitt gehört. Dabei wird noch kein vollständiges Bein-Rig erzwungen und die Farm-Integration bleibt unangetastet.
+Als nächster kleiner Schritt wird **genau ein Bein** aus einer vollständig identifizierten Sheet-Spalte als `Upper → LowerPivot → Lower → HoofPivot → Hoof` aufgebaut und statisch gegen die Master-Pose verglichen. Erst bei diesem kontrollierten Montagevergleich wird die betreffende Spalte verbindlich als `Near` oder `Far` zugeordnet.
 
-Danach sofort speichern/committen und erst anschließend den nächsten Rig-Baustein bearbeiten.
+Danach sofort speichern/committen und erst anschließend das Prinzip auf die übrigen drei Beine übertragen.
