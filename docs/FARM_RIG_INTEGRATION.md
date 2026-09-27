@@ -120,3 +120,29 @@ Atlas-Regions und Original-Alpha. Schwellwert alpha >= 16 wie beim bestätigten
 Segment-Audit; misst Pixelkanten im statischen, unskalierten Rig-Raum.
 Keine Bilddatei wird geschrieben. Erst nach Speicherung dieses Werkzeugs wird
 die Messung ausgeführt und der Bodenanker in einem eigenen Commit gesetzt.
+
+### Messung und Bodenanker (11C)
+
+Messwerkzeug-Commit: `bbade464d5cf71784b585ac014f0e62df7196f60`, Ausführung **PASS**.
+Statische robuste Hufunterkanten im Rig-Raum:
+
+| Huf | Y |
+| --- | ---: |
+| FrontNear | 516.7995 |
+| HindNear | 515.1000 |
+| HindFar | 505.2510 |
+| FrontFar | 493.5005 |
+
+Tiefster Standkontakt ist FrontNear. Neuer Instanz-Offset ausschließlich
+`HorseCutoutRig.position = (0, -516.7995)`. Dadurch landet die tiefste Hufkante
+auf `(x, 0)` innerhalb des Bodencontainers. Die bereits bestätigten unterschiedlichen
+Hufhöhen bleiben unangetastet. Alter Master-Anker im Referenzraum wäre Y=512;
+dieser wurde wegen des gemessenen 4.7995-px-Unterschieds nicht blind übernommen.
+
+Rig-Oberkante alpha >= 16: Y=-530.338792; statische sichtbare Höhe 1047.138292.
+Die Original-TSCN hat SHA-256 `328edf3d34090b08f4e729c690f04c36ad3f69f4d9d6813145bf73f9315cf96e`.
+Noch kein Scale-/Flip-Wechsel; Master weiter sichtbar. Visueller Anchor-Vergleich
+folgt vor der separaten Größenanpassung.
+
+Remote-CI der 11B-Instanz zusätzlich bestätigt: Godot-Run `36352833000` **success**,
+Android-Run `36352833014` **success**.

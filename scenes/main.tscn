@@ -19,3 +19,4 @@ visible = false
 [node name="RigSpace" type="Node2D" parent="HorseRoot/HorseVisual"]
 
 [node name="HorseCutoutRig" parent="HorseRoot/HorseVisual/RigSpace" instance=ExtResource("2_cutout")]
+position = Vector2(0, -516.7995)
