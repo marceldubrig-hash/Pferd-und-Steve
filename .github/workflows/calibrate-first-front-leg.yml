@@ -11,7 +11,7 @@ jobs:
   calibrate:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - name: Install CV dependency
@@ -52,7 +52,13 @@ jobs:
           assert dm is not None and len(km) > 50
           bf = cv2.BFMatcher(cv2.NORM_L2)
 
-          print("MASTER_SIZE", master.shape[1], master.shape[0])
+          out=[]
+          def emit(*parts):
+              line=" ".join(str(p) for p in parts)
+              print(line)
+              out.append(line)
+
+          emit("MASTER_SIZE", master.shape[1], master.shape[0])
           for name, (x,y,w,h) in boxes.items():
               crop = sheet[y:y+h, x:x+w]
               alpha = crop[:, :, 3] if crop.shape[2] == 4 else np.full((h,w),255,np.uint8)
@@ -60,18 +66,18 @@ jobs:
               g = gray_rgba(crop)
               kc, dc = sift.detectAndCompute(g, mask)
               if dc is None:
-                  print(name.upper(), "NO_DESCRIPTORS")
+                  emit(name.upper(), "NO_DESCRIPTORS")
                   continue
               pairs = bf.knnMatch(dc, dm, k=2)
               good = [a for a,b in pairs if a.distance < 0.72*b.distance]
-              print(name.upper(), "KEYPOINTS", len(kc), "GOOD", len(good))
+              emit(name.upper(), "KEYPOINTS", len(kc), "GOOD", len(good))
               if len(good) < 6:
                   continue
               src = np.float32([kc[m.queryIdx].pt for m in good]).reshape(-1,1,2)
               dst = np.float32([km[m.trainIdx].pt for m in good]).reshape(-1,1,2)
               M, inliers = cv2.estimateAffinePartial2D(src, dst, method=cv2.RANSAC, ransacReprojThreshold=4.0, maxIters=10000, confidence=0.999)
               if M is None:
-                  print(name.upper(), "NO_AFFINE")
+                  emit(name.upper(), "NO_AFFINE")
                   continue
               nin = int(inliers.sum()) if inliers is not None else 0
               a,b,tx = M[0]
@@ -85,9 +91,28 @@ jobs:
               else:
                   e = err
               rms = float(np.sqrt(np.mean(e*e))) if len(e) else float("nan")
-              print(name.upper(), "AFFINE", *[f"{v:.9f}" for v in M.flatten()])
-              print(name.upper(), "SCALE", f"{scale:.9f}", "ROT_DEG", f"{rot:.6f}", "INLIERS", nin, "RMS", f"{rms:.4f}")
+              emit(name.upper(), "AFFINE", *[f"{v:.9f}" for v in M.flatten()])
+              emit(name.upper(), "SCALE", f"{scale:.9f}", "ROT_DEG", f"{rot:.6f}", "INLIERS", nin, "RMS", f"{rms:.4f}")
               for an, p in anchors[name].items():
                   q = M @ np.array([p[0], p[1], 1.0])
-                  print(name.upper(), an.upper(), f"{q[0]:.3f}", f"{q[1]:.3f}")
+                  emit(name.upper(), an.upper(), f"{q[0]:.3f}", f"{q[1]:.3f}")
+          Path("docs/FIRST_FRONT_LEG_CALIBRATION.md").write_text(
+              "# First front leg calibration probe\n\n"
+              "Source: left column of horse_front_legs_segments_sheet_v01.png.\n\n"
+              "\`\`\`text\n" + "\n".join(out) + "\n\`\`\`\n",
+              encoding="utf-8",
+          )
           PY
+
+      - name: Commit calibration evidence
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/FIRST_FRONT_LEG_CALIBRATION.md
+          if git diff --cached --quiet; then
+            echo "No calibration change."
+          else
+            git commit -m "Record first front leg calibration evidence"
+            git push origin HEAD:main
+          fi
