@@ -325,3 +325,26 @@ temporärer Godot-4.3-Runtime-Runner jetzt direkt:
 Der Runner verändert keine Runtime-Datei; er schreibt ausschließlich einen
 Validierungsnachweis unter `debug/`. Erst das grüne Ergebnis entscheidet, ob 11G/11H
 ohne Runtime-Fix abgeschlossen werden können.
+
+
+### Ergebnis 11G/11H
+
+Movement-Probe-Commit: `2e370c20accf148d95869a09bfd975e052eca1ae`.
+Workflow-Run: `36353885527` — **success**.
+Ergebnis-Commit: `d0c047c3198d9ca3a8435f13971ecce92a8bbfe7`.
+
+Runtime bestätigt ohne irgendeinen Movement-Fix:
+
+- Touch retargetet `HorseRoot` weiterhin korrekt
+- ScreenDrag retargetet weiterhin und steuert LEFT/RIGHT am Gesamt-`HorseVisual`
+- offener hinterer Hof erreicht weiterhin praktisch `depth_t=0`
+- linke Hindernisgrenze projiziert auf `depth_t≈0.159581`
+- rechte Hindernisgrenze projiziert auf `depth_t≈0.179000`
+- X-/Y-Clamping bleibt aktiv
+- Perspektivscale auf `HorseRoot` bleibt positiv und uniform
+- World-Z bleibt `round(depth_t × 100)` (Testwert: depth `0.369047585` → z `37`)
+- Cutout-Hierarchie, `RigSpace=0.701686` und Bodenanker `-516.7995` bleiben erhalten
+- `HorseMaster` ist tatsächlich nicht mehr vorhanden
+
+Damit benötigen 11G und 11H **keine Runtime-Änderung**. Die bestehende Farm-Bewegungs-,
+Grenz- und World-Z-Logik wurde erfolgreich unverändert übernommen.
