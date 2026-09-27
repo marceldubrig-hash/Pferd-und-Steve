@@ -50,7 +50,10 @@ Die Tag-/Nacht-Farm ist dieselbe bestätigte Szene mit großer roter Scheune lin
 ## Technischer Importstatus
 
 - Projektstruktur und Spezifikation sind im Repository gesichert.
-- Die ursprünglichen Binärpakete liegen zusätzlich versioniert unter `asset_packs/`.
-- Die drei oben genannten Canon-Quelldateien sind eindeutig identifiziert und damit nicht mehr vom Dateinamen-Raten abhängig.
-- Sie müssen noch als einzelne PNG-Dateien in die verbindlichen `assets/...`-Runtime-Pfade geschrieben werden.
-- Bis dieser Binärimport erfolgt ist, erzeugt `scripts/main.gd` bewusst nur Warnungen für fehlende Runtime-Dateien.
+- Die ursprünglichen Binärpakete liegen versioniert unter `asset_packs/`.
+- Canon-Tagfarm, Canon-Nachtfarm und das Master-Pferd liegen bereits in ihren verbindlichen `assets/...`-Runtime-Pfaden.
+- Der aktuelle Rig-Source-Audit ist in `docs/RIG_SOURCE_AUDIT.md` dokumentiert.
+- In den vorhandenen Rig-Source-Paketen auf `main` sind derzeit nur `horse_head_upper_v01.png` und `horse_jaw_v01.png` von den separaten Cutout-Komponenten tatsächlich versioniert.
+- Die bereits bestätigten Dateien für Mund-Previews, Körper, Schweif sowie Vorder-/Hinterbein-Segment-Sheets wurden außerhalb des Repositories wiedergefunden, gelten aber erst nach unveränderter Versionierung auf `main` als verfügbarer Repository-Canon.
+- Bis diese exakten Originaldateien sicher auf `main` liegen, darf Phase 2 des Rigs nicht auf geratenen, neu generierten oder ersetzten Assets aufbauen.
+- Der CI-Audit arbeitet absichtlich fail-closed und bleibt rot, solange bestätigte Rig-Quellen fehlen.
