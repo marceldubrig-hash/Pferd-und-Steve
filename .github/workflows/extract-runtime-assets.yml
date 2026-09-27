@@ -36,7 +36,7 @@ jobs:
       - name: Commit extracted runtime assets
         shell: bash
         run: |
-          if git diff --quiet -- assets; then
+          if [ -z "$(git status --porcelain -- assets)" ]; then
             echo "No asset changes to commit."
             exit 0
           fi
