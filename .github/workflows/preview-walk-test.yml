@@ -67,11 +67,26 @@ jobs:
           )
           tracks = []
           for m in track_re.finditer(anim):
+              path = m.group(2)
               times = [float(v.strip()) for v in m.group(3).split(",") if v.strip()]
-              values = [float(v.strip()) for v in m.group(4).split(",") if v.strip()]
+              raw_values = m.group(4).strip()
+              if path.endswith(":rotation"):
+                  values = [float(v.strip()) for v in raw_values.split(",") if v.strip()]
+                  kind = "scalar"
+              elif path.endswith(":position"):
+                  values = [
+                      (float(x), float(y))
+                      for x, y in re.findall(
+                          r'Vector2\\(([-0-9.eE]+),\\s*([-0-9.eE]+)\\)',
+                          raw_values
+                      )
+                  ]
+                  kind = "vector2"
+              else:
+                  raise RuntimeError(f"unsupported walk preview track: {path}")
               if len(times) != len(values):
-                  raise RuntimeError(f"key mismatch for {m.group(2)}")
-              tracks.append({"path": m.group(2), "times": times, "values": values})
+                  raise RuntimeError(f"key mismatch for {path}: times={times} values={values}")
+              tracks.append({"path": path, "times": times, "values": values, "kind": kind})
           if len(tracks) < 4:
               raise RuntimeError(f"expected at least four walk tracks, found {len(tracks)}")
 
@@ -85,7 +100,13 @@ jobs:
                   if times[i] <= t <= times[i+1]:
                       span = times[i+1] - times[i]
                       alpha = 0.0 if span == 0 else (t-times[i])/span
-                      return values[i] + (values[i+1]-values[i]) * alpha
+                      a, b = values[i], values[i+1]
+                      if track["kind"] == "scalar":
+                          return a + (b-a) * alpha
+                      return (
+                          a[0] + (b[0]-a[0]) * alpha,
+                          a[1] + (b[1]-a[1]) * alpha,
+                      )
               return values[-1]
 
           ext, atlas, nodes = {}, {}, []
@@ -163,6 +184,7 @@ jobs:
 
           path_map={path_of(n):n for n in nodes}
           base_rot={p:n["rotation"] for p,n in path_map.items()}
+          base_pos={p:n["position"] for p,n in path_map.items()}
 
           def mul(a,b):
               return (
@@ -200,13 +222,18 @@ jobs:
           def render(t):
               for p,n in path_map.items():
                   n["rotation"]=base_rot[p]
+                  n["position"]=base_pos[p]
               for tr in tracks:
                   target, prop = tr["path"].split(":",1)
-                  if prop != "rotation":
-                      raise RuntimeError(f"preview only supports rotation tracks, got {tr['path']}")
                   if target not in path_map:
                       raise RuntimeError(f"animation target missing: {target}")
-                  path_map[target]["rotation"]=sample(tr,t)
+                  value = sample(tr,t)
+                  if prop == "rotation":
+                      path_map[target]["rotation"]=value
+                  elif prop == "position":
+                      path_map[target]["position"]=value
+                  else:
+                      raise RuntimeError(f"unsupported preview property: {tr['path']}")
 
               gm_cache={}; gz_cache={}
               def resolve(node):
@@ -266,5 +293,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add debug/walk_test_preview.jpg debug/walk_test_validation.txt
-          git commit -m "Record walk root swing preview"
+          git commit -m "Record walk animation preview"
           git push origin HEAD:main
