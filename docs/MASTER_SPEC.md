@@ -154,6 +154,7 @@ Stand auf `main`:
 - Heuballen links und rechter Unterstand/Balken können nicht mehr optisch als schwebende Standfläche benutzt werden
 - Godot-4.3-Headless-Validierung läuft in GitHub Actions
 - Android-Debug-APK wird automatisiert gebaut
+- separate Rig-Testszene `scenes/horse_cutout_rig.tscn` als reine, noch untexturierte Cutout-Hierarchie angelegt; Farm-/Perspektivsystem bleibt dabei unangetastet
 
 ## Technischer Test-Meilenstein — erster Android-Build
 
@@ -197,11 +198,12 @@ Korrektur abgeschlossen:
 
 ## Aktuell nächste technische Aufgabe
 
-Den neuen Grenz-Build auf dem Fold nur an den kritischen Stellen prüfen:
+Die bestätigte Farm-/Perspektivgrundlage bleibt unverändert. Für das Cutout-Rig ist jetzt die Scene-Hierarchie separat angelegt.
 
-1. direkt vor den Heuballen links
-2. am linken Scheunenrand
-3. vor dem rechten Unterstand/Balken
-4. vom freien hinteren Hof seitlich in diese Bereiche ziehen
+Nächster erlaubter Schritt:
 
-Wenn dort kein Schweben/Stehen auf Objekten mehr auftritt, ist die Grundbewegung der Farm bestätigt. Danach beginnt als nächster abgeschlossener Schritt das eigentliche Cutout-Rig aus Körper, oberem Kopf, Unterkiefer, Schweif und Beinsegmenten.
+1. die sechs anhand ihrer bereits dokumentierten SHA-256-Werte eindeutig wiedergefundenen Originaldateien unverändert als `asset_packs/Pferd-und-Steve-source-rig-missing-v01.zip` auf `main` versionieren
+2. den bestehenden Rig-Source-Audit erneut grün laufen lassen
+3. erst danach die bestätigten Texturen an die vorbereitete Rig-Testszene binden
+
+Keine der Chat-/Preview-Kopien darf ersatzweise als Canon verwendet werden, wenn ihre Binär-Hashes von den dokumentierten Originalen abweichen.
