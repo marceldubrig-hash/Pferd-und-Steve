@@ -405,3 +405,25 @@ billige Cutout-/Puppenstil. Es ist kein Integrationsfehler erkennbar, der eine
 Damit sind 11I und 11J ohne Runtime-Korrektur abgeschlossen. Als nächstes folgt nur
 noch die finale technische 11K-Validierung inklusive unveränderter Animationsdaten
 und Android-Debug-SHA.
+
+
+## 11K — finale technische Validierung vorbereitet
+
+Der finale temporäre Workflow prüft fail-closed:
+
+- fail-closed Asset-Materializer
+- SHA-256 der unveränderten Step-10-Rigscene
+- Jaw-/Head-/Tail-/Walk- und RESET-Invarianten
+- exakt 15 Walk- und 15 Walk-RESET-Tracks
+- Entfernung des alten `HorseMaster`
+- Integrationsscale und Bodenanker
+- unveränderte Perspektiv-, Input-, Grenz- und World-Z-Codepfade
+- echte Instanziierung von `main.tscn` unter Godot 4.3
+- Vorhandensein aller drei AnimationPlayer im instanziierten Rig
+- Runtime-LEFT/RIGHT auf dem Gesamtcontainer
+- Android Debug Export
+- SHA-256 des erzeugten APK
+
+Der Workflow speichert sein Ergebnis vor dem Cleanup unter
+`debug/farm_cutout_final_validation.txt`. Bei irgendeinem roten Schritt wird nicht
+weitergebaut, sondern nur der kleinste Prüf-/Runtimefehler isoliert.
