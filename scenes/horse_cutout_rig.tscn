@@ -1,10 +1,11 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/horse/rig/horse_body_v01.png" id="1_body"]
 [ext_resource type="Texture2D" path="res://assets/horse/rig/horse_head_upper_v01.png" id="2_head"]
 [ext_resource type="Texture2D" path="res://assets/horse/rig/horse_jaw_v01.png" id="3_jaw"]
 [ext_resource type="Texture2D" path="res://assets/horse/rig/horse_tail_v01.png" id="4_tail"]
 [ext_resource type="Texture2D" path="res://assets/horse/rig/horse_front_legs_segments_sheet_v01.png" id="5_front_sheet"]
+[ext_resource type="Texture2D" path="res://assets/horse/rig/horse_hind_legs_segments_sheet_v01.png" id="6_hind_sheet"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_front_left_upper"]
 atlas = ExtResource("5_front_sheet")
@@ -30,6 +31,10 @@ region = Rect2(767, 675, 143, 309)
 atlas = ExtResource("5_front_sheet")
 region = Rect2(766, 1007, 220, 289)
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_hind_left_upper"]
+atlas = ExtResource("6_hind_sheet")
+region = Rect2(164, 53, 368, 519)
+
 [node name="HorseCutoutRig" type="Node2D"]
 
 [node name="TailPivot" type="Node2D" parent="."]
@@ -47,17 +52,21 @@ rotation = 0.0239099
 scale = Vector2(0.695201, 0.695201)
 texture = ExtResource("1_body")
 
-[node name="HindFar" type="Node2D" parent="."]
+[node name="HindLeftColumn" type="Node2D" parent="."]
+position = Vector2(-446, -74)
+scale = Vector2(0.5, 0.5)
 
-[node name="Upper" type="Sprite2D" parent="HindFar"]
+[node name="Upper" type="Sprite2D" parent="HindLeftColumn"]
+position = Vector2(-20.816, 234.353)
+texture = SubResource("AtlasTexture_hind_left_upper")
 
-[node name="LowerPivot" type="Node2D" parent="HindFar/Upper"]
+[node name="LowerPivot" type="Node2D" parent="HindLeftColumn/Upper"]
 
-[node name="Lower" type="Sprite2D" parent="HindFar/Upper/LowerPivot"]
+[node name="Lower" type="Sprite2D" parent="HindLeftColumn/Upper/LowerPivot"]
 
-[node name="HoofPivot" type="Node2D" parent="HindFar/Upper/LowerPivot/Lower"]
+[node name="HoofPivot" type="Node2D" parent="HindLeftColumn/Upper/LowerPivot/Lower"]
 
-[node name="Hoof" type="Sprite2D" parent="HindFar/Upper/LowerPivot/Lower/HoofPivot"]
+[node name="Hoof" type="Sprite2D" parent="HindLeftColumn/Upper/LowerPivot/Lower/HoofPivot"]
 
 [node name="FrontNear" type="Node2D" parent="."]
 position = Vector2(155, -53)
