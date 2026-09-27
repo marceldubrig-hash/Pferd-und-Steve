@@ -348,3 +348,25 @@ Runtime bestätigt ohne irgendeinen Movement-Fix:
 
 Damit benötigen 11G und 11H **keine Runtime-Änderung**. Die bestehende Farm-Bewegungs-,
 Grenz- und World-Z-Logik wurde erfolgreich unverändert übernommen.
+
+
+## 11I/11J — echter Farm-Runtime-Preview
+
+Für die visuelle Integrationsprüfung wurde ein temporärer Godot-Runner ergänzt, der
+**die echte `main.tscn`** unter virtuellem Display rendert. Er erzeugt keine
+Ersatzgrafik und rekonstruiert die Pferdeposition nicht in Python.
+
+Vorgesehene sechs Pflichtfälle bei `1536×1384` und offenem Hof-X `0.60`:
+
+1. FAR RIGHT — Ruheframe
+2. FAR LEFT — Ruheframe
+3. MID RIGHT — gemeinsamer Bewegungsframe
+4. MID LEFT — gemeinsamer Bewegungsframe
+5. NEAR RIGHT — Ruheframe / extreme Kameranähe
+6. NEAR LEFT — Ruheframe / extreme Kameranähe
+
+Die MID-Frames suchen deterministisch `jaw_test@0.15s`, `tail_test@0.30s` und
+`walk_test@0.28s`; damit sind geöffneter Jaw, Schweifausschlag und Walk-Ausschlag
+im selben Bild prüfbar. Die AnimationPlayer werden nicht umgebaut; nur der temporäre
+Preview-Runner pausiert sie auf den Prüfzeitpunkten. Erst nach gespeichertem Ergebnis
+wird bewertet, ob überhaupt ein Runtime-Fix nötig ist.
