@@ -1,0 +1,20 @@
+PASS: main.tscn loads
+PASS: cutout hierarchy exists
+PASS: legacy HorseMaster is absent
+PASS: RigSpace scale preserved
+PASS: ground-anchor offset preserved
+PASS: open rear yard still reaches depth_t 0
+PASS: left obstacle boundary pushes horse forward
+PASS: right shelter boundary pushes horse forward
+PASS: screen/depth clamps remain active
+PASS: HorseRoot world z follows depth
+PASS: perspective scale remains uniform on HorseRoot
+PASS: screen touch still retargets the horse
+PASS: drag left flips the complete HorseVisual
+PASS: drag right restores original HorseVisual direction
+open_depth=0.000000038
+left_obstacle_depth=0.159581118
+right_obstacle_depth=0.178999884
+final_depth=0.369047585
+final_z_index=37
+RESULT: SUCCESS
