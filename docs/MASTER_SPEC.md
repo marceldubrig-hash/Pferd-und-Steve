@@ -148,11 +148,36 @@ Stand auf `main`:
 
 Die bestätigten Binär-Assets liegen derzeit weiterhin in versionierten ZIP-Paketen unter `asset_packs/`. Sie sind noch nicht als einzelne PNG-Dateien in die verbindlichen `assets/...`-Runtime-Pfade entpackt.
 
+## Technischer Test-Meilenstein — erster Android-Build
+
+Erreicht am 2026-09-27:
+
+- Canon-Assets wurden aus dem bereits bestätigten Runtime-Paket in die echten Runtime-Pfade übernommen:
+  - `assets/backgrounds/farm_day_v01.png`
+  - `assets/backgrounds/farm_night_v01.png`
+  - `assets/horse/horse_master_standing_v01.png`
+- Die WebP-Quellen aus dem Paket wurden ohne Neugenerierung in PNG konvertiert.
+- Die minimale Farm-Szene lädt die Tag-Farm und das Master-Pferd.
+- Touch-/Maus-Drag bewegt das Pferd auf dem Hof.
+- Bewegungsrichtung spiegelt das Pferd horizontal; RIGHT bleibt das Original.
+- Die Y-Position steuert die Größe und Z-Reihenfolge für den Pseudo-3D-Effekt.
+- Godot 4.3 hat das Projekt headless erfolgreich importiert und validiert.
+- Für Android wurde ETC2/ASTC-Import aktiviert, damit der Headless-Android-Export auf Linux korrekt validiert.
+- Ein signiertes Android-Debug-APK wurde erfolgreich gebaut und als CI-Artefakt erzeugt.
+- Erfolgreicher Build-Run: `36324391689`
+- Build-Basis: Commit `62e333994784883b989fb30ef0b9ebe39733f99c`
+- Lokaler Prüfsummenwert des heruntergeladenen Test-APK: `SHA-256 3e59b18f166e88be0853922115230080f3ab1f2ed6590e8262440d878c99ee4a`
+- APK-Archivprüfung: keine ZIP-/Kompressionsfehler; die drei Canon-Texturen und die Hauptszene sind im APK enthalten.
+
 ## Aktuell nächste technische Aufgabe
 
-Nur die bereits bestätigten Assets aus den vorhandenen Paketen in ihre verbindlichen Runtime-Pfade übernehmen. Zuerst ausschließlich:
-1. `assets/backgrounds/farm_day_v01.png`
-2. `assets/backgrounds/farm_night_v01.png`
-3. `assets/horse/horse_master_standing_v01.png`
+Zuerst den ersten Android-Build auf dem realen Testgerät prüfen. Dabei ausschließlich diese Basisfunktionen kontrollieren:
 
-Danach die erste minimale Farm-Szene mit diesen drei Canon-Assets testen. Erst nach erfolgreichem Test wird das eigentliche Cutout-Rig aus Kopf, Unterkiefer, Schweif und Beinsegmenten eingebaut.
+1. App startet ohne Absturz.
+2. Tag-Farm wird korrekt dargestellt.
+3. Master-Pferd steht sichtbar auf dem Hof.
+4. Touch/Drag bewegt das Pferd.
+5. Beim Wechsel nach links/rechts wird nur horizontal gespiegelt.
+6. Beim Verschieben nach oben/unten wird das Pferd plausibel kleiner/größer.
+
+Erst wenn diese Basis bestätigt oder gezielt korrigiert wurde, wird das eigentliche Cutout-Rig aus Kopf, Unterkiefer, Schweif und Beinsegmenten eingebaut.
