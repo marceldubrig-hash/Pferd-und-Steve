@@ -100,3 +100,15 @@ Git-Clone/Fetch funktioniert. Direkter Git-Push hat keine lokalen HTTPS-Zugangsd
 Schreibzugriffe erfolgen deshalb über den verbundenen GitHub-Connector, mit
 anschließender lokaler Synchronisierung vom verifizierten `main`. Godot 4.3 wurde
 für lokale Headless-Prüfungen heruntergeladen. Dies ist kein Runtime-Problem.
+
+## 11B — Prüfung der parallelen Instanz
+
+- Instanz-Commit: `513b1ea5ba3f64d8dce23f8fd26285879321e9e3`.
+- Lokales Godot **4.3.stable.official.77dcf97d8**, Editor-Import: **PASS**.
+- Anschließend reale `main.tscn` headless gestartet, `--quit-after 3`: **PASS**, keine Script-/Scene-Fehler.
+- Noch keine Änderung an Anchor, Scale, Flip oder `main.gd`.
+- Lokaler Screenshot-Setupversuch (`apt-get update` für Xvfb) scheiterte an
+  Container-Rechten für setgroups/setuid. Keine Runtime-Ursache; keine Rechteänderung
+  oder Eskalation. Gerenderte Godot-Screenshots werden über einen temporären
+  GitHub-Actions-Workflow mit virtuellem Display erzeugt. Lokale Headless-Tests
+  bleiben möglich. Automatische Godot-Importcaches werden nicht versioniert.
