@@ -159,7 +159,7 @@ Stand auf `main`:
 - alle vier Beine sind vollständig als `Upper → LowerPivot → Lower → HoofPivot → Hoof` montiert; insgesamt sind damit alle 12 Beinsegmente angebunden
 - vollständige statische Pferdefigur wurde in Schritt 6 gegen die Master-Pose geprüft; einzige nötige Transformkorrektur war die Ruhe-Rotation von `JawPivot` von ursprünglich `-14°` über einen kontrollierten Zwischenstand `-17°` auf final `-19°`
 - Body, Tail, HeadPivot/HeadUpper sowie alle vier Bein-Roots, Pivotwerte, Scales und Layer blieben in Schritt 6 unverändert
-- noch keine Animation und keine Farm-Integration des Cutout-Rigs
+- erster minimaler Jaw-Test ist in der Standalone-Rig-Szene aktiv; Kopf-, Schweif- und Walk-Animation sowie Farm-Integration bleiben weiterhin unbegonnen
 
 ## Technischer Test-Meilenstein — erster Android-Build
 
@@ -483,10 +483,104 @@ Finale Android-Prüfung:
 
 Damit ist **Schritt 6 abgeschlossen**. Es wurde keine Jaw-Animation, Kopfanimation, Schweifanimation, Walk-Animation oder Farm-Integration begonnen.
 
+## Rig-Meilenstein — minimaler Jaw-Test
+
+Abgeschlossen am 2026-09-27.
+
+### Ziel
+
+Der Unterkiefer soll ausschließlich über den bereits bestätigten `JawPivot` bewusst billig hoch/runter klappen. Keine neue Kopf-Perspektive, keine Bildbearbeitung, kein Lip-Sync-System und keine Farm-Integration.
+
+### Implementierung
+
+In `scenes/horse_cutout_rig.tscn` wurde ein eigener `AnimationPlayer` ergänzt.
+
+Animation:
+
+- Name: `jaw_test`
+- Autoplay: aktiv
+- Loop: aktiv
+- Länge: `0.6 s`
+- Track: `HeadPivot/JawPivot:rotation`
+- Interpolation: einfache lineare Value-Interpolation
+- Ruheposition bleibt unverändert bei `-0.331613 rad` ≈ `-19°`
+
+Finale Keyframes:
+
+- `0.00 s` → `-19°` Ruhe
+- `0.15 s` → `-9°` Hauptöffnung
+- `0.30 s` → `-19°` Ruhe
+- `0.42 s` → `-13°` kleinere zweite Öffnung
+- `0.60 s` → `-19°` Ruhe
+
+Dadurch entsteht absichtlich eine leicht ungleichmäßige, primitive Puppen-Sprechbewegung.
+
+Zusätzlich existiert eine `RESET`-Animation, die ausschließlich die bestätigte Ruhe-Rotation `-0.331613 rad` setzt.
+
+### Kontrollierter Korrekturversuch
+
+Erster Test:
+
+- Ruhe: `-19°`
+- Hauptöffnung: `-7°`
+- zweite Öffnung: `-10°`
+- Commit: `352f7478d1e588ddec3a808405466fa19e94a8a2`
+- erster visueller Nachweis: `7530bd4df4b38a9aac494a64aacb99e103864e89`
+
+Die `-7°`-Öffnung wirkte im Nahvergleich sichtbar zu weit und ließ den Unterkiefer eher ausgerenkt als billig-puppig erscheinen.
+
+Deshalb wurde ausschließlich der Öffnungsbereich verkleinert:
+
+- Hauptöffnung final: `-9°` / `-0.15708 rad`
+- zweite Öffnung final: `-13°` / `-0.226893 rad`
+- Korrektur-Commit: `a33f2701c9200230c0610d6b4dab5a20832c85e5`
+
+Der temporäre Preview-Workflow hatte danach zunächst noch alte Winkelbeschriftungen; ausschließlich diese Prüfbeschriftung wurde mit Commit `9e18d1855a84d8ed8945297b81f286a48d448b90` korrigiert. Der finale visuelle Nachweis liegt im temporären Ergebnis-Commit `8dad80d1009b0390cb7a5e5a18d697c097479596`.
+
+### Unverändert
+
+Schritt 7 verändert ausschließlich die Jaw-Animation.
+
+Unverändert bleiben insbesondere:
+
+- `JawPivot.position = (340, -110)`
+- statische Jaw-Ruhe-Rotation `-0.331613 rad`
+- Jaw-Asset-Offset, -Rotation und -Scale
+- HeadPivot und HeadUpper
+- Body
+- Tail
+- alle vier Beine und alle zwölf Beinsegmente
+- sämtliche Near/Far-Layer
+- Farm-/Perspektivsystem
+- `scripts/main.gd`
+
+Keine Textur wurde neu generiert, neu encodiert, zugeschnitten oder ersetzt.
+
+### Finale technische Validierung
+
+Finaler Lauf:
+
+- Workflow-Basis: `cbf9e4b071874e0e95334e992c81d417304f0987`
+- Ergebnis-Commit: `d442fe93b576526708926517892acb94473f6ed0`
+- Asset-Integrität: **success**
+- Godot 4.3 Headless: **success**
+- Runtime-Check der geladenen `horse_cutout_rig.tscn`: **success**
+- `AnimationPlayer`: gefunden
+- `jaw_test`: gefunden
+- Autoplay `jaw_test`: bestätigt
+- Rotation-Track `HeadPivot/JawPivot:rotation`: bestätigt
+- alle fünf Keyframe-Zeiten und Winkelwerte: bestätigt
+- Android Debug Export: **success**
+- APK SHA-256: `a72eccd7942f70db81da71113656c6906d0668c01d7df02d7948868440fd49de`
+
+Damit ist **Schritt 7 abgeschlossen**.
+
+Es wurde ausdrücklich **keine** Kopfanimation, Schweifanimation, Walk-Animation oder Farm-Integration begonnen.
+
 ## Aktuell nächste technische Aufgabe
 
 Die bestätigte Farm-/Perspektivgrundlage bleibt unverändert.
 
-Erst nach ausdrücklichem `weiter` folgt **Schritt 7: minimaler Jaw-Test**.
+Erst nach ausdrücklichem `weiter` folgt **Schritt 8: minimale Kopfrotation**.
 
-Ziel: Unterkiefer bewusst billig hoch/runter klappen; keine Lip-Sync-Komplexität.
+Ziel: kompletter ausgeschnittener Kopf leicht hoch/runter rotieren; absichtlich primitive Puppenbewegung.
