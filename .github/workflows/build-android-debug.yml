@@ -1,0 +1,68 @@
+name: Build Android Debug APK
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/build-android-debug.yml"
+      - "project.godot"
+      - "export_presets.cfg"
+      - "scenes/**"
+      - "scripts/**"
+      - "assets/**"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download Godot 4.3 editor
+        shell: bash
+        run: |
+          curl -L --fail --retry 3             -o godot.zip             "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          chmod +x Godot_v4.3-stable_linux.x86_64
+
+      - name: Install Godot 4.3 export templates
+        shell: bash
+        run: |
+          curl -L --fail --retry 3             -o templates.tpz             "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz"
+          rm -rf templates-unpacked
+          mkdir -p templates-unpacked
+          unzip -q templates.tpz -d templates-unpacked
+
+          mkdir -p "$HOME/.local/share/godot/export_templates/4.3.stable"
+          cp -a templates-unpacked/templates/. "$HOME/.local/share/godot/export_templates/4.3.stable/"
+
+      - name: Prepare debug keystore
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.android"
+          if [ ! -f "$HOME/.android/debug.keystore" ]; then
+            keytool -genkeypair               -v               -keystore "$HOME/.android/debug.keystore"               -storepass android               -alias androiddebugkey               -keypass android               -keyalg RSA               -keysize 2048               -validity 10000               -dname "CN=Android Debug,O=Android,C=US"
+          fi
+
+      - name: Import project
+        shell: bash
+        run: |
+          ./Godot_v4.3-stable_linux.x86_64             --headless             --path .             --import
+
+      - name: Export debug APK
+        shell: bash
+        run: |
+          mkdir -p build
+          ./Godot_v4.3-stable_linux.x86_64             --headless             --path .             --export-debug "Android Debug"             build/Pferd-und-Steve-debug.apk
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Pferd-und-Steve-debug-apk
+          path: build/Pferd-und-Steve-debug.apk
+          if-no-files-found: error
