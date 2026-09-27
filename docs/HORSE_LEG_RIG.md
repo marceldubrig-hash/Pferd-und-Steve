@@ -354,6 +354,14 @@ Preview-Commit:
 
 - `8f663311cedbef7ec93a461d80d3c2a6e8306457`
 
+Technische Validierung des Zwei-Vorderbein-Stands:
+
+- verifizierte Workflow-Basis: `ec658fb8e8f5f091407e5fc0055daa78b74cfdd1`
+- Godot 4.3 Headless Parse/Import: **success**
+- Android Debug Export: **success**
+- Validierungs-Commit: `eeb764fca324e009efe5fe4012c3d568106bfb28`
+- Test-APK SHA-256: `94bc4edc898cc33dd102a0cfd272be823794468de2da4f93037b310be4b69710`
+
 Aufbau-Commits:
 
 - `547c845e3ff65f3c0c12c5d9d9fd3de601e1c157` — FrontFar Upper
