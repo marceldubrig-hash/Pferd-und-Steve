@@ -184,3 +184,13 @@ Weiterhin unverändert in diesem Mini-Schritt:
 
 Nächster Prüfpunkt: visueller Alt-vs-Cutout-Vergleich bei ferner, mittlerer und sehr
 naher Tiefe; erst nach erfolgreichem Größenvergleich folgt der Ganzrig-Flip.
+
+
+### Temporärer visueller Größenvergleich (11D)
+
+Für die vorgeschriebene Sichtprüfung vor dem Flip wurde ein temporäres, rein lesendes
+Preview-Werkzeug ergänzt. Es rendert aus den echten TSCN-Transforms und unveränderten
+Assets drei Tiefen (`depth_t = 0 / 0.5 / 1`) jeweils als alten Master, Cutout und
+Überlagerung bei Fold-Testgröße `1536×1384`. Die Farm-Projektionsformel wird dabei
+mit den unveränderten Canon-Konstanten ausgewertet. Das Werkzeug schreibt nur unter
+`debug/`; Runtime-Dateien und Assets werden nicht verändert.

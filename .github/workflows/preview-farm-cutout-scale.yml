@@ -1,0 +1,46 @@
+name: Preview farm cutout scale
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/preview-farm-cutout-scale.yml"
+      - "tools/render_farm_cutout_scale_preview.py"
+      - "scenes/main.tscn"
+      - "scenes/horse_cutout_rig.tscn"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install preview dependency
+        run: python -m pip install --disable-pip-version-check pillow numpy
+
+      - name: Verify approved rig assets
+        run: python tools/materialize_verified_rig_assets.py
+
+      - name: Render far mid near master comparison
+        run: python tools/render_farm_cutout_scale_preview.py
+
+      - name: Commit preview evidence
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add debug/farm_cutout_scale_preview.jpg debug/farm_cutout_scale_preview.txt
+          if git diff --cached --quiet; then
+            echo "Preview unchanged."
+            exit 0
+          fi
+          git commit -m "Record farm cutout scale preview"
+          git push origin HEAD:main
