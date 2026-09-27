@@ -241,3 +241,19 @@ Beim eigentlichen Austausch in 11F entfällt die Master-Zeile vollständig.
 Sonst keine Änderung an Bewegung, Perspektive, Bodenanker, Hindernisgrenzen oder
 Animationen. Vor 11F müssen die automatischen Godot-/Android-Prüfungen dieses
 Script-Updates grün sein.
+
+
+### 11E technische Prüfung
+
+Whole-rig-Flip-Commit: `e1398dfcd9b9e8d33faa2b1fb60ea4e001c6f777`.
+
+- Godot-4.3-Validierung: Run `36353591506` — **success**
+- Android-Debug-Build: Run `36353591523` — **success**
+- `HorseVisual` ist ein äußerer Parent von `RigSpace/HorseCutoutRig`; dadurch bleibt
+  die Spiegelung außerhalb aller drei AnimationPlayer und ihrer Track-Pfade.
+- RIGHT behält positive X-Skalierung; LEFT invertiert nur X auf dem Gesamtcontainer.
+- Eine visuelle LEFT/RIGHT-Prüfung mit laufenden Animationen folgt nach dem sichtbaren
+  Austausch in 11F/11J; bis dahin bleibt der Master absichtlich sichtbar.
+
+Kein Fehler und kein Korrekturcommit nötig. 11E ist technisch bereit für den isolierten
+Austausch des sichtbaren Masters.
