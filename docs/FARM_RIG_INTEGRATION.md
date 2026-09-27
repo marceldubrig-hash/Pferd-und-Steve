@@ -513,3 +513,65 @@ Nicht verändert wurden insbesondere:
 Schritt 11M entfernt jetzt nur noch die temporären Preview-, Probe- und
 Validierungsdateien. Die hier dokumentierten Ergebnisse bleiben danach die dauerhafte
 Auditspur.
+
+
+## 11M — temporäre Prüfdateien entfernt
+
+Erst nach dauerhafter Dokumentation und erfolgreicher finaler Validierung wurden die
+Step-11-Prüfdateien einzeln entfernt. Jeder Dateilöschvorgang besitzt einen eigenen
+Commit:
+
+- `5666e48923112f68abc5c95edd04f8d9cc2ecc40` — Scale-Previewbild entfernt
+- `47e3da447456aece1cfc3cf3de9c86ef54fe42a6` — Scale-Previewnachweis entfernt
+- `13edaa8a69f8ffd6ff40ed336fa44dc3832b267b` — Scale-Previewworkflow entfernt
+- `5e82aa69b643c3ce8838c188c8a28274fc67c94a` — Scale-Previewtool entfernt
+- `384a86309a9a9365c76794670747fc6792917568` — Movement-Nachweis entfernt
+- `3425b2d3bcc36af85f46de8c35d29aeaf1904806` — Movement-Workflow entfernt
+- `17f36f0571e1c094edb0ec69debc7e6f5eeeb438` — Movement-Probe entfernt
+- `13ba9efd6b6cfc9d49b5cc17dc1d51f266b778e5` — Runtime-Previewbild entfernt
+- `4675230bb27e748df3432929b5f154eaea7a36ab` — Runtime-Previewnachweis entfernt
+- `8cb1850f0952bfe40f3f1f58d6b98cce10168b97` — Runtime-Previewworkflow entfernt
+- `d065593006a92f4f3a395811be2996c164d371c9` — Runtime-Previewrunner entfernt
+- `0167bf010df44b02b7b0b5f07b5a7ca9ab217c50` — finaler Validierungsnachweis entfernt
+- `74568d5cbca8884bc75f002f3d0db844b3b972ab` — finaler Validierungsworkflow entfernt
+- `3ad2dd2d5dee2e62b676ff26e4723a45eb3ce565` — finaler statischer Validator entfernt
+- `df192d3a20a57a2239fda8bf9ee704e8e18d2241` — finaler Runtime-Validator entfernt
+- `851b23ddc0bd67030cea0dba0e3e6e00547a9e8a` — 11C-Messwerkzeug entfernt
+
+Cleanup-Werkzeughistorie: Der erste Löschbatch startete nicht, weil ein JPEG über
+den Connector versehentlich als UTF-8 statt als Base64-Metadaten gelesen wurde
+(`UnicodeDecodeError`); **es entstand dabei kein Commit und keine Datei wurde
+gelöscht**. Der korrigierte Base64-Batch legte anschließend die ersten zehn
+Einzellösch-Commits erfolgreich an und stieß danach nur an das Code-Mode-
+Toolcall-Limit. Der Repository-Baum wurde daraufhin erneut geprüft und die sechs
+verbleibenden Dateien in zwei weiteren kontrollierten Batches entfernt. Es gab
+keinen Rollback und keinen ungesicherten Runtime-Zustand.
+
+### Finale Diff-/Integritätsprüfung nach Cleanup
+
+Vergleich gegen Step-10-Abschluss
+`d83694ccc2be05df037a50b75cd09e18afbb2e90`, geprüft am Cleanup-HEAD
+`851b23ddc0bd67030cea0dba0e3e6e00547a9e8a`:
+
+Dauerhaft verändert sind **exakt vier Pfade**:
+
+1. `docs/FARM_RIG_INTEGRATION.md` — neuer vollständiger Step-11-Audit
+2. `docs/MASTER_SPEC.md` — Projektstand / nächster Schritt aktualisiert
+3. `scenes/main.tscn` — Cutout-Hierarchie, Ground-Anchor und Integrationsscale
+4. `scripts/main.gd` — Ganzrig-Flip und Entfernung der alten Sprite-Abhängigkeiten
+
+Keine verbleibenden temporären Step-11-Dateien unter `debug/`, `tools/` oder
+`.github/workflows/`.
+
+Explizit unverändert:
+
+- `scenes/horse_cutout_rig.tscn`, Blob
+  `a5a62fc019e58e188535bf57387a43249e1b7c73`,
+  SHA-256 `328edf3d34090b08f4e729c690f04c36ad3f69f4d9d6813145bf73f9315cf96e`
+- `docs/HORSE_LEG_RIG.md`, Blob
+  `7b9e854cb5b848592d096eab72dbfd29315f7d1f`
+- alle Pferde-/Farm-Bildassets, Atlas-Regions, Pivots sowie Jaw/Head/Tail/Walk-Daten
+
+Damit ist **Schritt 11 vollständig abgeschlossen**. Nach dieser Dokumentation keine
+weitere Runtime-Arbeit beginnen. Erst auf ausdrückliches `weiter`: Schritt 12,
+echter Android-Gerätetest auf Galaxy Z Fold7 / Android 16.

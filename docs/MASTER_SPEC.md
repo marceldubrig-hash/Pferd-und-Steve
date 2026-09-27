@@ -1002,6 +1002,8 @@ Schritt 11 wurde am 2026-09-27 technisch abgeschlossen.
 - Android Debug Export: **success**
 - Step-11-APK SHA-256:
   `782dfed3cb22d7fd38ad52f9402cacacc75a60de86b4be08465266097c4be4de`
+- sämtliche temporären Step-11-Preview-, Probe- und Validierungsdateien wurden nach gesicherter Dokumentation einzeln entfernt
+- finaler Diff gegen den Step-10-Abschluss enthält nur `scenes/main.tscn`, `scripts/main.gd`, `docs/MASTER_SPEC.md` und die neue `docs/FARM_RIG_INTEGRATION.md`
 - Detailaudit: `docs/FARM_RIG_INTEGRATION.md`
 
 ## Aktuell nächste technische Aufgabe
