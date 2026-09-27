@@ -59,6 +59,22 @@ jobs:
               out.append(line)
 
           emit("MASTER_SIZE", master.shape[1], master.shape[0])
+          ma = master[:, :, 3] if master.shape[2] == 4 else np.full(master.shape[:2],255,np.uint8)
+          emit("MASTER_ALPHA_RUNS_RIGHT_HALF")
+          for yy in range(300, min(master.shape[0], 761), 20):
+              xs = np.flatnonzero(ma[yy] >= 16)
+              xs = xs[xs >= 500]
+              runs=[]
+              if len(xs):
+                  start=prev=int(xs[0])
+                  for xv in xs[1:]:
+                      xv=int(xv)
+                      if xv > prev + 1:
+                          if prev-start >= 3: runs.append((start,prev))
+                          start=xv
+                      prev=xv
+                  if prev-start >= 3: runs.append((start,prev))
+              emit("Y", yy, "RUNS", runs)
           for name, (x,y,w,h) in boxes.items():
               crop = sheet[y:y+h, x:x+w]
               alpha = crop[:, :, 3] if crop.shape[2] == 4 else np.full((h,w),255,np.uint8)
