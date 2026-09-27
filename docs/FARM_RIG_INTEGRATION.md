@@ -112,3 +112,11 @@ für lokale Headless-Prüfungen heruntergeladen. Dies ist kein Runtime-Problem.
   oder Eskalation. Gerenderte Godot-Screenshots werden über einen temporären
   GitHub-Actions-Workflow mit virtuellem Display erzeugt. Lokale Headless-Tests
   bleiben möglich. Automatische Godot-Importcaches werden nicht versioniert.
+
+## 11C — Messwerkzeug
+
+Temporär `tools/measure_farm_rig.py` ergänzt: liest echte TSCN-Transforms,
+Atlas-Regions und Original-Alpha. Schwellwert alpha >= 16 wie beim bestätigten
+Segment-Audit; misst Pixelkanten im statischen, unskalierten Rig-Raum.
+Keine Bilddatei wird geschrieben. Erst nach Speicherung dieses Werkzeugs wird
+die Messung ausgeführt und der Bodenanker in einem eigenen Commit gesetzt.
