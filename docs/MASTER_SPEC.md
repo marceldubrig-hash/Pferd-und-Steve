@@ -1146,3 +1146,86 @@ Der Git-Verlauf enthält einen ausdrücklich als vom Nutzer bestätigt dokumenti
 - Bestätigungs-/Canon-Dokumentation: `f34c9142c67c388758d7749fca2536ea51734b9d` — `Record approved perspective and calibrated yard boundaries`
 
 Die danach entstandenen Collision-Experimente aus Step 12 dürfen **nicht** als Begründung verwendet werden, diesen bestätigten Zustand frei neu zu erfinden. Jede weitere Collision-Recovery muss zuerst diesen bestätigten Snapshot als Quelle verwenden und darf andere bereits bestätigte Systeme nicht verändern.
+
+## FROZEN USER-APPROVED BASELINES
+
+Dieser Bereich ist die verbindliche Registry für vom Nutzer ausdrücklich bestätigte
+Systeme. Ein Eintrag mit Status **FROZEN** darf weder refaktoriert noch nebenbei
+angepasst werden. Änderungen sind nur nach ausdrücklicher Freigabe genau dieses
+Subsystems erlaubt.
+
+### Farm Collision — historisch user-approved
+
+- System: physischer Hof-Laufraum / obstacle-aware hintere Bodengrenze
+- Status: **FROZEN — historische Semantik**
+- Ursprünglicher Runtime-Commit:
+  `d5d3ff9ca32968f035d304176668eb2a326578ad`
+- Bestätigungs-/Canon-Commit:
+  `f34c9142c67c388758d7749fca2536ea51734b9d`
+- Kalibrierungsdokumentation:
+  `bd064faffffcde52f494886b81d6215dd18f2560`
+- historischer `main.gd`-Blob am Runtime-Commit:
+  `29d39e8a5f373014178e6e2d46f4d5bb9674fd61`
+- Gerätetest: Samsung Galaxy Z Fold / realer Fold-Test 2026-09-27
+- Freigabegrund:
+  Nah-/Fernskalierung, hintere Hofgröße und die kalibrierten physischen
+  Hofgrenzen wurden vom Nutzer als funktionierend bestätigt.
+- Verbindliche Collision-Semantik:
+  - offener hinterer Hof `0.565`
+  - Hindernisbereiche `0.585`
+  - äußerste Bereiche `0.600`
+  - X-Stützstellen `0.00 / 0.36 / 0.43 / 0.80 / 0.87 / 1.00`
+  - Projection-to-legal-ground statt frei erfundener Bounding-Box-Physik
+- Do not modify without explicit user permission.
+
+Wichtig: Dieser FROZEN-Eintrag schützt die **bereits damals bestätigte Semantik**.
+Er bedeutet nicht, dass jeder spätere technische Recovery-Build automatisch erneut
+auf allen Fold-Zuständen abgenommen ist.
+
+### Aktueller integrierter Collision-Recovery-Kandidat
+
+- Status: **AWAITING USER DEVICE APPROVAL — noch nicht als neuer Baseline-Snapshot eingefroren**
+- Recovery-Runtime-Commit:
+  `fd0962080edf756030a0b2a5a06cb5c1315ea859`
+- `scripts/main.gd`:
+  `a32408d507f0ee1c928c766f214666bedad65175`
+- `scenes/main.tscn`:
+  `336c90377be17ac57fe9b611a455ee544da6ba85`
+- `scenes/horse_cutout_rig.tscn`:
+  `0c94231e6e037d2ff32f9a70fe69f459dcc870ac`
+- Rig/Walk/Head/Assets wurden durch den Collision-Recovery-Commit nicht verändert.
+- Cutout-Adapter: **nicht erforderlich**.
+  `HorseRoot` blieb bei der Cutout-Integration derselbe physische Welt-/Bodenanker;
+  `RigSpace.scale = 0.701686` und
+  `HorseCutoutRig.position.y = -516.7995` bilden das Rig auf denselben
+  historischen Kalibrierraum ab.
+- Technischer Recovery-Validator:
+  Commit `dc7924ac79ea244b0343e33f156a4fc02962e912`,
+  Run `36368232364` — **success**.
+- Android-Testartefakt:
+  `Pferd-und-Steve-approved-collision-recovery-debug.apk`
+- Artifact-ID: `10947917953`
+- APK SHA-256:
+  `d0b6d9995f9d2b4df837ed7b8fc6c61f0b1a61baacd51fbda8b2980aac86452c`
+- Gerätetest: **ausstehend auf Samsung Galaxy Z Fold7 / Android 16**
+
+Nach ausdrücklicher Nutzerbestätigung „Kollision passt jetzt“ oder sinngleich wird
+dieser integrierte Recovery-Snapshot mit seinem dann aktuellen Commit, allen
+relevanten Blobs, APK-SHA, Datum und Geräteteststatus als **FROZEN / USER APPROVED**
+in dieser Registry festgeschrieben.
+
+### Verworfene Collision-Experimente — ausdrücklich kein Canon
+
+Die folgenden Runtime-Commits dürfen nicht als Quelle einer neuen Collision-Recovery
+verwendet werden:
+
+- `aa07a14d87ed983d2e7268fa701bae528f81f7c2`
+  — `Make farm obstacle boundaries aspect-ratio aware`
+- `07b575e7e780ba3320bc68f3f89294f7980b5cb3`
+  — `Use visible farm fences as movement boundaries`
+
+Die Git-Analyse zeigte als Ursache der Regression nicht das Cutout-Rig, sondern die
+spätere Änderung der Collision-Semantik: Source-Space-/Cover-Mapping,
+geschätzte Pferdebreite, Mehrfach-Probes, iterative X-/Depth-Clamps und anschließend
+Side-Fence-Grenzen ersetzten den zuvor bestätigten normierten Hof-Laufraum.
+
