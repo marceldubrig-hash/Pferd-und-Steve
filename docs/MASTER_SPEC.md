@@ -1397,3 +1397,82 @@ Automatisiert geprüft wurden zufällige Ziele auf beiden Hofseiten, Bewegung zu
 einem Ziel, Richtungswechsel, Walk während Bewegung, Pause im Stillstand,
 vollständig entfernte Drag-Eingabe sowie die unveränderte FROZEN-Collision für
 beide Fold-Auflösungen, LEFT/RIGHT, extreme X-Positionen und mehrere Tiefen.
+## Audio-/App-Icon-Meilenstein — kontinuierliche Musik und Launcher-Icon
+
+Abgeschlossen am 2026-09-28.
+
+### Hintergrundmusik
+
+- Audio-Asset: `assets/audio/background_music_v01.ogg`
+- ursprüngliche Integration: `2bbcc2bdbd00dabca332d36f290ee06c3c043e8f`
+  — `Add continuous background music`
+- Autoload: `BackgroundMusic="*res://scripts/background_music.gd"`
+- Lautstärke: `-8.0 dB`
+- Musik läuft als Loop und mit `PROCESS_MODE_ALWAYS`.
+- Beim ersten CI-Test auf einem komplett frischen Checkout zeigte sich ein Import-Race:
+  `preload("res://assets/audio/background_music_v01.ogg")` wurde bereits beim
+  Parsen des Autoload-Scripts ausgewertet, bevor Godot den OGG-Import vollständig
+  aufgebaut hatte.
+- Das Audioformat selbst war nicht defekt. Nach dem Import konnte Godot den
+  OGG-Vorbis-Stream korrekt laden und abspielen.
+- finaler isolierter Fix:
+  `1762ea2bbb086766656a454edf46a29be26d5535`
+  — `Load background music after fresh import`
+- Der Fix entfernt ausschließlich das parse-time `preload()` und lädt den
+  `AudioStream` erst zur Runtime. Im Editor-/Importmodus wird der Stream nicht
+  vorzeitig aufgelöst.
+- Es war daher **keine MP3-Konvertierung nötig**; das bestätigte OGG-Asset bleibt
+  unverändert.
+
+### App-Icon
+
+- Icon-Integration:
+  `2b89f5839b5fe2e718162f9f96a299d18eb8a2bb`
+  — `Set horse farm artwork as app icon`
+- Projekticon:
+  `assets/icons/app_icon_512.png`
+- Android-Launcher:
+  `assets/icons/app_icon_192.png`
+- Adaptive Foreground:
+  `assets/icons/app_icon_adaptive_foreground_432.png`
+- Adaptive Background:
+  `assets/icons/app_icon_adaptive_background_432.png`
+- bestätigte Quellablage:
+  `assets/icons/app_icon_source.jpg`
+
+### Technische Validierung
+
+Die Prüfung wurde bewusst gegen die eingefrorenen Runtime-Blobs abgesichert:
+
+- `scripts/main.gd` blieb Blob
+  `f9282fce26465491dee07d29bd8d5f7fb0a519f1`
+- `scenes/main.tscn` blieb Blob
+  `336c90377be17ac57fe9b611a455ee544da6ba85`
+- `scenes/horse_cutout_rig.tscn` blieb Blob
+  `0c94231e6e037d2ff32f9a70fe69f459dcc870ac`
+
+Ergebnisse:
+
+- allgemeine Godot-4.3-Parse-/Importprüfung auf dem Runtime-Fix:
+  Run `36380717351` — **SUCCESS**
+- Android-Debug-Export auf derselben Runtime-Basis:
+  Run `36380717399` — **SUCCESS**
+- spezieller Music-/Icon-Runtime-Validator:
+  Run `36380887221` — **SUCCESS**
+- geprüft wurden:
+  - Autoload-Konfiguration
+  - tatsächliches Erzeugen des `AudioStreamPlayer`
+  - OGG-Vorbis-Stream
+  - aktivierter Loop
+  - gestartete Wiedergabe
+  - Lautstärke `-8.0 dB`
+  - alle vier benötigten Icon-Dateien und ihre Zielgrößen
+  - Laden/Instanziieren der echten Hauptszene
+  - unveränderte FROZEN-Runtime-Blobs
+- der temporäre Validator wurde nach erfolgreicher Prüfung wieder entfernt:
+  `1866ae04bb1d4541c7928fcf5935adbfcc16a322`
+  — `Remove temporary music and icon validator`
+
+Damit sind Hintergrundmusik und App-Icon technisch integriert und validiert.
+Die FROZEN Collision, das Pferde-Rig, der Walk und die autonome Bewegung wurden
+für diesen Schritt nicht verändert.
