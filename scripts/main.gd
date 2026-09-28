@@ -53,9 +53,34 @@ const RIGHT_OUTER_X_RATIO := 1.00
 # fence is actually visible after Background cover-scaling/cropping.
 const LEFT_SIDE_FENCE_SOURCE_X := 45.0
 const RIGHT_SIDE_FENCE_SOURCE_X := 1416.0
-# Visible left support post of the small right shelter in the canonical farm source.
-# It is a local wide-Fold obstacle; the tall Fold crops this calibration differently.
-const WIDE_SHELTER_LEFT_POST_SOURCE_X := 1120.0
+# User-drawn final rear ground boundary for the 1536x658 wide Fold layout.
+# Points were sampled from the blue line in reference 22978.jpg and normalized,
+# so the same shape survives small viewport-size variations.
+const WIDE_GROUND_BOUNDARY_POINTS := [
+	Vector2(60.0 / 1536.0, 445.0 / 659.0),
+	Vector2(80.0 / 1536.0, 435.0 / 659.0),
+	Vector2(120.0 / 1536.0, 423.0 / 659.0),
+	Vector2(160.0 / 1536.0, 413.0 / 659.0),
+	Vector2(220.0 / 1536.0, 410.0 / 659.0),
+	Vector2(300.0 / 1536.0, 411.0 / 659.0),
+	Vector2(380.0 / 1536.0, 401.0 / 659.0),
+	Vector2(430.0 / 1536.0, 400.0 / 659.0),
+	Vector2(480.0 / 1536.0, 420.0 / 659.0),
+	Vector2(530.0 / 1536.0, 428.0 / 659.0),
+	Vector2(680.0 / 1536.0, 426.0 / 659.0),
+	Vector2(720.0 / 1536.0, 413.0 / 659.0),
+	Vector2(760.0 / 1536.0, 401.0 / 659.0),
+	Vector2(820.0 / 1536.0, 395.0 / 659.0),
+	Vector2(900.0 / 1536.0, 398.0 / 659.0),
+	Vector2(1040.0 / 1536.0, 397.0 / 659.0),
+	Vector2(1080.0 / 1536.0, 403.0 / 659.0),
+	Vector2(1120.0 / 1536.0, 420.0 / 659.0),
+	Vector2(1160.0 / 1536.0, 428.0 / 659.0),
+	Vector2(1240.0 / 1536.0, 421.0 / 659.0),
+	Vector2(1320.0 / 1536.0, 424.0 / 659.0),
+	Vector2(1360.0 / 1536.0, 426.0 / 659.0),
+	Vector2(1400.0 / 1536.0, 433.0 / 659.0),
+]
 
 # User-requested final micro-calibration: keep the exact cutout a few screen
 # pixels inside the already calibrated rear and lateral ground boundaries.
@@ -267,6 +292,29 @@ func _collision_boundary_inset_px(size: Vector2) -> float:
 	return COLLISION_BOUNDARY_INSET_PX
 
 
+func _wide_ground_boundary_y_ratio_for_x(x_ratio: float) -> float:
+	var x := clampf(x_ratio, 0.0, 1.0)
+	var first_point: Vector2 = WIDE_GROUND_BOUNDARY_POINTS[0]
+	if x <= first_point.x:
+		return first_point.y
+
+	for index in range(1, WIDE_GROUND_BOUNDARY_POINTS.size()):
+		var left_point: Vector2 = WIDE_GROUND_BOUNDARY_POINTS[index - 1]
+		var right_point: Vector2 = WIDE_GROUND_BOUNDARY_POINTS[index]
+		if x <= right_point.x:
+			var segment_t := inverse_lerp(left_point.x, right_point.x, x)
+			return lerpf(
+				left_point.y,
+				right_point.y,
+				smoothstep(0.0, 1.0, segment_t)
+			)
+
+	var last_point: Vector2 = WIDE_GROUND_BOUNDARY_POINTS[
+		WIDE_GROUND_BOUNDARY_POINTS.size() - 1
+	]
+	return last_point.y
+
+
 func _minimum_projected_foot_y_ratio_for_screen_span(
 	left_screen_x: float,
 	right_screen_x: float,
@@ -296,19 +344,22 @@ func _minimum_projected_foot_y_ratio_for_screen_span(
 				_minimum_projected_foot_y_ratio_for_x(support_x)
 			)
 
-	# The wide Fold keeps the shelter's left support post visible around source
-	# x=1120. Treat that exact visible post as one additional local curve support
-	# point so the current cutout cannot stand through it.
 	if size.x > size.y * 2.0:
-		var shelter_post_screen_x := _background_source_x_to_screen(
-			WIDE_SHELTER_LEFT_POST_SOURCE_X
+		minimum_ratio = maxf(
+			minimum_ratio,
+			_wide_ground_boundary_y_ratio_for_x(left_ratio),
+			_wide_ground_boundary_y_ratio_for_x(right_ratio)
 		)
-		if shelter_post_screen_x > minf(left_screen_x, right_screen_x) \
-		and shelter_post_screen_x < maxf(left_screen_x, right_screen_x):
-			minimum_ratio = maxf(minimum_ratio, RIGHT_OUTER_GROUND_Y_RATIO)
+		for point_variant in WIDE_GROUND_BOUNDARY_POINTS:
+			var point: Vector2 = point_variant
+			if point.x > left_ratio and point.x < right_ratio:
+				minimum_ratio = maxf(minimum_ratio, point.y)
+
+		# The drawn blue line is already the requested final foot boundary.
+		return clampf(minimum_ratio, 0.0, 1.0)
 
 	return clampf(
-		minimum_ratio + _collision_boundary_inset_px(size) / maxf(size.y, 1.0),
+		minimum_ratio + COLLISION_BOUNDARY_INSET_PX / maxf(size.y, 1.0),
 		0.0,
 		1.0
 	)
