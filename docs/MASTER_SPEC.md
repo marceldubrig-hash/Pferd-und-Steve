@@ -1067,3 +1067,19 @@ Deshalb gilt ab jetzt:
 - Erhalten bleiben ausschließlich die isolierten Kopfkorrekturen aus 12A/12B.
 - Der frühere Step-12-Build aus Run `36361667754` und APK-SHA `9bc3bb2972905b0e780afa5ad6808517486d0817140e9b4a05b7d541cd9ef648` ist ausdrücklich **verworfen**.
 - Nächster technischer Schritt ist ausschließlich die Wiederbestätigung der stabilen Step-11-Bewegung/Beine mit den Kopfkorrekturen auf echtem Android-Gerät. Vorher keine weiteren Bein-/Walk-/Speed-Experimente.
+
+
+### Step-12 Recovery-Build technisch bestätigt
+
+Die Recovery-Basis wurde danach mit einem separaten fail-closed Workflow geprüft:
+
+- `scripts/main.gd` musste exakt den Step-11-Git-Blob `a32408d507f0ee1c928c766f214666bedad65175` haben
+- `horse_cutout_rig.tscn` musste exakt den Recovery-Git-Blob `0c94231e6e037d2ff32f9a70fe69f459dcc870ac` haben
+- Godot 4.3 Headless: **success**
+- Runtime-Hauptszene: **success**
+- Android Debug Export: **success**
+- Workflow-Run: `36362768392`
+- Nachweis-Commit: `34c4b02468099a0d71931a122465f2b29ce4c419`
+- Recovery-APK SHA-256: `fe86fb4354a07e6fd02a8f7559f4a2f0b7a1d425c838e1c9e9b78d1fd44edc44`
+
+Dieser Recovery-Build ist der aktuelle Retest-Stand. Er enthält **Step-11 Beine, Step-11 Walk und Step-11 Bewegungs-/Hofgrenzen** plus ausschließlich die Kopfkorrekturen 12A/12B.
