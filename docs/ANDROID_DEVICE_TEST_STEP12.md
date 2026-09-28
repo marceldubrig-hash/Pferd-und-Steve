@@ -555,3 +555,55 @@ Der Runtime-Validator endete mit:
 Dieser Stand wird erst nach echter Bestätigung auf dem Samsung Galaxy Z Fold7 als
 neue integrierte FROZEN-Collision-Baseline übernommen.
 
+## Exact-Cutout-Collision — 4-Pixel-Micro-Kalibrierung (Fold-Test ausstehend)
+
+Status: **automatisiert verifiziert / echter Fold-Test ausstehend / noch nicht FROZEN**
+
+Die auf dem echten Samsung Galaxy Z Fold7 als **fast richtig** bewertete
+Exact-Cutout-Collision aus `98eb642fa4399d2bd5b7f649118a6cec0b3960a5`
+bleibt vollständig erhalten. Die einzige Runtime-Änderung ist ein gemeinsamer
+`COLLISION_BOUNDARY_INSET_PX := 4.0` auf den bereits berechneten hinteren und
+seitlichen Exact-Cutout-Grenzen.
+
+Unverändert bleiben insbesondere:
+
+- historische Ground-Curve `0.565 / 0.585 / 0.600`
+- echte Sprite2D-Cutout-Bounds
+- Fold-Cover- und Side-Fence-Auswertung
+- Perspektive und HorseRoot-Ground-Anchor
+- `main.tscn`
+- komplettes Cutout-Rig, Kopf-Fixes, Walk, Layering und Assets
+
+Technischer Stand:
+
+- Runtime-Commit: `7dfa0533fb8ae055fb69b3107da6aebfb089e86a`
+- Runtime-Commit-Inhalt: ausschließlich `scripts/main.gd`
+- temporärer Validator-Commit: `8c2edb0b2719d97b5dd94ddf47c12968e9e138f7`
+- temporärer Validator-Cleanup: `b48dcfabe1b4ca269f70ef0480e3c7c501ae173d`
+- Godot-4.3-Parse-Run: `36374978165` — **SUCCESS**
+- Collision-Validator-Run: `36375016331` — **SUCCESS**
+- Validator-Artifact-ID: `10950423676`
+- Android-Debug-Build-Run: `36374978188` — **SUCCESS**
+- Android-Artifact-ID: `10950582615`
+- APK: `Pferd-und-Steve-collision-micro-calibration-debug.apk`
+- APK SHA-256: `3bfc9c188ef87b1fd92c752318979435c7257a65740b8a26f74c2d22c2a71b62`
+- `scripts/main.gd` Blob: `214a87a755b2c8e7550f16ca78bd58cb2a919aff`
+- `scenes/main.tscn` Blob: `336c90377be17ac57fe9b611a455ee544da6ba85`
+- `scenes/horse_cutout_rig.tscn` Blob: `0c94231e6e037d2ff32f9a70fe69f459dcc870ac`
+
+Automatisiert geprüft:
+
+- 1536×658
+- 1536×1384
+- RIGHT und LEFT
+- X-Proben 0.00, 0.18, 0.34, 0.40, 0.50, 0.82, 0.90 und 1.00
+- Tiefen 0.00, 0.28 und 0.60
+- echte sichtbare Cutout-Spanne innerhalb der neuen Grenzen
+- hintere Ground-Curve inklusive 4-Pixel-Inset
+- breite Fold-Grenzen `49 … 1412`
+- hohe Fold-Grenzen `4 … 1532`
+
+Der Kandidat darf erst nach ausdrücklicher Nutzerbestätigung auf dem echten
+Samsung Galaxy Z Fold7 als USER APPROVED / FROZEN in `MASTER_SPEC.md`
+eingetragen werden.
+
