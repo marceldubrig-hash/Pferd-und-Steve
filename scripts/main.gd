@@ -48,6 +48,18 @@ const RIGHT_OPEN_X_RATIO := 0.80
 const RIGHT_OBSTACLE_X_RATIO := 0.87
 const RIGHT_OUTER_X_RATIO := 1.00
 
+# Side-fence positions measured directly in the canonical farm texture from the
+# user's real 1536x658 Fold screenshot. They are only active when the corresponding
+# fence is actually visible after Background cover-scaling/cropping.
+const LEFT_SIDE_FENCE_SOURCE_X := 45.0
+const RIGHT_SIDE_FENCE_SOURCE_X := 1416.0
+
+# The collision solver has one circular dependency: moving the horse forward makes
+# it larger, which changes its exact visual X-span. Iterate to convergence using the
+# real Sprite2D bounds instead of estimating horse width.
+const COLLISION_SOLVER_MAX_PASSES := 8
+const COLLISION_SOLVER_EPSILON := 0.0001
+
 @onready var background: Sprite2D = $Background
 @onready var horse_root: Node2D = $HorseRoot
 @onready var horse_visual: Node2D = $HorseRoot/HorseVisual
@@ -126,21 +138,19 @@ func set_horse_position(new_position: Vector2) -> void:
 
 	var min_y := size.y * GROUND_BACK_TOUCH_Y_RATIO
 	var max_y := size.y * GROUND_FRONT_TOUCH_Y_RATIO
-	var clamped_x := clampf(new_position.x, 0.0, size.x)
+	var requested_x := clampf(new_position.x, 0.0, size.x)
 	var clamped_y := clampf(new_position.y, min_y, max_y)
 
-	horse_x_ratio = clamped_x / size.x
-
-	var requested_depth_t := clampf(
+	horse_x_ratio = requested_x / size.x
+	horse_depth_t = clampf(
 		inverse_lerp(min_y, max_y, clamped_y),
 		0.0,
 		1.0
 	)
-	var obstacle_min_depth_t := _minimum_depth_t_for_x(horse_x_ratio)
 
-	# If the user drags "through" the hay stack or the right shelter, project
-	# the horse to the nearest legal ground point in front of that obstacle.
-	horse_depth_t = maxf(requested_depth_t, obstacle_min_depth_t)
+	# Collision resolution happens in _apply_perspective(). It uses the exact
+	# current Cutout Sprite2D bounds, so a legal HorseRoot can no longer leave
+	# the visible horse clipping through the calibrated farm boundaries.
 	_apply_perspective()
 
 
@@ -221,8 +231,7 @@ func _minimum_projected_foot_y_ratio_for_x(x_ratio: float) -> float:
 	)
 
 
-func _minimum_depth_t_for_x(x_ratio: float) -> float:
-	var minimum_foot_y_ratio := _minimum_projected_foot_y_ratio_for_x(x_ratio)
+func _minimum_depth_t_for_foot_y_ratio(minimum_foot_y_ratio: float) -> float:
 	var far_delta := FAR_PROJECTED_FOOT_Y_RATIO - PERSPECTIVE_HORIZON_Y_RATIO
 	var requested_delta := minimum_foot_y_ratio - PERSPECTIVE_HORIZON_Y_RATIO
 
@@ -238,16 +247,221 @@ func _minimum_depth_t_for_x(x_ratio: float) -> float:
 	)
 
 
+func _minimum_depth_t_for_x(x_ratio: float) -> float:
+	return _minimum_depth_t_for_foot_y_ratio(
+		_minimum_projected_foot_y_ratio_for_x(x_ratio)
+	)
+
+
+func _minimum_projected_foot_y_ratio_for_screen_span(
+	left_screen_x: float,
+	right_screen_x: float,
+	size: Vector2
+) -> float:
+	var left_ratio := clampf(minf(left_screen_x, right_screen_x) / maxf(size.x, 1.0), 0.0, 1.0)
+	var right_ratio := clampf(maxf(left_screen_x, right_screen_x) / maxf(size.x, 1.0), 0.0, 1.0)
+
+	var minimum_ratio := maxf(
+		_minimum_projected_foot_y_ratio_for_x(left_ratio),
+		_minimum_projected_foot_y_ratio_for_x(right_ratio)
+	)
+
+	# The historical boundary is monotonic between these calibrated support
+	# points. Testing every support point contained by the horse's real visual
+	# span therefore gives the exact maximum boundary over that span.
+	var support_points := [
+		LEFT_OBSTACLE_X_RATIO,
+		LEFT_OPEN_X_RATIO,
+		RIGHT_OPEN_X_RATIO,
+		RIGHT_OBSTACLE_X_RATIO,
+	]
+	for support_x in support_points:
+		if support_x > left_ratio and support_x < right_ratio:
+			minimum_ratio = maxf(
+				minimum_ratio,
+				_minimum_projected_foot_y_ratio_for_x(support_x)
+			)
+
+	return minimum_ratio
+
+
+func _minimum_depth_t_for_screen_span(
+	left_screen_x: float,
+	right_screen_x: float,
+	size: Vector2
+) -> float:
+	return _minimum_depth_t_for_foot_y_ratio(
+		_minimum_projected_foot_y_ratio_for_screen_span(
+			left_screen_x,
+			right_screen_x,
+			size
+		)
+	)
+
+
+func _horse_visual_x_bounds_in_root_space() -> Vector2:
+	var root_inverse := horse_root.global_transform.affine_inverse()
+	var minimum_x := INF
+	var maximum_x := -INF
+	var found_sprite := false
+
+	for node in horse_visual.find_children("*", "Sprite2D", true, false):
+		var sprite := node as Sprite2D
+		if sprite == null or not sprite.visible or sprite.texture == null:
+			continue
+
+		var rect := sprite.get_rect()
+		var sprite_to_root := root_inverse * sprite.global_transform
+		var corners := [
+			rect.position,
+			Vector2(rect.end.x, rect.position.y),
+			rect.end,
+			Vector2(rect.position.x, rect.end.y),
+		]
+
+		for corner in corners:
+			var root_point: Vector2 = sprite_to_root * corner
+			minimum_x = minf(minimum_x, root_point.x)
+			maximum_x = maxf(maximum_x, root_point.x)
+
+		found_sprite = true
+
+	if not found_sprite:
+		return Vector2.ZERO
+
+	return Vector2(minimum_x, maximum_x)
+
+
+func _projected_horse_root_scale_for_depth(size: Vector2, depth_t: float) -> float:
+	var distance_m := lerpf(FAR_DISTANCE_M, NEAR_DISTANCE_M, depth_t)
+	var inverse_depth_gain := FAR_DISTANCE_M / maxf(distance_m, 0.01)
+	var foot_delta_from_horizon := (
+		FAR_PROJECTED_FOOT_Y_RATIO - PERSPECTIVE_HORIZON_Y_RATIO
+	) * inverse_depth_gain
+	var projected_horse_height_ratio := (
+		HORSE_WORLD_HEIGHT_M / CAMERA_HEIGHT_M
+	) * maxf(foot_delta_from_horizon, 0.001)
+	var target_horse_height_px := size.y * projected_horse_height_ratio
+	return target_horse_height_px / HORSE_VISIBLE_SOURCE_HEIGHT_PX
+
+
+func _horse_screen_x_span(
+	root_screen_x: float,
+	size: Vector2,
+	depth_t: float,
+	local_x_bounds: Vector2
+) -> Vector2:
+	var root_scale := _projected_horse_root_scale_for_depth(size, depth_t)
+	return Vector2(
+		root_screen_x + local_x_bounds.x * root_scale,
+		root_screen_x + local_x_bounds.y * root_scale
+	)
+
+
+func _background_source_x_to_screen(source_x: float) -> float:
+	if background.texture == null:
+		return source_x
+
+	var source_width := background.texture.get_width()
+	return (
+		background.position.x
+		+ (source_x - source_width * 0.5) * background.scale.x
+	)
+
+
+func _visible_horizontal_ground_limits(size: Vector2) -> Vector2:
+	var left_limit := 0.0
+	var right_limit := size.x
+
+	var left_fence_x := _background_source_x_to_screen(LEFT_SIDE_FENCE_SOURCE_X)
+	if left_fence_x >= 0.0 and left_fence_x <= size.x:
+		left_limit = maxf(left_limit, left_fence_x)
+
+	var right_fence_x := _background_source_x_to_screen(RIGHT_SIDE_FENCE_SOURCE_X)
+	if right_fence_x >= 0.0 and right_fence_x <= size.x:
+		right_limit = minf(right_limit, right_fence_x)
+
+	return Vector2(left_limit, right_limit)
+
+
+func _clamp_root_x_for_visual_span(
+	root_screen_x: float,
+	size: Vector2,
+	depth_t: float,
+	local_x_bounds: Vector2
+) -> float:
+	var limits := _visible_horizontal_ground_limits(size)
+	var root_scale := _projected_horse_root_scale_for_depth(size, depth_t)
+
+	var minimum_root_x := limits.x - local_x_bounds.x * root_scale
+	var maximum_root_x := limits.y - local_x_bounds.y * root_scale
+
+	if minimum_root_x > maximum_root_x:
+		return (limits.x + limits.y) * 0.5
+
+	return clampf(root_screen_x, minimum_root_x, maximum_root_x)
+
+
+func _resolve_horse_collision(
+	requested_root_x: float,
+	requested_depth_t: float,
+	size: Vector2
+) -> Vector2:
+	var local_x_bounds := _horse_visual_x_bounds_in_root_space()
+	var resolved_x := clampf(requested_root_x, 0.0, size.x)
+	var resolved_depth_t := clampf(requested_depth_t, 0.0, 1.0)
+
+	for _pass in range(COLLISION_SOLVER_MAX_PASSES):
+		resolved_x = _clamp_root_x_for_visual_span(
+			resolved_x,
+			size,
+			resolved_depth_t,
+			local_x_bounds
+		)
+
+		var screen_span := _horse_screen_x_span(
+			resolved_x,
+			size,
+			resolved_depth_t,
+			local_x_bounds
+		)
+		var minimum_depth_t := _minimum_depth_t_for_screen_span(
+			screen_span.x,
+			screen_span.y,
+			size
+		)
+		var next_depth_t := maxf(requested_depth_t, minimum_depth_t)
+
+		if absf(next_depth_t - resolved_depth_t) <= COLLISION_SOLVER_EPSILON:
+			resolved_depth_t = next_depth_t
+			resolved_x = _clamp_root_x_for_visual_span(
+				resolved_x,
+				size,
+				resolved_depth_t,
+				local_x_bounds
+			)
+			break
+
+		resolved_depth_t = next_depth_t
+
+	return Vector2(resolved_x, resolved_depth_t)
+
+
 func _apply_perspective() -> void:
 	var size := get_viewport_rect().size
 	if size.x <= 0.0 or size.y <= 0.0:
 		return
 
-	# Keep an already-stored position legal after a resize/fold-state change too.
-	horse_depth_t = maxf(
+	# Keep the entire current cutout legal after movement or a Fold resize.
+	# HorseRoot remains the same physical ground anchor; only collision resolution
+	# now evaluates the exact visible Sprite2D span around that anchor.
+	var collision_result := _resolve_horse_collision(
+		size.x * horse_x_ratio,
 		horse_depth_t,
-		_minimum_depth_t_for_x(horse_x_ratio)
+		size
 	)
+	horse_x_ratio = collision_result.x / size.x
+	horse_depth_t = collision_result.y
 
 	# Move linearly in world depth, not linearly in sprite scale.
 	# Perspective itself then naturally grows non-linearly as Z approaches camera.
