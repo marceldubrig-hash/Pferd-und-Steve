@@ -391,7 +391,7 @@ tracks/3/keys = {
 "times": PackedFloat32Array(0, 0.36, 0.66, 0.96, 1.2),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
-"values": [0.0, -0.0698132, 0.0, 0.0872665, 0.0]
+"values": [0.0, 0.0698132, 0.0, -0.0872665, 0.0]
 }
 tracks/4/type = "value"
 tracks/4/imported = false
@@ -439,7 +439,7 @@ tracks/7/keys = {
 "times": PackedFloat32Array(0, 0.36, 0.66, 0.96, 1.2),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
-"values": [0.0, 0.0872665, 0.0, -0.10472, 0.0]
+"values": [0.0, -0.0872665, 0.0, 0.10472, 0.0]
 }
 tracks/8/type = "value"
 tracks/8/imported = false
@@ -487,7 +487,7 @@ tracks/11/keys = {
 "times": PackedFloat32Array(0, 0.36, 0.66, 0.96, 1.2),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
-"values": [0.0, -0.0349066, 0.0, 0.0523599, 0.0]
+"values": [0.0, 0.0349066, 0.0, -0.0523599, 0.0]
 }
 tracks/12/type = "value"
 tracks/12/imported = false
@@ -551,7 +551,7 @@ texture = ExtResource("1_body")
 
 [node name="HindNear" type="Node2D" parent="."]
 position = Vector2(-446, -74)
-scale = Vector2(0.5, 0.5)
+scale = Vector2(-0.5, 0.5)
 z_index = 1
 
 [node name="Upper" type="Sprite2D" parent="HindNear"]
