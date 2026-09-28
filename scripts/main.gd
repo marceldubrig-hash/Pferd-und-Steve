@@ -61,9 +61,16 @@ const RIGHT_OPEN_SOURCE_X := 1055.6671
 const RIGHT_OBSTACLE_SOURCE_X := 1122.7894
 const RIGHT_OUTER_SOURCE_X := 1247.4451
 
-const OPEN_GROUND_SOURCE_Y := 488.16
-const OBSTACLE_GROUND_SOURCE_Y := 505.44
-const OUTER_GROUND_SOURCE_Y := 518.40
+# The horizontal white paddock fence is the rear playable boundary.
+# 488.16 is the existing validated HorseRoot ground-anchor calibration for it.
+const REAR_FENCE_GROUND_SOURCE_Y := 488.16
+
+# Foreground side fences measured from the real 1536x658 Fold screenshot.
+# These are stored in the canonical 1536x864 farm texture coordinate system.
+# When cover-cropping pushes a fence offscreen (e.g. 1536x1384), that side
+# automatically falls back to the viewport edge instead of inventing a wall.
+const LEFT_SIDE_FENCE_SOURCE_X := 45.0
+const RIGHT_SIDE_FENCE_SOURCE_X := 1416.0
 
 # Keep the visible horse inside the viewport and use its current projected width
 # when testing obstacle overlap. This prevents the root from being legal while
@@ -221,58 +228,14 @@ func _background_screen_x_to_source(screen_x: float, size: Vector2) -> float:
 	return (screen_x - offset_x) / maxf(cover_scale, 0.001)
 
 
-func _minimum_ground_source_y_for_source_x(source_x: float) -> float:
-	var x := source_x
+func _minimum_ground_source_y_for_source_x(_source_x: float) -> float:
+	# The actual rear blocker is the horizontal white fence, not hay bales
+	# or the shelter. Keep the same validated rear ground anchor everywhere.
+	return REAR_FENCE_GROUND_SOURCE_Y
 
-	if x <= LEFT_OBSTACLE_SOURCE_X:
-		var outer_t := clampf(
-			inverse_lerp(LEFT_OUTER_SOURCE_X, LEFT_OBSTACLE_SOURCE_X, x),
-			0.0,
-			1.0
-		)
-		return lerpf(
-			OUTER_GROUND_SOURCE_Y,
-			OBSTACLE_GROUND_SOURCE_Y,
-			smoothstep(0.0, 1.0, outer_t)
-		)
 
-	if x < LEFT_OPEN_SOURCE_X:
-		var open_t := inverse_lerp(
-			LEFT_OBSTACLE_SOURCE_X,
-			LEFT_OPEN_SOURCE_X,
-			x
-		)
-		return lerpf(
-			OBSTACLE_GROUND_SOURCE_Y,
-			OPEN_GROUND_SOURCE_Y,
-			smoothstep(0.0, 1.0, open_t)
-		)
-
-	if x <= RIGHT_OPEN_SOURCE_X:
-		return OPEN_GROUND_SOURCE_Y
-
-	if x < RIGHT_OBSTACLE_SOURCE_X:
-		var obstacle_t := inverse_lerp(
-			RIGHT_OPEN_SOURCE_X,
-			RIGHT_OBSTACLE_SOURCE_X,
-			x
-		)
-		return lerpf(
-			OPEN_GROUND_SOURCE_Y,
-			OBSTACLE_GROUND_SOURCE_Y,
-			smoothstep(0.0, 1.0, obstacle_t)
-		)
-
-	var outer_t := clampf(
-		inverse_lerp(RIGHT_OBSTACLE_SOURCE_X, RIGHT_OUTER_SOURCE_X, x),
-		0.0,
-		1.0
-	)
-	return lerpf(
-		OBSTACLE_GROUND_SOURCE_Y,
-		OUTER_GROUND_SOURCE_Y,
-		smoothstep(0.0, 1.0, outer_t)
-	)
+func _projected_side_fence_screen_x(source_x: float, size: Vector2) -> float:
+	return _background_source_to_screen(Vector2(source_x, 0.0), size).x
 
 
 func _projected_horse_height_px_for_depth(size: Vector2, depth_t: float) -> float:
@@ -293,11 +256,38 @@ func _horse_collision_half_width_px(size: Vector2, depth_t: float) -> float:
 
 func _clamp_horse_screen_x(screen_x: float, size: Vector2, depth_t: float) -> float:
 	var half_width := _horse_collision_half_width_px(size, depth_t)
-	var margin := minf(
+	var screen_margin := minf(
 		half_width + SCREEN_EDGE_PADDING_PX,
 		size.x * 0.45
 	)
-	return clampf(screen_x, margin, size.x - margin)
+
+	var min_center_x := screen_margin
+	var max_center_x := size.x - screen_margin
+
+	var left_fence_x := _projected_side_fence_screen_x(
+		LEFT_SIDE_FENCE_SOURCE_X,
+		size
+	)
+	if left_fence_x >= 0.0 and left_fence_x <= size.x:
+		min_center_x = maxf(
+			min_center_x,
+			left_fence_x + half_width + SCREEN_EDGE_PADDING_PX
+		)
+
+	var right_fence_x := _projected_side_fence_screen_x(
+		RIGHT_SIDE_FENCE_SOURCE_X,
+		size
+	)
+	if right_fence_x >= 0.0 and right_fence_x <= size.x:
+		max_center_x = minf(
+			max_center_x,
+			right_fence_x - half_width - SCREEN_EDGE_PADDING_PX
+		)
+
+	if min_center_x > max_center_x:
+		return size.x * 0.5
+
+	return clampf(screen_x, min_center_x, max_center_x)
 
 
 func _minimum_depth_t_for_screen_x(
@@ -312,7 +302,7 @@ func _minimum_depth_t_for_screen_x(
 		screen_x + half_width,
 	]
 
-	var minimum_source_y := OPEN_GROUND_SOURCE_Y
+	var minimum_source_y := REAR_FENCE_GROUND_SOURCE_Y
 	for sample_screen_x in sample_screen_xs:
 		var source_x := _background_screen_x_to_source(sample_screen_x, size)
 		minimum_source_y = maxf(
