@@ -235,3 +235,67 @@ Der Recovery-Build wurde erfolgreich automatisiert validiert und exportiert.
 - APK SHA-256: `fe86fb4354a07e6fd02a8f7559f4a2f0b7a1d425c838e1c9e9b78d1fd44edc44`
 
 Dieser Build ist der **einzige gültige Step-12-Reteststand**. Der vorherige Step-12-Build bleibt verworfen.
+
+
+## Collision-Regression — eigentliche Ursache und aspect-ratio-fester Fix
+
+Der zweite echte Fold-Retest zeigte weiterhin klar falsche Hofgrenzen. Die Screenshots hatten eine effektive Spielfläche von **1536×658**, während die ursprünglichen obstacle-aware Grenzwerte aus einem **1536×1384**-Testbild als direkte Viewport-Ratios kalibriert worden waren.
+
+Da der Farm-Hintergrund mit `cover` skaliert und zentriert gecroppt wird, sind direkte X-/Y-Prozentwerte des Viewports nicht stabil. Dadurch lagen die mathematischen Grenzen im Querformat nicht mehr auf den sichtbaren Heuballen / Unterstand-Bereichen.
+
+### Fix
+
+Runtime-Commit:
+- `aa07a14d87ed983d2e7268fa701bae528f81f7c2` — `Make farm obstacle boundaries aspect-ratio aware`
+
+Die bereits bestätigte historische Kalibrierung wurde **nicht neu geraten**, sondern aus dem alten 1536×1384-Screenshot in kanonische Farm-Texturkoordinaten der 1536×864-Farm zurückgerechnet:
+
+- Left outer X: `288.5549`
+- Left obstacle X: `633.7554`
+- Left open X: `700.8777`
+- Right open X: `1055.6671`
+- Right obstacle X: `1122.7894`
+- Right outer X: `1247.4451`
+- Open ground Y: `488.16`
+- Obstacle ground Y: `505.44`
+- Outer ground Y: `518.40`
+
+Diese Werte werden zur Laufzeit mit exakt demselben `cover`-Transform wie der Hintergrund in den aktuellen Viewport projiziert.
+
+Für 1536×658 ergibt das ungefähr:
+- X: `289 / 634 / 701 / 1056 / 1123 / 1247`
+- Y: `385 / 402 / 415`
+
+Für den alten 1536×1384-Fall ergeben dieselben Farm-Koordinaten wieder praktisch exakt die ursprüngliche Kalibrierung:
+- X: `0 / 553 / 660 / 1229 / 1336 / 1536`
+- Y: `782 / 810 / 830`
+
+Zusätzlich wird nicht mehr nur der `HorseRoot`-Punkt geprüft:
+- aktuelle projizierte Pferdebreite wird als Collision-Probe berücksichtigt
+- links / Mitte / rechts des sichtbaren Pferdes werden gegen die Farm-Grenze geprüft
+- Bildschirm-X wird mit einer tiefenabhängigen sichtbaren Pferde-Marge begrenzt
+- dadurch kann der Root nicht mehr legal sein, während Körper/Kopf schon im Hindernis oder halb außerhalb des Screens liegen
+
+### Schutz vor erneuten Rig-Regressionen
+
+Der Validator erzwingt gleichzeitig:
+- `scripts/main.gd` Blob: `98284df5dbaf8bed2210303929572e87f3444df5`
+- `horse_cutout_rig.tscn` Blob: `0c94231e6e037d2ff32f9a70fe69f459dcc870ac`
+
+Damit blieb das Recovery-Rig **unverändert**: Step-11 Beine + Step-11 Walk + ausschließlich Kopf 12A/12B.
+
+### Validierung / Android-Build
+
+- Workflow-Run: `36363441866` — **success**
+- Nachweis-Commit: `fe316d513892498372dcb4560624b69e03e2e700`
+- 1536×658 Mapping-Test: **success**
+- 1536×1384 Legacy-Mapping-Test: **success**
+- Asset-Integrität: **success**
+- Godot 4.3 Headless: **success**
+- echte Hauptszene headless: **success**
+- Android Debug Export: **success**
+- Artifact: `Pferd-und-Steve-aspect-collision-fix-apk`
+- Artifact-ID: `10946561870`
+- APK SHA-256: `a30e097b41782094c1227f865f129d01a84009babda72308763139b35ac67c01`
+
+Dieser Build ist jetzt der gültige Collision-Reteststand.
