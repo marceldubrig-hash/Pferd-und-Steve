@@ -69,3 +69,14 @@ Nächster isolierter Fix: 12B — sichtbaren Hals/Mähnen-/Segmentbereich hinter
 - Runtime-Commit: `1b9cd86e118c20ecac2b70a6d8439133dfe15f07` (`Fix head and mane overlap behind horse head`).
 
 Nächster isolierter Fix: 12C — anatomisch falsch gerichtetes Hinterbein korrigieren.
+
+
+## 12C — Hinterbeinrichtung korrigiert
+
+- Der Gerätetest hat die bisher nur statisch validierte Ausrichtung von `HindNear` überstimmt: die Kette wirkte in der echten Farm anatomisch verkehrt herum.
+- Korrektur erfolgt ausschließlich als Root-Transform der vollständigen bestehenden Kette: `HindNear.scale = (-0.5, 0.5)` statt `(0.5, 0.5)`.
+- Keine Segmenttextur wurde ersetzt, neu gerendert oder einzeln gespiegelt.
+- Weil eine negative X-Skalierung die sichtbare Drehrichtung invertiert, wurden die Vorzeichen der drei bestehenden `HindNear`-Walk-Tracks (Root, LowerPivot, HoofPivot) passend invertiert. So bleibt die beabsichtigte Gelenkbeugung beim Laufen erhalten.
+- Runtime-Commit: `bd81055911cb30fd86b2eb079502a0126b4de302` (`Correct reversed hind leg orientation`).
+
+Nächster isolierter Fix: 12D — äußerstes `HindFar` näher unter die Hinterhand setzen.
