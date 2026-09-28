@@ -23,7 +23,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          RUNTIME_COMMIT="8420b24e5413ae0a2741714fc80555098ab64ee4"
+          RUNTIME_COMMIT="144f13ea4f2740024c5ccfbb3df3c6b93adbfc71"
           test "$(git diff-tree --no-commit-id --name-only -r "$RUNTIME_COMMIT")" = "scripts/main.gd"
           test "$(git hash-object scenes/main.tscn)" = "336c90377be17ac57fe9b611a455ee544da6ba85"
           test "$(git hash-object scenes/horse_cutout_rig.tscn)" = "0c94231e6e037d2ff32f9a70fe69f459dcc870ac"
