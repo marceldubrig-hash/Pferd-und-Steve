@@ -856,3 +856,17 @@ Dabei zwingend erhalten:
 - extreme Kameranähe
 
 Keine dieser Farm-Grundlagen darf für die Rig-Integration neu erfunden werden.
+
+
+## Step 12 — Gerätetest überschreibt statische Hinterbein-Abnahme
+
+Die in Schritt 5/6 dokumentierten Hinterbeinwerte bleiben als **historischer Aufbau- und statischer Vergleichsstand** erhalten. Der echte Android-Gerätetest hat jedoch zwei Punkte sichtbar widerlegt; für den aktuellen Runtime-Canon gelten deshalb ab Step 12 folgende Overrides:
+
+- `HindNear`: Root-Position bleibt `(-446, -74)`, aber Root-Scale ist jetzt `(-0.5, 0.5)` statt `(0.5, 0.5)`. Dadurch wird die komplette bestehende Segmentkette anatomisch korrekt ausgerichtet, ohne ein Quellasset zu ändern. Commit: `bd81055911cb30fd86b2eb079502a0126b4de302`.
+- Die drei `HindNear`-Walk-Rotationstracks wurden beim Mirror in der Drehrichtung angepasst; der spätere stärkere Walk überschreibt diese Werte als Teil des gemeinsamen Step-12-Zyklus.
+- `HindFar`: Root-Position ist jetzt `(-330, -77)` statt `(-262, -77)`; dadurch liegt das äußere Hinterbein näher unter der Hinterhand. Commit: `26ba13c40a27b603f0370f82f5a77759365a6cad`.
+- Layering-Canon: `TailPivot z=-2`, `HindFar z=-1`, Body Basis-Z `0`, `HindNear z=1`. Commit: `ccd15bfa5d73af62003e90f71fa42d4215c2146b`.
+- Die Segment-Atlanten, Crops, Pivots und Quell-PNGs selbst bleiben unverändert.
+- Der bestehende 1,2-s-Walk wurde in `c2b24d34855bad9995011f74153f5ec8d1051a76` deutlich verstärkt und auf klarere Viertelphasen verteilt; `f3eb8ce362bf413b0d22c979844fbee39473f4ca` koppelt Playback-Speed und leichte Amplitudenvariation an die tatsächliche Drag-Geschwindigkeit.
+
+Bei Widersprüchen zwischen älteren Schritt-5/6-Werten und diesem Abschnitt ist für die aktuelle Runtime **dieser Step-12-Override maßgeblich**.
