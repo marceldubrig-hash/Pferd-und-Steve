@@ -1229,3 +1229,47 @@ spätere Änderung der Collision-Semantik: Source-Space-/Cover-Mapping,
 geschätzte Pferdebreite, Mehrfach-Probes, iterative X-/Depth-Clamps und anschließend
 Side-Fence-Grenzen ersetzten den zuvor bestätigten normierten Hof-Laufraum.
 
+### Pending Collision Candidate — exact visible cutout bounds
+
+Ein neuer, technisch validierter Collision-Kandidat liegt vor, ist aber **noch nicht
+USER APPROVED / FROZEN**.
+
+Runtime-Commit:
+`98eb642fa4399d2bd5b7f649118a6cec0b3960a5`
+— `Resolve farm collision from exact cutout bounds`.
+
+Grund für diesen Ansatz:
+
+Die bisherigen Screenshots zeigen, dass der historische `HorseRoot` legal sein kann,
+obwohl sichtbare Teile des heutigen Cutout-Rigs bereits Heuballen, Unterstand,
+Seitenzaun oder Bildschirmrand schneiden. Deshalb wird die bestätigte historische
+Hofkurve nicht ersetzt, sondern jetzt über die **tatsächliche sichtbare X-Spanne aller
+aktuellen Sprite2D-Teile** ausgewertet.
+
+Explizit keine Schätzung:
+- keine `HORSE_HALF_WIDTH_TO_PROJECTED_HEIGHT`
+- keine erfundene pauschale Pferdebreite
+- keine Änderung am Rig
+
+Frozen-Blobs weiterhin:
+- `scenes/main.tscn`: `336c90377be17ac57fe9b611a455ee544da6ba85`
+- `scenes/horse_cutout_rig.tscn`: `0c94231e6e037d2ff32f9a70fe69f459dcc870ac`
+
+Runtime-Validator:
+- Commit `eeadb4585bddd63dff1e0959bcb0efd0dcb13cd3`
+- Run `36374011658`: **success**
+- beide Fold-Formate, beide Richtungen, extreme X- und Tiefenproben geprüft
+
+Android:
+- Build-Run `36373925737`: **success**
+- Artifact-ID `10949734349`
+- APK SHA-256
+  `b8af37bb6b6c21c5620472b72bdfb760fd02e77889a53c560ae997798d371feb`
+
+Status:
+**AWAITING REAL Z FOLD7 DEVICE APPROVAL**.
+
+Nur wenn der Nutzer diesen konkreten Stand ausdrücklich bestätigt, wird er als
+neuer integrierter Collision-Snapshot unter
+`FROZEN USER-APPROVED BASELINES` festgeschrieben.
+
