@@ -1154,6 +1154,80 @@ Systeme. Ein Eintrag mit Status **FROZEN** darf weder refaktoriert noch nebenbei
 angepasst werden. Änderungen sind nur nach ausdrücklicher Freigabe genau dieses
 Subsystems erlaubt.
 
+### Farm Collision — integrierte Exact-Cutout- und Wide-Fold-Boundary
+
+- System: vollständige physische Farm-Collision des integrierten Cutout-Pferdes
+- Status: **FROZEN / USER APPROVED**
+- Nutzerfreigabe: **„Es ist perfekt“**
+- Freigabedatum: **2026-09-28**
+- Gerätetest:
+  - Samsung Galaxy Z Fold7
+  - Android 16
+  - großes/hohes Fold-Format bestätigt
+  - kleines/breites Fold-Format bestätigt
+  - LEFT und RIGHT bestätigt
+  - Rand-, Hindernis- und Tiefenverhalten bestätigt
+- Exact-Cutout-Grundlage:
+  `98eb642fa4399d2bd5b7f649118a6cec0b3960a5`
+  — `Resolve farm collision from exact cutout bounds`
+- finale Wide-Fold-Kurve aus Nutzerzeichnung `22978.jpg`:
+  `8420b24e5413ae0a2741714fc80555098ab64ee4`
+  — `Match wide Fold collision to drawn ground boundary`
+- finaler isolierter Runtime-Fix:
+  `144f13ea4f2740024c5ccfbb3df3c6b93adbfc71`
+  — `Fix wide boundary maximum comparison`
+- letzter HEAD vor der Freeze-Dokumentation:
+  `711422106661fa48b96d0843b1e4406a06669751`
+- `scripts/main.gd` Blob:
+  `04966694a5354ec2255a422bef74c21b7b6061e8`
+- `scenes/main.tscn` Blob:
+  `336c90377be17ac57fe9b611a455ee544da6ba85`
+- `scenes/horse_cutout_rig.tscn` Blob:
+  `0c94231e6e037d2ff32f9a70fe69f459dcc870ac`
+- Godot-4.3-Parse:
+  Run `36376969653` — **SUCCESS**
+- finaler Collision-Validator:
+  Run `36376982492` — **SUCCESS**
+- Validator-Artifact-ID:
+  `10951745842`
+- Android-Debug-Build:
+  Run `36376969750` — **SUCCESS**
+- Android-Artifact-ID:
+  `10951381157`
+- freigegebene APK:
+  `Pferd-und-Steve-drawn-wide-boundary-debug.apk`
+- APK SHA-256:
+  `d2e0631b26941b2d24ac40c6197cd7479405ad841eae4c10ec84fdb2c277f2c1`
+- Freigabegrund:
+  Die Collision folgt im breiten Fold der vom Nutzer in `22978.jpg`
+  eingezeichneten blauen Bodengrenze und wurde anschließend auf dem echten
+  Zielgerät ausdrücklich als perfekt bestätigt. Das hohe Fold-Format blieb
+  während dieser Kalibrierung unverändert und war bereits bestätigt.
+- Verbindliche technische Semantik:
+  - `HorseRoot` bleibt der physische Welt-/Ground-Anchor.
+  - Die tatsächlichen aktuellen `Sprite2D`-Grenzen des Cutout-Rigs bestimmen
+    die sichtbare Pferdespanne.
+  - Großes/hohes Fold verwendet die bestätigte historische Ground-Curve mit
+    4-Pixel-Inset.
+  - Kleines/breites Fold verwendet die 23 normalisierten Stützpunkte aus der
+    blauen Nutzerlinie in `22978.jpg`.
+  - Seitliche Wide-Fold-Limits bleiben `53 … 1408`.
+  - Rig, Walk, Kopf, Layering, Perspektive und Assets gehören nicht zur
+    Collision-Kalibrierung und bleiben unverändert.
+- Geschützte Runtime-Bereiche in `scripts/main.gd`:
+  - Exact-Cutout-Bounds-Auswertung
+  - Fold-spezifische Inset-Auswahl
+  - `WIDE_GROUND_BOUNDARY_POINTS`
+  - Wide-Ground-Interpolation
+  - Span-basierte Ground-Curve-Auswertung
+  - sichtbare Side-Fence-Limits
+  - iterativer Collision-Solver
+- **DO NOT MODIFY WITHOUT EXPLICIT USER PERMISSION.**
+
+Alle weiter unten stehenden Einträge mit Status „Pending“, „Awaiting Approval“
+oder „Recovery Candidate“ sind historische Zwischenstände und werden durch
+diese aktuelle FROZEN-Baseline vollständig superseded.
+
 ### Farm Collision — historisch user-approved
 
 - System: physischer Hof-Laufraum / obstacle-aware hintere Bodengrenze
