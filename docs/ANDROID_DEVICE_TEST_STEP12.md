@@ -693,3 +693,59 @@ Gezielte Validator-Probe:
 
 Status: **echter Wide-Fold-Gerätetest ausstehend / noch nicht FROZEN**.
 
+### Gezeichnete Wide-Fold-Bodenbegrenzung aus 22978.jpg
+
+Der Nutzer hat die gewünschte begehbare Rückgrenze im echten Wide-Fold-Screenshot
+`22978.jpg` als blaue Linie eingezeichnet. Diese visuelle Vorgabe ersetzt für
+das breite Fold-Layout die vorherigen groben lokalen Rückgrenzen.
+
+Umsetzung:
+
+- 23 aus der blauen Linie gemessene und normalisierte Stützpunkte
+- glatte Interpolation zwischen benachbarten Punkten
+- echte aktuelle Cutout-Spanne wird weiterhin vollständig ausgewertet
+- alle innerhalb der Pferdespanne liegenden Kurvenstützpunkte werden geprüft
+- die gezeichnete Linie selbst ist die finale Hufgrenze; kein zusätzlicher
+  vertikaler 8-Pixel-Inset wird darauf addiert
+- bestehende seitliche Wide-Fold-Limits bleiben `53 … 1408`
+- hohes/großes Fold verwendet weiterhin unverändert die historische Kurve und
+  den bestätigten 4-Pixel-Inset
+
+Ausgewählte gemessene Referenzpunkte:
+
+- `x=430 → y=400`
+- `x=530 → y=428`
+- `x=820 → y=395`
+- `x=1120 → y=420`
+- `x=1400 → y=433`
+
+Technischer Stand:
+
+- Kurven-Commit: `8420b24e5413ae0a2741714fc80555098ab64ee4`
+- isolierter Runtime-Aufruffix: `144f13ea4f2740024c5ccfbb3df3c6b93adbfc71`
+- Runtime-Änderungen betreffen ausschließlich `scripts/main.gd`
+- temporärer Validator-Commit: `88e3422a5158b6fc5a8400ef5e4b3ecb4cfc8db5`
+- Validator-Retarget-Commit: `954fc784d090231be5643325e650b452e9bedd69`
+- temporärer Validator-Cleanup: `4c66fc927b16dcef71bc4a64835ea0c860e07cd2`
+- Godot-4.3-Parse-Run: `36376969653` — **SUCCESS**
+- Collision-Validator-Run: `36376982492` — **SUCCESS**
+- Validator-Artifact-ID: `10951745842`
+- Android-Debug-Build-Run: `36376969750` — **SUCCESS**
+- Android-Artifact-ID: `10951381157`
+- APK: `Pferd-und-Steve-drawn-wide-boundary-debug.apk`
+- APK SHA-256: `d2e0631b26941b2d24ac40c6197cd7479405ad841eae4c10ec84fdb2c277f2c1`
+- `scripts/main.gd` Blob: `04966694a5354ec2255a422bef74c21b7b6061e8`
+- `scenes/main.tscn` Blob: `336c90377be17ac57fe9b611a455ee544da6ba85`
+- `scenes/horse_cutout_rig.tscn` Blob: `0c94231e6e037d2ff32f9a70fe69f459dcc870ac`
+
+Automatisiert geprüft:
+
+- fünf feste Punkte direkt aus der blauen Referenzlinie
+- 1536×658 und 1536×1384
+- LEFT und RIGHT
+- extreme X-Positionen und mehrere Tiefen
+- große Fold-Collision unverändert
+- Rig-/Scene-Blobs unverändert
+
+Status: **echter Wide-Fold-Gerätetest ausstehend / noch nicht FROZEN**.
+
