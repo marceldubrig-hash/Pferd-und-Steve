@@ -48,36 +48,6 @@ const RIGHT_OPEN_X_RATIO := 0.80
 const RIGHT_OBSTACLE_X_RATIO := 0.87
 const RIGHT_OUTER_X_RATIO := 1.00
 
-# The old obstacle profile above was calibrated from a 1536x1384 screenshot.
-# Using those values directly as viewport ratios breaks as soon as the Fold runs
-# at a different aspect ratio because Background uses cover scaling/cropping.
-# Keep the historical ratios for documentation, but resolve collisions in the
-# canonical 1536x864 farm texture's coordinate space instead.
-const FARM_SOURCE_SIZE := Vector2(1536.0, 864.0)
-const LEFT_OUTER_SOURCE_X := 288.5549
-const LEFT_OBSTACLE_SOURCE_X := 633.7554
-const LEFT_OPEN_SOURCE_X := 700.8777
-const RIGHT_OPEN_SOURCE_X := 1055.6671
-const RIGHT_OBSTACLE_SOURCE_X := 1122.7894
-const RIGHT_OUTER_SOURCE_X := 1247.4451
-
-# The horizontal white paddock fence is the rear playable boundary.
-# 488.16 is the existing validated HorseRoot ground-anchor calibration for it.
-const REAR_FENCE_GROUND_SOURCE_Y := 488.16
-
-# Foreground side fences measured from the real 1536x658 Fold screenshot.
-# These are stored in the canonical 1536x864 farm texture coordinate system.
-# When cover-cropping pushes a fence offscreen (e.g. 1536x1384), that side
-# automatically falls back to the viewport edge instead of inventing a wall.
-const LEFT_SIDE_FENCE_SOURCE_X := 45.0
-const RIGHT_SIDE_FENCE_SOURCE_X := 1416.0
-
-# Keep the visible horse inside the viewport and use its current projected width
-# when testing obstacle overlap. This prevents the root from being legal while
-# the body/head is already inside a barn/shelter or outside the screen.
-const HORSE_HALF_WIDTH_TO_PROJECTED_HEIGHT := 0.62
-const SCREEN_EDGE_PADDING_PX := 8.0
-
 @onready var background: Sprite2D = $Background
 @onready var horse_root: Node2D = $HorseRoot
 @onready var horse_visual: Node2D = $HorseRoot/HorseVisual
@@ -156,31 +126,21 @@ func set_horse_position(new_position: Vector2) -> void:
 
 	var min_y := size.y * GROUND_BACK_TOUCH_Y_RATIO
 	var max_y := size.y * GROUND_FRONT_TOUCH_Y_RATIO
+	var clamped_x := clampf(new_position.x, 0.0, size.x)
 	var clamped_y := clampf(new_position.y, min_y, max_y)
+
+	horse_x_ratio = clamped_x / size.x
 
 	var requested_depth_t := clampf(
 		inverse_lerp(min_y, max_y, clamped_y),
 		0.0,
 		1.0
 	)
+	var obstacle_min_depth_t := _minimum_depth_t_for_x(horse_x_ratio)
 
-	var resolved_x := clampf(new_position.x, 0.0, size.x)
-	var resolved_depth_t := requested_depth_t
-
-	# Resolve horizontal screen containment and obstacle depth together.
-	# Projected horse width grows with depth, so a few deterministic passes are
-	# enough to converge without introducing physics or a new movement system.
-	for _pass in range(4):
-		resolved_x = _clamp_horse_screen_x(resolved_x, size, resolved_depth_t)
-		var obstacle_min_depth_t := _minimum_depth_t_for_screen_x(
-			resolved_x,
-			size,
-			resolved_depth_t
-		)
-		resolved_depth_t = maxf(requested_depth_t, obstacle_min_depth_t)
-
-	horse_x_ratio = resolved_x / size.x
-	horse_depth_t = resolved_depth_t
+	# If the user drags "through" the hay stack or the right shelter, project
+	# the horse to the nearest legal ground point in front of that obstacle.
+	horse_depth_t = maxf(requested_depth_t, obstacle_min_depth_t)
 	_apply_perspective()
 
 
@@ -207,115 +167,62 @@ func _layout_scene() -> void:
 	_apply_perspective()
 
 
-func _background_cover_scale(size: Vector2) -> float:
-	return maxf(
-		size.x / FARM_SOURCE_SIZE.x,
-		size.y / FARM_SOURCE_SIZE.y
-	)
+func _minimum_projected_foot_y_ratio_for_x(x_ratio: float) -> float:
+	var x := clampf(x_ratio, 0.0, 1.0)
 
-
-func _background_source_to_screen(source_point: Vector2, size: Vector2) -> Vector2:
-	var cover_scale := _background_cover_scale(size)
-	var scaled_source_size := FARM_SOURCE_SIZE * cover_scale
-	var offset := (size - scaled_source_size) * 0.5
-	return offset + source_point * cover_scale
-
-
-func _background_screen_x_to_source(screen_x: float, size: Vector2) -> float:
-	var cover_scale := _background_cover_scale(size)
-	var scaled_source_width := FARM_SOURCE_SIZE.x * cover_scale
-	var offset_x := (size.x - scaled_source_width) * 0.5
-	return (screen_x - offset_x) / maxf(cover_scale, 0.001)
-
-
-func _minimum_ground_source_y_for_source_x(_source_x: float) -> float:
-	# The actual rear blocker is the horizontal white fence, not hay bales
-	# or the shelter. Keep the same validated rear ground anchor everywhere.
-	return REAR_FENCE_GROUND_SOURCE_Y
-
-
-func _projected_side_fence_screen_x(source_x: float, size: Vector2) -> float:
-	return _background_source_to_screen(Vector2(source_x, 0.0), size).x
-
-
-func _projected_horse_height_px_for_depth(size: Vector2, depth_t: float) -> float:
-	var distance_m := lerpf(FAR_DISTANCE_M, NEAR_DISTANCE_M, depth_t)
-	var inverse_depth_gain := FAR_DISTANCE_M / maxf(distance_m, 0.01)
-	var foot_delta_from_horizon := (
-		FAR_PROJECTED_FOOT_Y_RATIO - PERSPECTIVE_HORIZON_Y_RATIO
-	) * inverse_depth_gain
-	var projected_horse_height_ratio := (
-		HORSE_WORLD_HEIGHT_M / CAMERA_HEIGHT_M
-	) * maxf(foot_delta_from_horizon, 0.001)
-	return size.y * projected_horse_height_ratio
-
-
-func _horse_collision_half_width_px(size: Vector2, depth_t: float) -> float:
-	return _projected_horse_height_px_for_depth(size, depth_t) * HORSE_HALF_WIDTH_TO_PROJECTED_HEIGHT
-
-
-func _clamp_horse_screen_x(screen_x: float, size: Vector2, depth_t: float) -> float:
-	var half_width := _horse_collision_half_width_px(size, depth_t)
-	var screen_margin := minf(
-		half_width + SCREEN_EDGE_PADDING_PX,
-		size.x * 0.45
-	)
-
-	var min_center_x := screen_margin
-	var max_center_x := size.x - screen_margin
-
-	var left_fence_x := _projected_side_fence_screen_x(
-		LEFT_SIDE_FENCE_SOURCE_X,
-		size
-	)
-	if left_fence_x >= 0.0 and left_fence_x <= size.x:
-		min_center_x = maxf(
-			min_center_x,
-			left_fence_x + half_width + SCREEN_EDGE_PADDING_PX
+	if x <= LEFT_OBSTACLE_X_RATIO:
+		var outer_t := inverse_lerp(
+			LEFT_OUTER_X_RATIO,
+			LEFT_OBSTACLE_X_RATIO,
+			x
+		)
+		return lerpf(
+			LEFT_OUTER_GROUND_Y_RATIO,
+			LEFT_OBSTACLE_GROUND_Y_RATIO,
+			smoothstep(0.0, 1.0, outer_t)
 		)
 
-	var right_fence_x := _projected_side_fence_screen_x(
-		RIGHT_SIDE_FENCE_SOURCE_X,
-		size
+	if x < LEFT_OPEN_X_RATIO:
+		var open_t := inverse_lerp(
+			LEFT_OBSTACLE_X_RATIO,
+			LEFT_OPEN_X_RATIO,
+			x
+		)
+		return lerpf(
+			LEFT_OBSTACLE_GROUND_Y_RATIO,
+			GROUND_BACK_TOUCH_Y_RATIO,
+			smoothstep(0.0, 1.0, open_t)
+		)
+
+	if x <= RIGHT_OPEN_X_RATIO:
+		return GROUND_BACK_TOUCH_Y_RATIO
+
+	if x < RIGHT_OBSTACLE_X_RATIO:
+		var obstacle_t := inverse_lerp(
+			RIGHT_OPEN_X_RATIO,
+			RIGHT_OBSTACLE_X_RATIO,
+			x
+		)
+		return lerpf(
+			GROUND_BACK_TOUCH_Y_RATIO,
+			RIGHT_OBSTACLE_GROUND_Y_RATIO,
+			smoothstep(0.0, 1.0, obstacle_t)
+		)
+
+	var outer_t := inverse_lerp(
+		RIGHT_OBSTACLE_X_RATIO,
+		RIGHT_OUTER_X_RATIO,
+		x
 	)
-	if right_fence_x >= 0.0 and right_fence_x <= size.x:
-		max_center_x = minf(
-			max_center_x,
-			right_fence_x - half_width - SCREEN_EDGE_PADDING_PX
-		)
-
-	if min_center_x > max_center_x:
-		return size.x * 0.5
-
-	return clampf(screen_x, min_center_x, max_center_x)
+	return lerpf(
+		RIGHT_OBSTACLE_GROUND_Y_RATIO,
+		RIGHT_OUTER_GROUND_Y_RATIO,
+		smoothstep(0.0, 1.0, outer_t)
+	)
 
 
-func _minimum_depth_t_for_screen_x(
-	screen_x: float,
-	size: Vector2,
-	probe_depth_t: float
-) -> float:
-	var half_width := _horse_collision_half_width_px(size, probe_depth_t)
-	var sample_screen_xs := [
-		screen_x - half_width,
-		screen_x,
-		screen_x + half_width,
-	]
-
-	var minimum_source_y := REAR_FENCE_GROUND_SOURCE_Y
-	for sample_screen_x in sample_screen_xs:
-		var source_x := _background_screen_x_to_source(sample_screen_x, size)
-		minimum_source_y = maxf(
-			minimum_source_y,
-			_minimum_ground_source_y_for_source_x(source_x)
-		)
-
-	var minimum_screen_y := _background_source_to_screen(
-		Vector2(0.0, minimum_source_y),
-		size
-	).y
-	var minimum_foot_y_ratio := minimum_screen_y / maxf(size.y, 1.0)
-
+func _minimum_depth_t_for_x(x_ratio: float) -> float:
+	var minimum_foot_y_ratio := _minimum_projected_foot_y_ratio_for_x(x_ratio)
 	var far_delta := FAR_PROJECTED_FOOT_Y_RATIO - PERSPECTIVE_HORIZON_Y_RATIO
 	var requested_delta := minimum_foot_y_ratio - PERSPECTIVE_HORIZON_Y_RATIO
 
@@ -337,14 +244,10 @@ func _apply_perspective() -> void:
 		return
 
 	# Keep an already-stored position legal after a resize/fold-state change too.
-	var resolved_x := size.x * horse_x_ratio
-	for _pass in range(4):
-		resolved_x = _clamp_horse_screen_x(resolved_x, size, horse_depth_t)
-		horse_depth_t = maxf(
-			horse_depth_t,
-			_minimum_depth_t_for_screen_x(resolved_x, size, horse_depth_t)
-		)
-	horse_x_ratio = resolved_x / size.x
+	horse_depth_t = maxf(
+		horse_depth_t,
+		_minimum_depth_t_for_x(horse_x_ratio)
+	)
 
 	# Move linearly in world depth, not linearly in sprite scale.
 	# Perspective itself then naturally grows non-linearly as Z approaches camera.
@@ -371,7 +274,7 @@ func _apply_perspective() -> void:
 	var visual_scale := target_horse_height_px / HORSE_VISIBLE_SOURCE_HEIGHT_PX
 
 	horse_root.position = Vector2(
-		resolved_x,
+		size.x * horse_x_ratio,
 		size.y * projected_foot_y_ratio
 	)
 	horse_root.scale = Vector2.ONE * visual_scale
