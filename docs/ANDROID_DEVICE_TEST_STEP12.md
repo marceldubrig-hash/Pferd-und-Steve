@@ -100,3 +100,18 @@ Nächster isolierter Fix: 12E — Z-Reihenfolge von Schweif/Body/HindFar/HindNea
 - Runtime-Commit: `ccd15bfa5d73af62003e90f71fa42d4215c2146b` (`Polish hind leg layering and body attachment`).
 
 Nächster isolierter Fix: 12F — bestehende Walk-Keys kräftiger und besser lesbar machen.
+
+
+## 12F — Walk deutlich verstärkt
+
+Die bestehende `walk_test`-Animation wurde beibehalten, aber ihre Beinbewegung deutlich lesbarer gemacht.
+
+- Root-Schwung der Beine liegt nun grob bei 9–14° statt zuvor etwa 4–6°.
+- LowerPivot-Beugung liegt nun grob bei 12–18° statt zuvor etwa 5–8°.
+- HoofPivot-Ausgleich liegt nun grob bei 6–9° statt zuvor etwa 2–4°.
+- Die vier Beinketten wurden auf klar getrennte Viertelphasen des bestehenden 1,2-s-Zyklus verteilt. Damit arbeiten sie nicht mehr nahezu gleichzeitig, sondern lesen sich deutlich eher als 4-Takt-Walk.
+- Body-/Head-/Tail-Bob blieb bewusst klein; die bestehende Positionsbewegung wurde nicht hochskaliert.
+- Die reale Gangreferenz wurde nur als Rhythmus-/Phasenleitlinie genutzt; es wurde keine neue Gait-State-Machine gebaut.
+- Runtime-Commit: `c2b24d34855bad9995011f74153f5ec8d1051a76` (`Increase horse walk animation amplitude`).
+
+Nächster isolierter Fix: 12G — Walk-Frequenz und leichte Zusatzamplitude an die reale Drag-/Bewegungsgeschwindigkeit koppeln.
