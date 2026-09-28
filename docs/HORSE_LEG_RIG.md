@@ -870,3 +870,28 @@ Die in Schritt 5/6 dokumentierten Hinterbeinwerte bleiben als **historischer Auf
 - Der bestehende 1,2-s-Walk wurde in `c2b24d34855bad9995011f74153f5ec8d1051a76` deutlich verstärkt und auf klarere Viertelphasen verteilt; `f3eb8ce362bf413b0d22c979844fbee39473f4ca` koppelt Playback-Speed und leichte Amplitudenvariation an die tatsächliche Drag-Geschwindigkeit.
 
 Bei Widersprüchen zwischen älteren Schritt-5/6-Werten und diesem Abschnitt ist für die aktuelle Runtime **dieser Step-12-Override maßgeblich**.
+
+
+## Step-12 Recovery — vorheriger Override VERWORFEN
+
+Der unmittelbar vorherige Abschnitt „Step 12 — Gerätetest überschreibt statische Hinterbein-Abnahme“ beschreibt einen **fehlgeschlagenen Zwischenstand** und ist nicht mehr gültiger Runtime-Canon.
+
+Der echte Fold-Test dieses Zwischenstands zeigte, dass beide Hinterbeine visuell falsch wurden. Deshalb gilt wieder:
+
+- `HindNear`: Position `(-446, -74)`, Scale `(0.5, 0.5)`, `z_index = 1`
+- `HindFar`: Position `(-262, -77)`, Scale `(0.5, 0.5)`, `z_index = -1`
+- `TailPivot`: wieder `z_index = -1`
+- kompletter Walk wieder exakt Step 11
+- keine geschwindigkeitsabhängige Walk-Amplitudenlogik
+- Segment-Atlanten, Pivots und alle Quellassets unverändert
+
+Recovery-Commit der Rig-Datei:
+- `7f3b243753080d8ebc26e9c5accf12820bb6793d`
+
+Validierter Recovery-Scene-Blob:
+- `0c94231e6e037d2ff32f9a70fe69f459dcc870ac`
+
+Einzige gegenüber Step 11 erhaltene Änderung im Rig:
+- Kopfposition/-überdeckung aus 12A/12B.
+
+Bei jedem Widerspruch mit dem verworfenen Step-12-Override ist **dieser Recovery-Abschnitt maßgeblich**.
