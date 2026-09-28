@@ -8,6 +8,10 @@ config_version=5
 config/name="Pferd und Steve"
 run/main_scene="res://scenes/main.tscn"
 
+[autoload]
+
+BackgroundMusic="*res://scripts/background_music.gd"
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"
