@@ -154,7 +154,7 @@ jobs:
                                   size
                               )
                               if is_equal_approx(size.y, 658.0) and is_equal_approx(x_ratio, 0.73):
-                                  var expected_post_ratio := 0.600 + 8.0 / size.y
+                                  var expected_post_ratio: float = 0.600 + 8.0 / size.y
                                   if required_foot_ratio + 0.0005 < expected_post_ratio:
                                       _fail(
                                           "SHELTER POST NOT ENFORCED facing=%s span=%s required=%s expected=%s"
