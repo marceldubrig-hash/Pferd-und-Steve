@@ -1,0 +1,8 @@
+source_commit=d10b76b235f8a81cb60d163a8e34f1be7e8af0e0
+workflow_run_id=36361667754
+asset_integrity=success
+step12_source_invariants=success
+godot_4_3_headless=success
+runtime_scene_load=success
+android_debug_export=success
+apk_sha256=9bc3bb2972905b0e780afa5ad6808517486d0817140e9b4a05b7d541cd9ef648
