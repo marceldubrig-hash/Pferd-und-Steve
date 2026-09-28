@@ -53,6 +53,9 @@ const RIGHT_OUTER_X_RATIO := 1.00
 # fence is actually visible after Background cover-scaling/cropping.
 const LEFT_SIDE_FENCE_SOURCE_X := 45.0
 const RIGHT_SIDE_FENCE_SOURCE_X := 1416.0
+# Visible left support post of the small right shelter in the canonical farm source.
+# It is a local wide-Fold obstacle; the tall Fold crops this calibration differently.
+const WIDE_SHELTER_LEFT_POST_SOURCE_X := 1120.0
 
 # User-requested final micro-calibration: keep the exact cutout a few screen
 # pixels inside the already calibrated rear and lateral ground boundaries.
@@ -292,6 +295,17 @@ func _minimum_projected_foot_y_ratio_for_screen_span(
 				minimum_ratio,
 				_minimum_projected_foot_y_ratio_for_x(support_x)
 			)
+
+	# The wide Fold keeps the shelter's left support post visible around source
+	# x=1120. Treat that exact visible post as one additional local curve support
+	# point so the current cutout cannot stand through it.
+	if size.x > size.y * 2.0:
+		var shelter_post_screen_x := _background_source_x_to_screen(
+			WIDE_SHELTER_LEFT_POST_SOURCE_X
+		)
+		if shelter_post_screen_x > minf(left_screen_x, right_screen_x) \
+		and shelter_post_screen_x < maxf(left_screen_x, right_screen_x):
+			minimum_ratio = maxf(minimum_ratio, RIGHT_OUTER_GROUND_Y_RATIO)
 
 	return clampf(
 		minimum_ratio + _collision_boundary_inset_px(size) / maxf(size.y, 1.0),
