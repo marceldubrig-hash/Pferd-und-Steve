@@ -165,3 +165,52 @@ Beim Retest gezielt prüfen:
 ### Bekannte Restarbeit
 
 Keine bekannte automatisierte Parse-/Runtime-/Exportblockade. Offener Punkt ist ausschließlich die visuelle/gefühlte Abnahme auf dem Samsung Galaxy Z Fold7. Falls dort noch etwas auffällt, wird nur der konkrete Step-12-Restfehler behoben; noch kein Steve-, Sound-, Jaw-Sprach- oder vollständiges Gait-System beginnen.
+
+
+## WICHTIG — erster Step-12-Fixversuch auf echtem Gerät VERWORFEN
+
+Der Build aus Run `36361667754` / APK-SHA `9bc3bb2972905b0e780afa5ad6808517486d0817140e9b4a05b7d541cd9ef648` ist **NICHT mehr gültiger Runtime-Canon**.
+
+Der anschließende echte Android-Test zeigte klare Regressionen:
+
+- beide Hinterbeine wirkten anatomisch falsch herum
+- zuvor bereits sauber getestete Hof-/Hindernisbegrenzungen verhielten sich sichtbar wieder falsch
+- die in 12C–12G vorgenommenen Änderungen waren damit nicht akzeptabel
+
+### Ursache / Korrektur
+
+Der Fehler entstand dadurch, dass der Gerätetest-Befund zu aggressiv interpretiert wurde:
+
+- `HindNear` wurde als komplette Kette gespiegelt
+- HindFar wurde verschoben
+- der zuvor validierte Walk wurde stark umgebaut
+- `main.gd` bekam zusätzlich neue geschwindigkeitsabhängige Bewegungslogik
+
+Das war entgegen der Vorgabe zu invasiv. Diese Änderungen wurden vollständig verworfen.
+
+### Recovery-Canon
+
+1. `scripts/main.gd` wurde **exakt auf den validierten Step-11-Stand** aus Commit `e8771b39dd0f7619a882e78fd6f657d48f46de6b` zurückgesetzt.
+   - Recovery-Commit: `c8d10c7a8c84562275b2ec029b8fe281ec5116d0`
+   - Blob-SHA wieder exakt: `a32408d507f0ee1c928c766f214666bedad65175`
+   - Damit sind Drag, Perspektive und alle obstacle-aware Hofgrenzen wieder exakt Step 11.
+
+2. `scenes/horse_cutout_rig.tscn` wurde bezüglich **beider Hinterbeine, Layering und komplettem Walk** exakt auf Step 11 zurückgesetzt.
+   - Recovery-Commit: `7f3b243753080d8ebc26e9c5accf12820bb6793d`
+   - Erhalten bleiben ausschließlich die isolierten Kopfkorrekturen 12A/12B:
+     - HeadPivot `(303.171, -236.253)`
+     - Head-Z `12`
+     - entsprechende Head-RESET-/Walk-Positionskeys
+   - Aktueller Scene-Blob-SHA: `0c94231e6e037d2ff32f9a70fe69f459dcc870ac`
+
+### Nicht mehr gültig
+
+Die Runtime-Änderungen aus folgenden Commits dürfen **nicht** erneut als Zielzustand übernommen werden:
+
+- `bd81055911cb30fd86b2eb079502a0126b4de302` — HindNear-Mirror
+- `26ba13c40a27b603f0370f82f5a77759365a6cad` — HindFar-Verschiebung
+- `ccd15bfa5d73af62003e90f71fa42d4215c2146b` — Step-12-Layeränderung
+- `c2b24d34855bad9995011f74153f5ec8d1051a76` — verstärkter Walk
+- `f3eb8ce362bf413b0d22c979844fbee39473f4ca` — Geschwindigkeitskopplung
+
+Der nächste Testbuild ist daher bewusst ein **Recovery-Build: Step-11 Bewegung/Beine + Step-12A/B Kopfkorrektur**. Erst dieser muss auf dem Fold wieder die bekannte stabile Basis bestätigen, bevor irgendein weiterer Bein- oder Walk-Fix versucht wird.
