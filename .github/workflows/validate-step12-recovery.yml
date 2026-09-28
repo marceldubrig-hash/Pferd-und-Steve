@@ -1,0 +1,141 @@
+name: Validate Step 12 recovery
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/validate-step12-recovery.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify exact recovery blobs
+        shell: bash
+        run: |
+          MAIN_BLOB="$(git hash-object scripts/main.gd)"
+          RIG_BLOB="$(git hash-object scenes/horse_cutout_rig.tscn)"
+          echo "main.gd blob=$MAIN_BLOB"
+          echo "rig blob=$RIG_BLOB"
+          test "$MAIN_BLOB" = "a32408d507f0ee1c928c766f214666bedad65175"
+          test "$RIG_BLOB" = "0c94231e6e037d2ff32f9a70fe69f459dcc870ac"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify approved rig assets
+        run: python tools/materialize_verified_rig_assets.py
+
+      - name: Download Godot 4.3
+        shell: bash
+        run: |
+          curl -L --fail --retry 3 -o godot.zip "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          chmod +x Godot_v4.3-stable_linux.x86_64
+
+      - name: Validate and run recovered project headlessly
+        shell: bash
+        run: |
+          mkdir -p build
+          ./Godot_v4.3-stable_linux.x86_64 --headless --path . --editor --quit 2>&1 | tee build/recovery_editor.log
+          ./Godot_v4.3-stable_linux.x86_64 --headless --path . --quit-after 4 2>&1 | tee build/recovery_runtime.log
+          if grep -E "SCRIPT ERROR|Parse Error|Invalid access|Invalid get index|Invalid call" build/recovery_editor.log build/recovery_runtime.log; then
+            echo "Godot reported a script/runtime error"
+            exit 1
+          fi
+
+      - name: Install Godot 4.3 export templates
+        shell: bash
+        run: |
+          curl -L --fail --retry 3 -o templates.tpz "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz"
+          unzip -q templates.tpz -d templates-unpacked
+          mkdir -p "$HOME/.local/share/godot/export_templates/4.3.stable"
+          cp -a templates-unpacked/templates/. "$HOME/.local/share/godot/export_templates/4.3.stable/"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Ensure Android SDK packages
+        shell: bash
+        run: |
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+          if [ ! -d "$SDK_ROOT/build-tools/34.0.0" ] || [ ! -d "$SDK_ROOT/platforms/android-34" ]; then
+            SDKMANAGER="$(find "$SDK_ROOT" -type f -name sdkmanager 2>/dev/null | head -n 1)"
+            test -n "$SDKMANAGER"
+            yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses >/dev/null || true
+            "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platform-tools" "build-tools;34.0.0" "platforms;android-34"
+          fi
+
+      - name: Prepare debug keystore and Godot Android settings
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.android" "$HOME/.config/godot"
+          if [ ! -f "$HOME/.android/debug.keystore" ]; then
+            keytool -genkeypair -v -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          fi
+          {
+            echo '[gd_resource type="EditorSettings" format=3]'
+            echo
+            echo '[resource]'
+            echo "export/android/android_sdk_path = \"$ANDROID_HOME\""
+            echo "export/android/java_sdk_path = \"$JAVA_HOME\""
+            echo "export/android/debug_keystore = \"$HOME/.android/debug.keystore\""
+            echo 'export/android/debug_keystore_user = "androiddebugkey"'
+            echo 'export/android/debug_keystore_pass = "android"'
+          } > "$HOME/.config/godot/editor_settings-4.tres"
+
+      - name: Export recovery Android debug APK
+        shell: bash
+        env:
+          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: /home/runner/.android/debug.keystore
+          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
+        run: |
+          mkdir -p build
+          ./Godot_v4.3-stable_linux.x86_64 --headless --path . --import
+          ./Godot_v4.3-stable_linux.x86_64 --headless --verbose --path . --export-debug "Android Debug" build/Pferd-und-Steve-step12-recovery-debug.apk
+
+      - name: Record recovery validation evidence
+        shell: bash
+        run: |
+          APK_SHA="$(sha256sum build/Pferd-und-Steve-step12-recovery-debug.apk | awk '{print $1}')"
+          mkdir -p debug
+          cat > debug/step12_recovery_validation.txt <<EOF
+          source_commit=$GITHUB_SHA
+          workflow_run_id=$GITHUB_RUN_ID
+          main_blob=a32408d507f0ee1c928c766f214666bedad65175
+          rig_blob=0c94231e6e037d2ff32f9a70fe69f459dcc870ac
+          asset_integrity=success
+          godot_4_3_headless=success
+          runtime_scene_load=success
+          android_debug_export=success
+          apk_sha256=$APK_SHA
+          EOF
+          cat debug/step12_recovery_validation.txt
+
+      - name: Upload recovery APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Pferd-und-Steve-step12-recovery-apk
+          path: build/Pferd-und-Steve-step12-recovery-debug.apk
+          if-no-files-found: error
+
+      - name: Commit recovery validation evidence
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add debug/step12_recovery_validation.txt
+          git commit -m "Record Step 12 recovery Android validation"
+          git push origin HEAD:main
