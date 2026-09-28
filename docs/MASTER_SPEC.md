@@ -1,6 +1,6 @@
 # MASTER SPEC — Pferd und Steve
 
-Stand: 2026-09-27
+Stand: 2026-09-28
 
 ## Kernidee
 
@@ -1017,3 +1017,39 @@ Bodenanker, Perspektivscale, Performance und mögliche Segmentlücken.
 
 Noch **nicht** automatisch beginnen: State-Machine, bewegungsabhängiges Walk,
 sprechabhängiger Jaw, Steve, Sound oder weiteres Gameplay.
+
+
+## Technischer Meilenstein — Step 12 Android-Gerätetest-Fixblock
+
+Umgesetzt am 2026-09-28 als gezielter Fixblock nach dem ersten echten Step-11-Test auf dem Samsung Galaxy Z Fold7. Die Farm-Perspektive, bestätigten Quellassets und der grundsätzliche Cutout-Rig-Aufbau wurden nicht neu erfunden.
+
+### Umgesetzte Runtime-Fixes
+
+- **12A Kopf höher:** `HeadPivot.y -194.253 → -236.253`; RESET- und Walk-Positionskeys identisch mitverschoben. Runtime-Commit `378f8a73a89a419e0d918f139f37ba2b5735309f`.
+- **12B Hals-/Kopfüberdeckung:** `HeadPivot.x 321.171 → 303.171`, inklusive Positionskeys; Head-Z `10 → 12`. Runtime-Commit `1b9cd86e118c20ecac2b70a6d8439133dfe15f07`.
+- **12C verkehrtes Hinterbein:** komplette bestehende `HindNear`-Kette über Root-X-Scale `-0.5` anatomisch umgerichtet; zugehörige Animationsdrehrichtung angepasst. Runtime-Commit `bd81055911cb30fd86b2eb079502a0126b4de302`.
+- **12D äußeres Hinterbein:** `HindFar.x -262 → -330`, ohne Y-/Pivot-/Assetänderung. Runtime-Commit `26ba13c40a27b603f0370f82f5a77759365a6cad`.
+- **12E Layering:** eindeutige Tiefe `Tail -2 → HindFar -1 → Body 0 → HindNear +1 → Head 12`. Runtime-Commit `ccd15bfa5d73af62003e90f71fa42d4215c2146b`.
+- **12F stärkerer Walk:** vorhandener 1,2-s-Zyklus beibehalten; deutlich größere Root-/Lower-/Hoof-Rotationen und klarere Viertelphasen für besser lesbaren 4-Takt-Charakter. Body-Bob bleibt klein. Runtime-Commit `c2b24d34855bad9995011f74153f5ec8d1051a76`.
+- **12G Geschwindigkeitskopplung:** keine Gait-State-Machine; echte Drag-Geschwindigkeit steuert Walk-Playback weich zwischen `0.72×` und `1.60×` sowie die gespeicherte Basisamplitude zwischen `0.86×` und `1.20×`. Runtime-Commit `f3eb8ce362bf413b0d22c979844fbee39473f4ca`.
+
+Die Walk-Phasen orientieren sich am realen 4-Takt-Prinzip des Schritts; Trab/Galopp wurden ausdrücklich noch nicht implementiert.
+
+### Android-Build / automatisierte Prüfung
+
+- Build-/Validierungsbasis: `d10b76b235f8a81cb60d163a8e34f1be7e8af0e0`.
+- GitHub-Actions-Run: `36361667754` — **success**.
+- automatischer Nachweis-Commit: `ddef8d00606dc4b18f70b857726c429728631c61`.
+- Asset-Integrität: **success**.
+- Godot 4.3 Headless Parse/Editor: **success**.
+- echte Hauptszene headless gestartet: **success**.
+- Android Debug Export: **success**.
+- APK: `Pferd-und-Steve-step12-debug.apk`.
+- Artifact: `Pferd-und-Steve-step12-final-apk` / ID `10945053792`.
+- APK SHA-256: `9bc3bb2972905b0e780afa5ad6808517486d0817140e9b4a05b7d541cd9ef648`.
+
+### Testergebnis und Reststatus
+
+Automatisch ist Step 12 technisch grün: Projekt parst, startet und exportiert für Android. Die **visuelle Abnahme auf dem echten Fold mit diesem neuen Step-12-Build steht noch aus** und darf nicht mit dem erfolgreichen CI-Test verwechselt werden.
+
+Beim nächsten Gerätetest werden ausschließlich die Step-12-Ziele erneut bewertet: Kopf/Halsübergang, beide Hinterbeine und Layering, Walk-Lesbarkeit bei langsam/mittel/schnell, LEFT/RIGHT, FAR/MID/NEAR, extreme Nähe, Bodenanker, Segmentlücken, Perspektive, Touch/Drag und Performance. Bis dieser Retest abgeschlossen ist, noch keine Steve-, Sound-, Sprach-Jaw-, Gameplay- oder vollständige Walk/Trot/Canter-State-Machine beginnen.
