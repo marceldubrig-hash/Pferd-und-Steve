@@ -93,9 +93,27 @@ const WIDE_FOLD_EXTRA_COLLISION_BOUNDARY_INSET_PX := 4.0
 const COLLISION_SOLVER_MAX_PASSES := 8
 const COLLISION_SOLVER_EPSILON := 0.0001
 
+# Autonomous horse wandering. These values control only target choice and travel
+# timing; every requested position is still resolved by the frozen collision system.
+const WANDER_X_MIN_RATIO := 0.12
+const WANDER_X_MAX_RATIO := 0.88
+const WANDER_DEPTH_MIN_T := 0.04
+const WANDER_DEPTH_MAX_T := 0.55
+const WANDER_X_SPEED_RATIO_PER_SECOND := 0.055
+const WANDER_DEPTH_SPEED_T_PER_SECOND := 0.045
+const WANDER_MIN_HORIZONTAL_TRAVEL_RATIO := 0.16
+const WANDER_TARGET_EPSILON := 0.006
+const WANDER_PAUSE_MIN_SECONDS := 1.5
+const WANDER_PAUSE_MAX_SECONDS := 4.5
+const WANDER_REROUTE_MIN_SECONDS := 6.0
+const WANDER_REROUTE_MAX_SECONDS := 14.0
+
 @onready var background: Sprite2D = $Background
 @onready var horse_root: Node2D = $HorseRoot
 @onready var horse_visual: Node2D = $HorseRoot/HorseVisual
+@onready var walk_animation_player: AnimationPlayer = (
+	$HorseRoot/HorseVisual/RigSpace/HorseCutoutRig/WalkAnimationPlayer
+)
 
 var is_night := false
 
@@ -104,12 +122,107 @@ var is_night := false
 var horse_x_ratio := 0.5
 var horse_depth_t := 0.28
 
+var wander_rng := RandomNumberGenerator.new()
+var wander_position := Vector2(0.5, 0.28)
+var wander_target := Vector2(0.5, 0.28)
+var wander_pause_remaining := 0.0
+var wander_reroute_remaining := 0.0
+var horse_is_walking := false
+
 
 func _ready() -> void:
 	get_viewport().size_changed.connect(_layout_scene)
 	_load_texture_if_available(background, FARM_DAY)
 	_layout_scene()
 	_apply_perspective()
+
+	wander_rng.randomize()
+	wander_position = Vector2(horse_x_ratio, horse_depth_t)
+	_choose_new_wander_target()
+
+
+func _process(delta: float) -> void:
+	if wander_pause_remaining > 0.0:
+		wander_pause_remaining = maxf(wander_pause_remaining - delta, 0.0)
+		if wander_pause_remaining <= 0.0:
+			_choose_new_wander_target()
+		return
+
+	wander_reroute_remaining -= delta
+	if wander_reroute_remaining <= 0.0:
+		_choose_new_wander_target()
+
+	var horizontal_delta := wander_target.x - wander_position.x
+	if absf(horizontal_delta) > WANDER_TARGET_EPSILON:
+		set_horse_facing_right(horizontal_delta > 0.0)
+
+	wander_position.x = move_toward(
+		wander_position.x,
+		wander_target.x,
+		WANDER_X_SPEED_RATIO_PER_SECOND * delta
+	)
+	wander_position.y = move_toward(
+		wander_position.y,
+		wander_target.y,
+		WANDER_DEPTH_SPEED_T_PER_SECOND * delta
+	)
+
+	horse_x_ratio = wander_position.x
+	horse_depth_t = wander_position.y
+	_apply_perspective()
+
+	if (
+		absf(wander_target.x - wander_position.x) <= WANDER_TARGET_EPSILON
+		and absf(wander_target.y - wander_position.y) <= WANDER_TARGET_EPSILON
+	):
+		_begin_wander_pause()
+
+
+func _choose_new_wander_target() -> void:
+	var next_x := wander_rng.randf_range(WANDER_X_MIN_RATIO, WANDER_X_MAX_RATIO)
+
+	# Most choices cross the yard, which creates natural back-and-forth motion.
+	if wander_rng.randf() < 0.65:
+		if wander_position.x < 0.5:
+			next_x = wander_rng.randf_range(0.55, WANDER_X_MAX_RATIO)
+		else:
+			next_x = wander_rng.randf_range(WANDER_X_MIN_RATIO, 0.45)
+
+	for _attempt in range(8):
+		if absf(next_x - wander_position.x) >= WANDER_MIN_HORIZONTAL_TRAVEL_RATIO:
+			break
+		next_x = wander_rng.randf_range(WANDER_X_MIN_RATIO, WANDER_X_MAX_RATIO)
+
+	wander_target = Vector2(
+		next_x,
+		wander_rng.randf_range(WANDER_DEPTH_MIN_T, WANDER_DEPTH_MAX_T)
+	)
+	wander_reroute_remaining = wander_rng.randf_range(
+		WANDER_REROUTE_MIN_SECONDS,
+		WANDER_REROUTE_MAX_SECONDS
+	)
+	set_horse_facing_right(wander_target.x > wander_position.x)
+	_set_horse_walking(true)
+
+
+func _begin_wander_pause() -> void:
+	wander_position = Vector2(horse_x_ratio, horse_depth_t)
+	wander_pause_remaining = wander_rng.randf_range(
+		WANDER_PAUSE_MIN_SECONDS,
+		WANDER_PAUSE_MAX_SECONDS
+	)
+	_set_horse_walking(false)
+
+
+func _set_horse_walking(walking: bool) -> void:
+	if horse_is_walking == walking:
+		return
+
+	horse_is_walking = walking
+	if walking:
+		walk_animation_player.play("walk_test")
+	else:
+		walk_animation_player.pause()
 
 
 func _load_texture_if_available(target: Sprite2D, path: String) -> void:
