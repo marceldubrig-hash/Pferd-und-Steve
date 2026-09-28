@@ -128,3 +128,40 @@ Nächster isolierter Fix: 12G — Walk-Frequenz und leichte Zusatzamplitude an d
 - Runtime-Commit: `f3eb8ce362bf413b0d22c979844fbee39473f4ca` (`Scale walk cycle with movement speed`).
 
 Damit sind 12A–12G im Runtime-Code umgesetzt. Als nächstes folgt die gemeinsame Godot-4.3-/Android-Debug-Validierung und ein neuer Step-12-Testbuild.
+
+
+## Step-12 automatisierte Abschlussvalidierung
+
+Status: **erfolgreich**.
+
+- Validierungsbasis / Build-Source: `d10b76b235f8a81cb60d163a8e34f1be7e8af0e0`.
+- GitHub-Actions-Run: `36361667754`.
+- Asset-Integrität: **success**.
+- Step-12-Source-Invarianten: **success**.
+- Godot 4.3 Headless Editor/Parse: **success**.
+- Echte `main.tscn` headless gestartet: **success**.
+- Android Debug Export: **success**.
+- APK: `Pferd-und-Steve-step12-debug.apk`.
+- Artifact: `Pferd-und-Steve-step12-final-apk`.
+- Artifact-ID: `10945053792`.
+- APK SHA-256: `9bc3bb2972905b0e780afa5ad6808517486d0817140e9b4a05b7d541cd9ef648`.
+- Automatischer Nachweis-Commit: `ddef8d00606dc4b18f70b857726c429728631c61` (`Record Step 12 Android validation`).
+
+### Stand für den physischen Retest
+
+Alle angeforderten Runtime-Fixes 12A–12G sind implementiert und technisch exportfähig. **Der neue physische Fold-Gerätetest ist noch nicht durchgeführt**; dieser kann erst nach Installation der neuen APK durch den Nutzer bewertet werden. Daher werden Kopf-/Layering-/Anatomie-/Walk-Qualität auf dem echten Gerät noch nicht als visuell bestätigt behauptet.
+
+Beim Retest gezielt prüfen:
+- Kopfposition und Hals-/Mähnenübergang
+- `HindNear`-Anatomie in Stand und Bewegung
+- `HindFar`-Anschluss unter der Hinterhand
+- Schweif / HindFar / Body / HindNear Layering
+- stärkere Walk-Lesbarkeit
+- langsames / mittleres / schnelles Drag-Tempo
+- Richtungswechsel LEFT/RIGHT
+- FAR / MID / NEAR und extreme Kameranähe
+- Huf-/Bodenanker, Segmentlücken, Perspektivscale, Touch/Drag und Performance
+
+### Bekannte Restarbeit
+
+Keine bekannte automatisierte Parse-/Runtime-/Exportblockade. Offener Punkt ist ausschließlich die visuelle/gefühlte Abnahme auf dem Samsung Galaxy Z Fold7. Falls dort noch etwas auffällt, wird nur der konkrete Step-12-Restfehler behoben; noch kein Steve-, Sound-, Jaw-Sprach- oder vollständiges Gait-System beginnen.
