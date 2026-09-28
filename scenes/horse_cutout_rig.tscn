@@ -352,10 +352,10 @@ tracks/0/path = NodePath("FrontNear:rotation")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.3, 0.6, 0.9, 1.2),
+"times": PackedFloat32Array(0, 0.28, 0.58, 0.88, 1.2),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
-"values": [0.0, 0.244346, 0.0, -0.191986, 0.0]
+"values": [0.0, 0.10472, 0.0, -0.0872665, 0.0]
 }
 tracks/1/type = "value"
 tracks/1/imported = false
@@ -364,10 +364,10 @@ tracks/1/path = NodePath("HindFar:rotation")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
-"times": PackedFloat32Array(0, 0.3, 0.6, 0.9, 1.2),
+"times": PackedFloat32Array(0, 0.34, 0.64, 0.94, 1.2),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
-"values": [-0.15708, 0.0, 0.20944, 0.0, -0.15708]
+"values": [0.0, 0.0872665, 0.0, -0.0698132, 0.0]
 }
 tracks/2/type = "value"
 tracks/2/imported = false
@@ -379,7 +379,7 @@ tracks/2/keys = {
 "times": PackedFloat32Array(0, 0.3, 0.6, 0.9, 1.2),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
-"values": [0.0, -0.191986, 0.0, 0.244346, 0.0]
+"values": [0.0, -0.0872665, 0.0, 0.10472, 0.0]
 }
 tracks/3/type = "value"
 tracks/3/imported = false
@@ -388,10 +388,10 @@ tracks/3/path = NodePath("HindNear:rotation")
 tracks/3/interp = 1
 tracks/3/loop_wrap = true
 tracks/3/keys = {
-"times": PackedFloat32Array(0, 0.3, 0.6, 0.9, 1.2),
+"times": PackedFloat32Array(0, 0.36, 0.66, 0.96, 1.2),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
-"values": [0.174533, 0.0, -0.20944, 0.0, 0.174533]
+"values": [0.0, -0.0698132, 0.0, 0.0872665, 0.0]
 }
 tracks/4/type = "value"
 tracks/4/imported = false
@@ -400,10 +400,10 @@ tracks/4/path = NodePath("FrontNear/Upper/LowerPivot:rotation")
 tracks/4/interp = 1
 tracks/4/loop_wrap = true
 tracks/4/keys = {
-"times": PackedFloat32Array(0, 0.3, 0.6, 0.9, 1.2),
+"times": PackedFloat32Array(0, 0.28, 0.58, 0.88, 1.2),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
-"values": [0.0, -0.314159, 0.0, 0.226893, 0.0]
+"values": [0.0, -0.139626, 0.0, 0.10472, 0.0]
 }
 tracks/5/type = "value"
 tracks/5/imported = false
@@ -412,10 +412,10 @@ tracks/5/path = NodePath("HindFar/Upper/LowerPivot:rotation")
 tracks/5/interp = 1
 tracks/5/loop_wrap = true
 tracks/5/keys = {
-"times": PackedFloat32Array(0, 0.3, 0.6, 0.9, 1.2),
+"times": PackedFloat32Array(0, 0.34, 0.64, 0.94, 1.2),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
-"values": [0.20944, 0.0, -0.261799, 0.0, 0.20944]
+"values": [0.0, -0.10472, 0.0, 0.0872665, 0.0]
 }
 tracks/6/type = "value"
 tracks/6/imported = false
@@ -427,7 +427,7 @@ tracks/6/keys = {
 "times": PackedFloat32Array(0, 0.3, 0.6, 0.9, 1.2),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
-"values": [0.0, 0.226893, 0.0, -0.314159, 0.0]
+"values": [0.0, 0.10472, 0.0, -0.139626, 0.0]
 }
 tracks/7/type = "value"
 tracks/7/imported = false
@@ -436,10 +436,10 @@ tracks/7/path = NodePath("HindNear/Upper/LowerPivot:rotation")
 tracks/7/interp = 1
 tracks/7/loop_wrap = true
 tracks/7/keys = {
-"times": PackedFloat32Array(0, 0.3, 0.6, 0.9, 1.2),
+"times": PackedFloat32Array(0, 0.36, 0.66, 0.96, 1.2),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
-"values": [-0.20944, 0.0, 0.261799, 0.0, -0.20944]
+"values": [0.0, 0.0872665, 0.0, -0.10472, 0.0]
 }
 tracks/8/type = "value"
 tracks/8/imported = false
@@ -448,10 +448,10 @@ tracks/8/path = NodePath("FrontNear/Upper/LowerPivot/Lower/HoofPivot:rotation")
 tracks/8/interp = 1
 tracks/8/loop_wrap = true
 tracks/8/keys = {
-"times": PackedFloat32Array(0, 0.3, 0.6, 0.9, 1.2),
+"times": PackedFloat32Array(0, 0.28, 0.58, 0.88, 1.2),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
-"values": [0.0, 0.15708, 0.0, -0.122173, 0.0]
+"values": [0.0, 0.0698132, 0.0, -0.0523599, 0.0]
 }
 tracks/9/type = "value"
 tracks/9/imported = false
@@ -460,10 +460,10 @@ tracks/9/path = NodePath("HindFar/Upper/LowerPivot/Lower/HoofPivot:rotation")
 tracks/9/interp = 1
 tracks/9/loop_wrap = true
 tracks/9/keys = {
-"times": PackedFloat32Array(0, 0.3, 0.6, 0.9, 1.2),
+"times": PackedFloat32Array(0, 0.34, 0.64, 0.94, 1.2),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
-"values": [-0.10472, 0.0, 0.139626, 0.0, -0.10472]
+"values": [0.0, 0.0523599, 0.0, -0.0349066, 0.0]
 }
 tracks/10/type = "value"
 tracks/10/imported = false
@@ -475,7 +475,7 @@ tracks/10/keys = {
 "times": PackedFloat32Array(0, 0.3, 0.6, 0.9, 1.2),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
-"values": [0.0, -0.122173, 0.0, 0.15708, 0.0]
+"values": [0.0, -0.0523599, 0.0, 0.0698132, 0.0]
 }
 tracks/11/type = "value"
 tracks/11/imported = false
@@ -484,10 +484,10 @@ tracks/11/path = NodePath("HindNear/Upper/LowerPivot/Lower/HoofPivot:rotation")
 tracks/11/interp = 1
 tracks/11/loop_wrap = true
 tracks/11/keys = {
-"times": PackedFloat32Array(0, 0.3, 0.6, 0.9, 1.2),
+"times": PackedFloat32Array(0, 0.36, 0.66, 0.96, 1.2),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
-"values": [0.10472, 0.0, -0.139626, 0.0, 0.10472]
+"values": [0.0, -0.0349066, 0.0, 0.0523599, 0.0]
 }
 tracks/12/type = "value"
 tracks/12/imported = false
@@ -536,7 +536,7 @@ _data = {
 
 [node name="TailPivot" type="Node2D" parent="."]
 position = Vector2(-449, -198)
-z_index = -2
+z_index = -1
 
 [node name="Tail" type="Sprite2D" parent="TailPivot"]
 position = Vector2(-102.18, 270.66)
@@ -551,7 +551,7 @@ texture = ExtResource("1_body")
 
 [node name="HindNear" type="Node2D" parent="."]
 position = Vector2(-446, -74)
-scale = Vector2(-0.5, 0.5)
+scale = Vector2(0.5, 0.5)
 z_index = 1
 
 [node name="Upper" type="Sprite2D" parent="HindNear"]
@@ -596,7 +596,7 @@ position = Vector2(67.359, 138.418)
 texture = SubResource("AtlasTexture_front_left_hoof")
 
 [node name="HindFar" type="Node2D" parent="."]
-position = Vector2(-330, -77)
+position = Vector2(-262, -77)
 scale = Vector2(0.5, 0.5)
 z_index = -1
 
