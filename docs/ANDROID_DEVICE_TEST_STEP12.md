@@ -642,3 +642,54 @@ Automatisierte erwartete Grenzen:
 Status: **breiter Fold-Gerätetest ausstehend / noch nicht vollständig FROZEN**.
 Das bestätigte hohe Format darf bei weiteren Nachjustierungen nicht verändert werden.
 
+### Lokale Wide-Fold-Grenze am linken Pfosten der rechten Hütte
+
+Neue echte Fold-Referenzen: `22961.jpg`, `22963.jpg`, `22965.jpg`,
+`22969.jpg`.
+
+Befund:
+
+- rechter Zaun, rechte Hüttenkante und linker Scheunenbereich zeigen brauchbare Zielpositionen
+- bei der hinteren Position um `x≈1120` konnte das Pferd noch sichtbar durch den
+  linken senkrechten Stützpfosten der kleinen rechten Hütte stehen
+- eine weitere globale Verengung wäre falsch, weil sie bereits passende Kanten
+  ebenfalls verschieben würde
+
+Isolierte Lösung:
+
+- kanonischer Pfosten-Stützpunkt: `WIDE_SHELTER_LEFT_POST_SOURCE_X := 1120.0`
+- gilt ausschließlich im breiten Fold-Layout
+- greift nur, wenn die echte aktuelle Cutout-Spanne den sichtbaren Pfosten schneidet
+- verwendet die bestehende kanonische äußere Hufgrenze `0.600`
+- bestehendes Wide-Fold-Inset `8 px` bleibt erhalten
+- hohes/großes Fold bleibt vollständig unverändert
+
+Technischer Stand:
+
+- Runtime-Commit: `6e30a169067dab52b0c788358d2686391f96f152`
+- Runtime-Commit-Inhalt: ausschließlich `scripts/main.gd`
+- erster temporärer Validator-Commit: `00f8d2863bc1a66e2ac1c48c5f68ed71a8408858`
+- reine Validator-Typkorrektur: `d2958fab42bf693beac3988020ae0c2158a9fe83`
+- temporärer Validator-Cleanup: `7c9dd17a3835cdd0340ec62291dcc75ab7f433fa`
+- Godot-4.3-Parse-Run: `36375985744` — **SUCCESS**
+- Collision-Validator-Run: `36376097268` — **SUCCESS**
+- Validator-Artifact-ID: `10950833233`
+- Android-Debug-Build-Run: `36375985743` — **SUCCESS**
+- Android-Artifact-ID: `10951315565`
+- APK: `Pferd-und-Steve-shelter-post-collision-debug.apk`
+- APK SHA-256: `53af4187551fbf1a0e3df1a58db2c2de24631a89be12223ad3e7f93e209974bb`
+- `scripts/main.gd` Blob: `f31c6d82592ab5bee6f6591f7d567f3e0b658ef8`
+- `scenes/main.tscn` Blob: `336c90377be17ac57fe9b611a455ee544da6ba85`
+- `scenes/horse_cutout_rig.tscn` Blob: `0c94231e6e037d2ff32f9a70fe69f459dcc870ac`
+
+Gezielte Validator-Probe:
+
+- kleines Fold `1536×658`
+- `x_ratio = 0.73`
+- LEFT und RIGHT
+- resultierende Mindest-Huflinie: `0.612158… = 0.600 + 8/658`
+- bestehende Seitenlimits bleiben `53 … 1408`
+- großes Fold bleibt bei den bisherigen 4-Pixel-Grenzen
+
+Status: **echter Wide-Fold-Gerätetest ausstehend / noch nicht FROZEN**.
+
