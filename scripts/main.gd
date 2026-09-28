@@ -54,6 +54,10 @@ const RIGHT_OUTER_X_RATIO := 1.00
 const LEFT_SIDE_FENCE_SOURCE_X := 45.0
 const RIGHT_SIDE_FENCE_SOURCE_X := 1416.0
 
+# User-requested final micro-calibration: keep the exact cutout a few screen
+# pixels inside the already calibrated rear and lateral ground boundaries.
+const COLLISION_BOUNDARY_INSET_PX := 4.0
+
 # The collision solver has one circular dependency: moving the horse forward makes
 # it larger, which changes its exact visual X-span. Iterate to convergence using the
 # real Sprite2D bounds instead of estimating horse width.
@@ -282,7 +286,11 @@ func _minimum_projected_foot_y_ratio_for_screen_span(
 				_minimum_projected_foot_y_ratio_for_x(support_x)
 			)
 
-	return minimum_ratio
+	return clampf(
+		minimum_ratio + COLLISION_BOUNDARY_INSET_PX / maxf(size.y, 1.0),
+		0.0,
+		1.0
+	)
 
 
 func _minimum_depth_t_for_screen_span(
@@ -381,7 +389,10 @@ func _visible_horizontal_ground_limits(size: Vector2) -> Vector2:
 	if right_fence_x >= 0.0 and right_fence_x <= size.x:
 		right_limit = minf(right_limit, right_fence_x)
 
-	return Vector2(left_limit, right_limit)
+	return Vector2(
+		left_limit + COLLISION_BOUNDARY_INSET_PX,
+		right_limit - COLLISION_BOUNDARY_INSET_PX
+	)
 
 
 func _clamp_root_x_for_visual_span(
