@@ -1122,3 +1122,27 @@ Validierung:
 - APK SHA-256 `f5e51d13ff4c5cf599246d959509b5d0a5710a5d2aefeea0f6e8c5cd1c1d8e37`
 
 Nächster Schritt: ausschließlich echter Fold-Retest dieser Zaungrenzen.
+
+
+## OBERSTE ARBEITSREGEL — BESTÄTIGTE FUNKTIONEN SIND EINGEFROREN
+
+Diese Regel ist verbindlich und hat Vorrang vor späteren Optimierungs-, Cleanup- oder Refactoring-Ideen.
+
+Sobald der Nutzer einen Zustand ausdrücklich als **funktionierend**, **sauber**, **fertig**, **bestätigt**, **abgelegt** oder sinngleich akzeptiert hat:
+
+- dieser technische Zustand gilt als **IMMUTABLE / FROZEN BASELINE**
+- der zugehörige Code darf in späteren Arbeiten **nicht mitverändert, refaktoriert, neu interpretiert oder "verbessert"** werden
+- Änderungen an anderen Systemen müssen so isoliert werden, dass die eingefrorene Funktion unverändert bleibt
+- ein bestätigtes System darf erst wieder geändert werden, wenn der Nutzer **ausdrücklich genau dieses System** zur Änderung freigibt
+- bei Unsicherheit gilt: **nicht ändern**
+- vor jeder Runtime-Änderung ist zu prüfen, ob der betroffene Code zu einem bestätigten/abgelegten Stand gehört
+- wenn eine spätere Änderung versehentlich eine bestätigte Funktion regressiert, muss auf den letzten explizit bestätigten Snapshot zurückgegangen werden; keine freie Rekonstruktion und kein erneutes Raten
+
+### Aktuell eingefrorene historische Farmbewegungs-Baseline
+
+Der Git-Verlauf enthält einen ausdrücklich als vom Nutzer bestätigt dokumentierten Stand:
+
+- Collision-/Ground-Boundary-Implementierung: `d5d3ff9ca32968f035d304176668eb2a326578ad` — `Add obstacle-aware physical ground boundary`
+- Bestätigungs-/Canon-Dokumentation: `f34c9142c67c388758d7749fca2536ea51734b9d` — `Record approved perspective and calibrated yard boundaries`
+
+Die danach entstandenen Collision-Experimente aus Step 12 dürfen **nicht** als Begründung verwendet werden, diesen bestätigten Zustand frei neu zu erfinden. Jede weitere Collision-Recovery muss zuerst diesen bestätigten Snapshot als Quelle verwenden und darf andere bereits bestätigte Systeme nicht verändern.
