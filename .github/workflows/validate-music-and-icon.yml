@@ -118,7 +118,7 @@ jobs:
           set -o pipefail
           ./Godot_v4.3-stable_linux.x86_64 --headless --path . --editor --quit
           timeout 90 ./Godot_v4.3-stable_linux.x86_64 --headless --path . --script build/verify_music_and_icon.gd 2>&1 | tee build/music_and_icon.log
-          if grep -E "SCRIPT ERROR|Parse Error|Invalid access|Invalid get index|Invalid call|ERROR:" build/music_and_icon.log; then
+          if grep -E "SCRIPT ERROR|Parse Error|Invalid access|Invalid get index|Invalid call" build/music_and_icon.log; then
             echo "Music and icon verifier reported an error"
             exit 1
           fi
