@@ -347,8 +347,10 @@ func _minimum_projected_foot_y_ratio_for_screen_span(
 	if size.x > size.y * 2.0:
 		minimum_ratio = maxf(
 			minimum_ratio,
-			_wide_ground_boundary_y_ratio_for_x(left_ratio),
-			_wide_ground_boundary_y_ratio_for_x(right_ratio)
+			maxf(
+				_wide_ground_boundary_y_ratio_for_x(left_ratio),
+				_wide_ground_boundary_y_ratio_for_x(right_ratio)
+			)
 		)
 		for point_variant in WIDE_GROUND_BOUNDARY_POINTS:
 			var point: Vector2 = point_variant
