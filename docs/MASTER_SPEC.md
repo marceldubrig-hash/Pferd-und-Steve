@@ -1053,3 +1053,17 @@ Die Walk-Phasen orientieren sich am realen 4-Takt-Prinzip des Schritts; Trab/Gal
 Automatisch ist Step 12 technisch grün: Projekt parst, startet und exportiert für Android. Die **visuelle Abnahme auf dem echten Fold mit diesem neuen Step-12-Build steht noch aus** und darf nicht mit dem erfolgreichen CI-Test verwechselt werden.
 
 Beim nächsten Gerätetest werden ausschließlich die Step-12-Ziele erneut bewertet: Kopf/Halsübergang, beide Hinterbeine und Layering, Walk-Lesbarkeit bei langsam/mittel/schnell, LEFT/RIGHT, FAR/MID/NEAR, extreme Nähe, Bodenanker, Segmentlücken, Perspektive, Touch/Drag und Performance. Bis dieser Retest abgeschlossen ist, noch keine Steve-, Sound-, Sprach-Jaw-, Gameplay- oder vollständige Walk/Trot/Canter-State-Machine beginnen.
+
+
+### Step-12 Recovery nach fehlgeschlagenem echtem Gerätetest
+
+Der erste Step-12-Fixbuild wurde auf dem Samsung Galaxy Z Fold7 verworfen. Der echte Gerätetest zeigte zwei klare Regressionen: beide Hinterbeine wirkten falsch herum und die zuvor validierten Hof-/Hindernisbegrenzungen verhielten sich wieder falsch.
+
+Deshalb gilt ab jetzt:
+
+- Die Step-12-Runtimeänderungen an Hinterbeinen, Walk, Layering und geschwindigkeitsabhängiger Bewegung sind **kein Canon**.
+- `scripts/main.gd` ist wieder bytegenau der Step-11-Stand aus `e8771b39dd0f7619a882e78fd6f657d48f46de6b`; Recovery-Commit `c8d10c7a8c84562275b2ec029b8fe281ec5116d0`.
+- Beide Hinterbeine und der komplette Walk sind wieder exakt Step 11; Recovery-Commit `7f3b243753080d8ebc26e9c5accf12820bb6793d`.
+- Erhalten bleiben ausschließlich die isolierten Kopfkorrekturen aus 12A/12B.
+- Der frühere Step-12-Build aus Run `36361667754` und APK-SHA `9bc3bb2972905b0e780afa5ad6808517486d0817140e9b4a05b7d541cd9ef648` ist ausdrücklich **verworfen**.
+- Nächster technischer Schritt ist ausschließlich die Wiederbestätigung der stabilen Step-11-Bewegung/Beine mit den Kopfkorrekturen auf echtem Android-Gerät. Vorher keine weiteren Bein-/Walk-/Speed-Experimente.
