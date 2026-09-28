@@ -57,6 +57,7 @@ const RIGHT_SIDE_FENCE_SOURCE_X := 1416.0
 # User-requested final micro-calibration: keep the exact cutout a few screen
 # pixels inside the already calibrated rear and lateral ground boundaries.
 const COLLISION_BOUNDARY_INSET_PX := 4.0
+const WIDE_FOLD_EXTRA_COLLISION_BOUNDARY_INSET_PX := 4.0
 
 # The collision solver has one circular dependency: moving the horse forward makes
 # it larger, which changes its exact visual X-span. Iterate to convergence using the
@@ -257,6 +258,12 @@ func _minimum_depth_t_for_x(x_ratio: float) -> float:
 	)
 
 
+func _collision_boundary_inset_px(size: Vector2) -> float:
+	if size.x > size.y * 2.0:
+		return COLLISION_BOUNDARY_INSET_PX + WIDE_FOLD_EXTRA_COLLISION_BOUNDARY_INSET_PX
+	return COLLISION_BOUNDARY_INSET_PX
+
+
 func _minimum_projected_foot_y_ratio_for_screen_span(
 	left_screen_x: float,
 	right_screen_x: float,
@@ -287,7 +294,7 @@ func _minimum_projected_foot_y_ratio_for_screen_span(
 			)
 
 	return clampf(
-		minimum_ratio + COLLISION_BOUNDARY_INSET_PX / maxf(size.y, 1.0),
+		minimum_ratio + _collision_boundary_inset_px(size) / maxf(size.y, 1.0),
 		0.0,
 		1.0
 	)
@@ -389,9 +396,10 @@ func _visible_horizontal_ground_limits(size: Vector2) -> Vector2:
 	if right_fence_x >= 0.0 and right_fence_x <= size.x:
 		right_limit = minf(right_limit, right_fence_x)
 
+	var inset_px := _collision_boundary_inset_px(size)
 	return Vector2(
-		left_limit + COLLISION_BOUNDARY_INSET_PX,
-		right_limit - COLLISION_BOUNDARY_INSET_PX
+		left_limit + inset_px,
+		right_limit - inset_px
 	)
 
 
