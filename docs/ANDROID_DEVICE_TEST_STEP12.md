@@ -90,3 +90,13 @@ Nächster isolierter Fix: 12D — äußerstes `HindFar` näher unter die Hinterh
 - Runtime-Commit: `26ba13c40a27b603f0370f82f5a77759365a6cad` (`Reposition outer hind leg closer to body`).
 
 Nächster isolierter Fix: 12E — Z-Reihenfolge von Schweif/Body/HindFar/HindNear eindeutig machen.
+
+
+## 12E — Hinterbein-Layering poliert
+
+- Die bisher mehrdeutige Tiefenreihenfolge wurde deterministisch gemacht: `TailPivot z=-2`, `HindFar z=-1`, Body auf Basis-Z `0`, `HindNear z=1`, Head weiterhin deutlich darüber auf `z=12`.
+- Damit kann das hintere Bein nicht mehr in derselben Z-Ebene mit dem Schweif um die Zeichenreihenfolge konkurrieren.
+- Alle Attachment-Positionen aus 12C/12D bleiben erhalten; keine Texturänderung.
+- Runtime-Commit: `ccd15bfa5d73af62003e90f71fa42d4215c2146b` (`Polish hind leg layering and body attachment`).
+
+Nächster isolierter Fix: 12F — bestehende Walk-Keys kräftiger und besser lesbar machen.
