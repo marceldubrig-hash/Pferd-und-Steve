@@ -98,7 +98,6 @@ const COLLISION_SOLVER_EPSILON := 0.0001
 @onready var horse_visual: Node2D = $HorseRoot/HorseVisual
 
 var is_night := false
-var mouse_dragging := false
 
 # Persist movement in normalized screen/depth coordinates so resize/fold changes
 # do not destroy the world position.
@@ -111,31 +110,6 @@ func _ready() -> void:
 	_load_texture_if_available(background, FARM_DAY)
 	_layout_scene()
 	_apply_perspective()
-
-
-func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventScreenTouch:
-		var touch := event as InputEventScreenTouch
-		if touch.pressed:
-			_move_horse_to(touch.position)
-		return
-
-	if event is InputEventScreenDrag:
-		var drag := event as InputEventScreenDrag
-		_move_horse_to(drag.position)
-		return
-
-	if event is InputEventMouseButton:
-		var mouse_button := event as InputEventMouseButton
-		if mouse_button.button_index == MOUSE_BUTTON_LEFT:
-			mouse_dragging = mouse_button.pressed
-			if mouse_button.pressed:
-				_move_horse_to(mouse_button.position)
-		return
-
-	if event is InputEventMouseMotion and mouse_dragging:
-		var mouse_motion := event as InputEventMouseMotion
-		_move_horse_to(mouse_motion.position)
 
 
 func _load_texture_if_available(target: Sprite2D, path: String) -> void:
@@ -185,13 +159,6 @@ func set_horse_position(new_position: Vector2) -> void:
 	# current Cutout Sprite2D bounds, so a legal HorseRoot can no longer leave
 	# the visible horse clipping through the calibrated farm boundaries.
 	_apply_perspective()
-
-
-func _move_horse_to(target_position: Vector2) -> void:
-	var current_x := horse_root.position.x
-	if absf(target_position.x - current_x) > 1.0:
-		set_horse_facing_right(target_position.x > current_x)
-	set_horse_position(target_position)
 
 
 func _layout_scene() -> void:
