@@ -468,3 +468,14 @@ Auf dem Samsung Galaxy Z Fold7 jetzt nur Collision testen:
 
 Bis zur ausdrücklichen Nutzerbestätigung keine weitere Runtime-Änderung.
 
+### Cleanup des temporären Validators
+
+Nach erfolgreichem Run und dauerhafter Dokumentation wurde ausschließlich der
+temporäre Recovery-Workflow wieder entfernt:
+
+- Cleanup-Commit: `39167054b96433b6bae30ea51b17beda54201ab8`
+  — `Remove temporary collision recovery validator`
+- keine Runtime-Datei, Scene, Animation oder Assetdatei wurde dabei verändert
+- der erfolgreiche Run `36368232364` und das erzeugte APK-Artefakt bleiben als
+  dokumentierter Nachweis erhalten
+
