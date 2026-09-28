@@ -115,3 +115,16 @@ Die bestehende `walk_test`-Animation wurde beibehalten, aber ihre Beinbewegung d
 - Runtime-Commit: `c2b24d34855bad9995011f74153f5ec8d1051a76` (`Increase horse walk animation amplitude`).
 
 Nächster isolierter Fix: 12G — Walk-Frequenz und leichte Zusatzamplitude an die reale Drag-/Bewegungsgeschwindigkeit koppeln.
+
+
+## 12G — Walk an Bewegungsgeschwindigkeit gekoppelt
+
+- Es wurde bewusst **keine** Walk/Trot/Canter-State-Machine gebaut.
+- `InputEventScreenDrag.velocity` bzw. Mausgeschwindigkeit steuert nun direkt den bestehenden `WalkAnimationPlayer`.
+- Playback-Speed wird weich zwischen `0.72×` und `1.60×` skaliert.
+- Zusätzlich werden die bereits vorhandenen Walk-Keywerte nicht-destruktiv aus einer beim Start gecachten Basis zwischen `0.86×` und `1.20×` amplitudenskaliert.
+- Rotationskeys werden um 0 skaliert; Body/Head/Tail-Positionskeys werden relativ zu ihrem jeweiligen Ruhewert skaliert, damit kein Drift entsteht.
+- Ein einzelner Tap ohne Drag-Velocity wird absichtlich als ruhige Bewegung behandelt statt als künstlicher Hochgeschwindigkeitssprung.
+- Runtime-Commit: `f3eb8ce362bf413b0d22c979844fbee39473f4ca` (`Scale walk cycle with movement speed`).
+
+Damit sind 12A–12G im Runtime-Code umgesetzt. Als nächstes folgt die gemeinsame Godot-4.3-/Android-Debug-Validierung und ein neuer Step-12-Testbuild.
