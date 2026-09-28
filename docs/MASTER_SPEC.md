@@ -1100,3 +1100,25 @@ Wichtig:
 - APK SHA-256: `a30e097b41782094c1227f865f129d01a84009babda72308763139b35ac67c01`
 
 Nächster Schritt ist ausschließlich der echte Fold-Retest dieser neuen Farmgrenzen.
+
+
+### Fence-specific Collision-Canon nach Fold-Gerätescreenshots
+
+Die Collision-Zielobjekte wurden anhand echter Screenshots präzisiert:
+
+- kleines 1536×658-Querbild: seitliche Begrenzung = sichtbarer weißer Vordergrund-Zaun ganz rechts (analog links)
+- großes 1536×1384-Bild: hintere Begrenzung = weißer horizontaler Zaun in der Bildmitte
+- Heuballen und Unterstand sind keine primären Collision-Grenzen
+
+Ab Runtime-Commit `07b575e7e780ba3320bc68f3f89294f7980b5cb3` werden sichtbare seitliche Zaunlinien in Farm-Texturkoordinaten als X-Grenzen benutzt. Durch `cover` aus dem Viewport herausgecroppte Seitenzäune erzeugen keine unsichtbare Wand. Der horizontale hintere Zaun bleibt die Rear-/Depth-Grenze.
+
+Rig/Walk unverändert:
+- `horse_cutout_rig.tscn` Blob `0c94231e6e037d2ff32f9a70fe69f459dcc870ac`
+
+Validierung:
+- Godot `36364162114`: success
+- Android `36364162142`: success
+- Artifact `10946946741`
+- APK SHA-256 `f5e51d13ff4c5cf599246d959509b5d0a5710a5d2aefeea0f6e8c5cd1c1d8e37`
+
+Nächster Schritt: ausschließlich echter Fold-Retest dieser Zaungrenzen.
