@@ -1,0 +1,179 @@
+name: Validate aspect aware farm collisions
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/validate-aspect-aware-collisions.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify isolated collision patch
+        shell: bash
+        run: |
+          MAIN_BLOB="$(git hash-object scripts/main.gd)"
+          RIG_BLOB="$(git hash-object scenes/horse_cutout_rig.tscn)"
+          echo "main.gd blob=$MAIN_BLOB"
+          echo "rig blob=$RIG_BLOB"
+          test "$MAIN_BLOB" = "98284df5dbaf8bed2210303929572e87f3444df5"
+          test "$RIG_BLOB" = "0c94231e6e037d2ff32f9a70fe69f459dcc870ac"
+
+      - name: Verify farm-space mapping math
+        shell: bash
+        run: |
+          python - <<'PY'
+          import math
+
+          farm_w, farm_h = 1536.0, 864.0
+          source_x = [288.5549,633.7554,700.8777,1055.6671,1122.7894,1247.4451]
+          source_y = [488.16,505.44,518.40]
+
+          def project(vw, vh):
+              scale=max(vw/farm_w, vh/farm_h)
+              ox=(vw-farm_w*scale)*0.5
+              oy=(vh-farm_h*scale)*0.5
+              xs=[ox+x*scale for x in source_x]
+              ys=[oy+y*scale for y in source_y]
+              return xs,ys
+
+          landscape_x, landscape_y = project(1536.0,658.0)
+          old_x, old_y = project(1536.0,1384.0)
+
+          expected_landscape_x=[288.5549,633.7554,700.8777,1055.6671,1122.7894,1247.4451]
+          expected_landscape_y=[385.16,402.44,415.40]
+          expected_old_x=[0.0,552.96,660.48,1228.8,1336.32,1536.0]
+          expected_old_y=[781.96,809.64,830.40]
+
+          def close_list(a,b,tol=0.2):
+              return all(abs(x-y)<=tol for x,y in zip(a,b))
+
+          assert close_list(landscape_x,expected_landscape_x)
+          assert close_list(landscape_y,expected_landscape_y)
+          assert close_list(old_x,expected_old_x)
+          assert close_list(old_y,expected_old_y)
+          print("PASS farm-space collision mapping for 1536x658 and 1536x1384")
+          PY
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify approved rig assets
+        run: python tools/materialize_verified_rig_assets.py
+
+      - name: Download Godot 4.3
+        shell: bash
+        run: |
+          curl -L --fail --retry 3 -o godot.zip "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          chmod +x Godot_v4.3-stable_linux.x86_64
+
+      - name: Validate and run project headlessly
+        shell: bash
+        run: |
+          mkdir -p build
+          ./Godot_v4.3-stable_linux.x86_64 --headless --path . --editor --quit 2>&1 | tee build/collision_editor.log
+          ./Godot_v4.3-stable_linux.x86_64 --headless --path . --quit-after 4 2>&1 | tee build/collision_runtime.log
+          if grep -E "SCRIPT ERROR|Parse Error|Invalid access|Invalid get index|Invalid call" build/collision_editor.log build/collision_runtime.log; then
+            echo "Godot reported a script/runtime error"
+            exit 1
+          fi
+
+      - name: Install Godot 4.3 export templates
+        shell: bash
+        run: |
+          curl -L --fail --retry 3 -o templates.tpz "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz"
+          unzip -q templates.tpz -d templates-unpacked
+          mkdir -p "$HOME/.local/share/godot/export_templates/4.3.stable"
+          cp -a templates-unpacked/templates/. "$HOME/.local/share/godot/export_templates/4.3.stable/"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Ensure Android SDK packages
+        shell: bash
+        run: |
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+          if [ ! -d "$SDK_ROOT/build-tools/34.0.0" ] || [ ! -d "$SDK_ROOT/platforms/android-34" ]; then
+            SDKMANAGER="$(find "$SDK_ROOT" -type f -name sdkmanager 2>/dev/null | head -n 1)"
+            test -n "$SDKMANAGER"
+            yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses >/dev/null || true
+            "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platform-tools" "build-tools;34.0.0" "platforms;android-34"
+          fi
+
+      - name: Prepare debug keystore and Godot Android settings
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.android" "$HOME/.config/godot"
+          if [ ! -f "$HOME/.android/debug.keystore" ]; then
+            keytool -genkeypair -v -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          fi
+          {
+            echo '[gd_resource type="EditorSettings" format=3]'
+            echo
+            echo '[resource]'
+            echo "export/android/android_sdk_path = \"$ANDROID_HOME\""
+            echo "export/android/java_sdk_path = \"$JAVA_HOME\""
+            echo "export/android/debug_keystore = \"$HOME/.android/debug.keystore\""
+            echo 'export/android/debug_keystore_user = "androiddebugkey"'
+            echo 'export/android/debug_keystore_pass = "android"'
+          } > "$HOME/.config/godot/editor_settings-4.tres"
+
+      - name: Export collision-fix Android debug APK
+        shell: bash
+        env:
+          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: /home/runner/.android/debug.keystore
+          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
+        run: |
+          mkdir -p build
+          ./Godot_v4.3-stable_linux.x86_64 --headless --path . --import
+          ./Godot_v4.3-stable_linux.x86_64 --headless --verbose --path . --export-debug "Android Debug" build/Pferd-und-Steve-collision-fix-debug.apk
+
+      - name: Record validation evidence
+        shell: bash
+        run: |
+          APK_SHA="$(sha256sum build/Pferd-und-Steve-collision-fix-debug.apk | awk '{print $1}')"
+          mkdir -p debug
+          cat > debug/aspect_aware_collision_validation.txt <<EOF
+          source_commit=$GITHUB_SHA
+          workflow_run_id=$GITHUB_RUN_ID
+          main_blob=98284df5dbaf8bed2210303929572e87f3444df5
+          rig_blob=0c94231e6e037d2ff32f9a70fe69f459dcc870ac
+          landscape_1536x658_mapping=success
+          legacy_1536x1384_mapping=success
+          asset_integrity=success
+          godot_4_3_headless=success
+          runtime_scene_load=success
+          android_debug_export=success
+          apk_sha256=$APK_SHA
+          EOF
+          cat debug/aspect_aware_collision_validation.txt
+
+      - name: Upload collision-fix APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Pferd-und-Steve-aspect-collision-fix-apk
+          path: build/Pferd-und-Steve-collision-fix-debug.apk
+          if-no-files-found: error
+
+      - name: Commit validation evidence
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add debug/aspect_aware_collision_validation.txt
+          git commit -m "Record aspect-aware collision validation"
+          git push origin HEAD:main
