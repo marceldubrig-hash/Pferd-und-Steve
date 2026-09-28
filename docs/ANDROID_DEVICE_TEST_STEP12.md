@@ -749,3 +749,34 @@ Automatisiert geprüft:
 
 Status: **echter Wide-Fold-Gerätetest ausstehend / noch nicht FROZEN**.
 
+## ENDGÜLTIGE GERÄTEFREIGABE — FARM COLLISION FROZEN
+
+Status: **FROZEN / USER APPROVED**
+
+- Nutzerfreigabe: **„Es ist perfekt“**
+- Freigabedatum: **2026-09-28**
+- Zielgerät: Samsung Galaxy Z Fold7 / Android 16
+- bestätigte Layouts:
+  - 1536×658 kleines/breites Fold
+  - 1536×1384 großes/hohes Fold
+- bestätigte Richtungen: LEFT und RIGHT
+- finale Runtime:
+  `144f13ea4f2740024c5ccfbb3df3c6b93adbfc71`
+- letzter HEAD vor Freeze-Dokumentation:
+  `711422106661fa48b96d0843b1e4406a06669751`
+- Freeze-Registry-Commit:
+  `362043812bd85c86fbb9e76c93eb14166d197c1a`
+- `scripts/main.gd` Blob:
+  `04966694a5354ec2255a422bef74c21b7b6061e8`
+- `scenes/main.tscn` Blob:
+  `336c90377be17ac57fe9b611a455ee544da6ba85`
+- `scenes/horse_cutout_rig.tscn` Blob:
+  `0c94231e6e037d2ff32f9a70fe69f459dcc870ac`
+- APK SHA-256:
+  `d2e0631b26941b2d24ac40c6197cd7479405ad841eae4c10ec84fdb2c277f2c1`
+
+Ab diesem Eintrag sind sämtliche Collision-Funktionen, Fold-spezifischen
+Grenzwerte, Exact-Cutout-Bounds, `WIDE_GROUND_BOUNDARY_POINTS`,
+Side-Fence-Limits und Solver-Details unveränderlich. Änderungen sind nur nach
+erneuter ausdrücklicher Freigabe des Nutzers erlaubt.
+
