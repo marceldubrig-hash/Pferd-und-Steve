@@ -607,3 +607,38 @@ Der Kandidat darf erst nach ausdrücklicher Nutzerbestätigung auf dem echten
 Samsung Galaxy Z Fold7 als USER APPROVED / FROZEN in `MASTER_SPEC.md`
 eingetragen werden.
 
+### Wide-Fold-Nachkalibrierung nach echtem Gerätetest
+
+Gerätefeedback auf Samsung Galaxy Z Fold7 / Android 16:
+
+- hohes/großes Format: **passt**, Verhalten mit 4-Pixel-Inset bleibt unverändert
+- kleines/breites Format: Grenzen noch leicht zu großzügig
+- erlaubte Folgeänderung: ausschließlich breites Format von 4 auf 8 Pixel Inset
+
+Technischer Stand:
+
+- Runtime-Commit: `2984fadda8464a034992f5992133913cb095b1c6`
+- Runtime-Commit-Inhalt: ausschließlich `scripts/main.gd`
+- hohes/großes Fold: weiterhin exakt `4 px`
+- kleines/breites Fold: jetzt exakt `8 px`
+- temporärer Validator-Commit: `2f21d2ed485f2633fcf994441fef238ff37c2b7e`
+- temporärer Validator-Cleanup: `94f23d2fd597bd627c9a0d25d3f4459a1ce73815`
+- Godot-4.3-Parse-Run: `36375398912` — **SUCCESS**
+- Collision-Validator-Run: `36375423043` — **SUCCESS**
+- Validator-Artifact-ID: `10950797336`
+- Android-Debug-Build-Run: `36375398904` — **SUCCESS**
+- Android-Artifact-ID: `10950961311`
+- APK: `Pferd-und-Steve-wide-fold-collision-calibration-debug.apk`
+- APK SHA-256: `2d00e15809d16c074de3d356409c6d83c98a39ee9ebde1c3894137ff6e252922`
+- `scripts/main.gd` Blob: `117998e0e4073f6436bfc30123f75bca90ae24f0`
+- `scenes/main.tscn` Blob: `336c90377be17ac57fe9b611a455ee544da6ba85`
+- `scenes/horse_cutout_rig.tscn` Blob: `0c94231e6e037d2ff32f9a70fe69f459dcc870ac`
+
+Automatisierte erwartete Grenzen:
+
+- 1536×658: `53 … 1408` (8-Pixel-Inset)
+- 1536×1384: `4 … 1532` (unverändert 4-Pixel-Inset)
+
+Status: **breiter Fold-Gerätetest ausstehend / noch nicht vollständig FROZEN**.
+Das bestätigte hohe Format darf bei weiteren Nachjustierungen nicht verändert werden.
+
