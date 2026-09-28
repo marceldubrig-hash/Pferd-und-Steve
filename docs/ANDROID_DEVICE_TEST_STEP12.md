@@ -479,3 +479,79 @@ temporäre Recovery-Workflow wieder entfernt:
 - der erfolgreiche Run `36368232364` und das erzeugte APK-Artefakt bleiben als
   dokumentierter Nachweis erhalten
 
+## Exact-Cutout Collision-Retest — dritte Recovery-Chance
+
+Status: **technisch validiert / echter Fold-Gerätetest ausstehend**.
+
+Runtime-Commit:
+`98eb642fa4399d2bd5b7f649118a6cec0b3960a5`
+— `Resolve farm collision from exact cutout bounds`.
+
+### Geänderte Collision-Semantik
+
+Die historische Hofkurve bleibt unverändert:
+`0.565 / 0.585 / 0.600` mit den kalibrierten X-Stützstellen
+`0.00 / 0.36 / 0.43 / 0.80 / 0.87 / 1.00`.
+
+Neu ist ausschließlich die Art, **welcher X-Bereich gegen diese Kurve geprüft wird**:
+
+- nicht mehr nur der `HorseRoot`-Punkt
+- keine geschätzte Pferdebreite
+- keine frei angenommene Bounding-Box-Ratio
+- Godot liest die tatsächlichen aktuellen `Sprite2D`-Bounds des sichtbaren Cutout-Rigs
+- die gesamte reale sichtbare X-Spanne wird gegen die bestehende Hofkurve geprüft
+- die bekannten Stützstellen innerhalb dieser Spanne werden exakt mitbewertet
+- bei Fold-Querformat werden die real sichtbaren Seitenzäune bei Farm-Source-X `45` und `1416` als horizontale Limits verwendet
+- wenn diese Zäune im hohen Fold-Bild durch `cover` aus dem Viewport gecroppt sind, gelten ausschließlich die sichtbaren Bildschirmränder
+
+Damit bleibt `HorseRoot` derselbe physische Bodenanker. Rig, Perspektive und Animation werden nicht umgebaut.
+
+### Frozen-Dateien unverändert
+
+- `scenes/main.tscn`: `336c90377be17ac57fe9b611a455ee544da6ba85`
+- `scenes/horse_cutout_rig.tscn`: `0c94231e6e037d2ff32f9a70fe69f459dcc870ac`
+- keine Assetänderung
+- keine Walk-/Bein-/Kopf-/Layering-Änderung
+- keine Änderung am `RigSpace.scale = 0.701686`
+- keine Änderung am Ground-Anchor `-516.7995`
+
+### Runtime-Validierung
+
+Temporärer Validator:
+`eeadb4585bddd63dff1e0959bcb0efd0dcb13cd3`
+— `Add exact cutout collision runtime validation`.
+
+Run:
+`36374011658` — **success**.
+
+Getestet wurden in echtem Godot 4.3:
+
+- Viewport-Modell `1536×658`
+- Viewport-Modell `1536×1384`
+- RIGHT und LEFT
+- X-Proben `0.00 / 0.18 / 0.34 / 0.40 / 0.50 / 0.82 / 0.90 / 1.00`
+- Tiefen `0.00 / 0.28 / 0.60`
+
+Für jede Kombination wurde geprüft:
+
+- tatsächliche Sprite-Grenze links bleibt innerhalb des erlaubten Bereichs
+- tatsächliche Sprite-Grenze rechts bleibt innerhalb des erlaubten Bereichs
+- im breiten Fold-Bild: sichtbare Fence-Limits exakt ungefähr `45 … 1416`
+- im hohen Fold-Bild: Seitenzäune korrekt herausgecroppt, Limits `0 … 1536`
+- projizierter Hufpunkt liegt mindestens auf der strengsten historischen Hofgrenze innerhalb der gesamten sichtbaren Pferdespanne
+
+Der Runtime-Validator endete mit:
+`PASS exact cutout collision for both Fold sizes, both directions, and extreme X/depth probes`.
+
+### Android-Testbuild
+
+- Godot-Parse-Run: `36373925689` — **success**
+- Android-Build-Run: `36373925737` — **success**
+- Artifact-ID: `10949734349`
+- APK: `Pferd-und-Steve-exact-cutout-collision-debug.apk`
+- APK SHA-256:
+  `b8af37bb6b6c21c5620472b72bdfb760fd02e77889a53c560ae997798d371feb`
+
+Dieser Stand wird erst nach echter Bestätigung auf dem Samsung Galaxy Z Fold7 als
+neue integrierte FROZEN-Collision-Baseline übernommen.
+
