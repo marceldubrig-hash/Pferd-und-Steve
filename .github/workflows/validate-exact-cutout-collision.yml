@@ -1,0 +1,210 @@
+name: Validate wide Fold shelter-post collision
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/validate-exact-cutout-collision.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify frozen files and isolated runtime patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          RUNTIME_COMMIT="6e30a169067dab52b0c788358d2686391f96f152"
+          test "$(git diff-tree --no-commit-id --name-only -r "$RUNTIME_COMMIT")" = "scripts/main.gd"
+          test "$(git hash-object scenes/main.tscn)" = "336c90377be17ac57fe9b611a455ee544da6ba85"
+          test "$(git hash-object scenes/horse_cutout_rig.tscn)" = "0c94231e6e037d2ff32f9a70fe69f459dcc870ac"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify approved rig assets
+        run: python tools/materialize_verified_rig_assets.py
+
+      - name: Download Godot 4.3
+        shell: bash
+        run: |
+          curl -L --fail --retry 3 -o godot.zip "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          chmod +x Godot_v4.3-stable_linux.x86_64
+
+      - name: Create runtime collision verifier
+        shell: bash
+        run: |
+          mkdir -p build
+          cat > build/verify_exact_collision.gd <<'GDSCRIPT'
+          extends SceneTree
+
+          const TEST_SIZES := [
+              Vector2(1536.0, 658.0),
+              Vector2(1536.0, 1384.0),
+          ]
+
+          const TEST_X_RATIOS := [
+              0.0,
+              0.18,
+              0.34,
+              0.40,
+              0.50,
+              0.73,
+              0.82,
+              0.90,
+              1.0,
+          ]
+
+          func _initialize() -> void:
+              call_deferred("_run")
+
+          func _fail(message: String) -> void:
+              push_error(message)
+              quit(1)
+
+          func _configure_background(main, size: Vector2) -> void:
+              var bg: Sprite2D = main.get_node("Background")
+              bg.position = size * 0.5
+              var texture_size := bg.texture.get_size()
+              var cover_scale := maxf(
+                  size.x / texture_size.x,
+                  size.y / texture_size.y
+              )
+              bg.scale = Vector2.ONE * cover_scale
+
+          func _run() -> void:
+              var packed := load("res://scenes/main.tscn") as PackedScene
+              if packed == null:
+                  _fail("Could not load main.tscn")
+                  return
+
+              var main = packed.instantiate()
+              root.add_child(main)
+              await process_frame
+              await process_frame
+
+              var horse_root: Node2D = main.get_node("HorseRoot")
+
+              for size in TEST_SIZES:
+                  _configure_background(main, size)
+
+                  for facing_right in [true, false]:
+                      main.set_horse_facing_right(facing_right)
+                      await process_frame
+
+                      var local_bounds: Vector2 = main.call("_horse_visual_x_bounds_in_root_space")
+                      if local_bounds.y <= local_bounds.x:
+                          _fail("Invalid visual bounds for facing=%s: %s" % [facing_right, local_bounds])
+                          return
+
+                      var limits: Vector2 = main.call("_visible_horizontal_ground_limits", size)
+                      if is_equal_approx(size.y, 658.0):
+                          if absf(limits.x - 53.0) > 0.25 or absf(limits.y - 1408.0) > 0.25:
+                              _fail("Wide Fold fence projection mismatch: %s" % limits)
+                              return
+                      else:
+                          if absf(limits.x - 4.0) > 0.25 or absf(limits.y - (size.x - 4.0)) > 0.25:
+                              _fail("Tall Fold side fences should be cropped out: %s" % limits)
+                              return
+
+                      for x_ratio in TEST_X_RATIOS:
+                          for requested_depth in [0.0, 0.28, 0.60]:
+                              var result: Vector2 = main.call(
+                                  "_resolve_horse_collision",
+                                  size.x * x_ratio,
+                                  requested_depth,
+                                  size
+                              )
+                              var span: Vector2 = main.call(
+                                  "_horse_screen_x_span",
+                                  result.x,
+                                  size,
+                                  result.y,
+                                  local_bounds
+                              )
+
+                              if span.x < limits.x - 0.75:
+                                  _fail(
+                                      "LEFT CLIP size=%s facing=%s x=%s depth=%s result=%s span=%s limits=%s"
+                                      % [size, facing_right, x_ratio, requested_depth, result, span, limits]
+                                  )
+                                  return
+                              if span.y > limits.y + 0.75:
+                                  _fail(
+                                      "RIGHT CLIP size=%s facing=%s x=%s depth=%s result=%s span=%s limits=%s"
+                                      % [size, facing_right, x_ratio, requested_depth, result, span, limits]
+                                  )
+                                  return
+
+                              var required_foot_ratio: float = main.call(
+                                  "_minimum_projected_foot_y_ratio_for_screen_span",
+                                  span.x,
+                                  span.y,
+                                  size
+                              )
+                              if is_equal_approx(size.y, 658.0) and is_equal_approx(x_ratio, 0.73):
+                                  var expected_post_ratio := 0.600 + 8.0 / size.y
+                                  if required_foot_ratio + 0.0005 < expected_post_ratio:
+                                      _fail(
+                                          "SHELTER POST NOT ENFORCED facing=%s span=%s required=%s expected=%s"
+                                          % [facing_right, span, required_foot_ratio, expected_post_ratio]
+                                      )
+                                      return
+
+                              var far_delta := 0.565 - 0.405
+                              var distance_m := lerpf(12.0, 1.40, result.y)
+                              var inverse_depth_gain := 12.0 / maxf(distance_m, 0.01)
+                              var actual_foot_ratio := 0.405 + far_delta * inverse_depth_gain
+
+                              if actual_foot_ratio + 0.0005 < required_foot_ratio:
+                                  _fail(
+                                      "REAR CLIP size=%s facing=%s x=%s requested_depth=%s result=%s span=%s actual=%s required=%s"
+                                      % [size, facing_right, x_ratio, requested_depth, result, span, actual_foot_ratio, required_foot_ratio]
+                                  )
+                                  return
+
+                              print(
+                                  "PASS size=", size,
+                                  " facing_right=", facing_right,
+                                  " x_ratio=", x_ratio,
+                                  " requested_depth=", requested_depth,
+                                  " local_bounds=", local_bounds,
+                                  " resolved=", result,
+                                  " span=", span,
+                                  " limits=", limits,
+                                  " foot=", actual_foot_ratio,
+                                  " required=", required_foot_ratio
+                              )
+
+              print("PASS wide shelter-post support with unchanged tall Fold and existing edge limits")
+              quit(0)
+          GDSCRIPT
+
+      - name: Import and run exact collision verifier
+        shell: bash
+        run: |
+          set -o pipefail
+          ./Godot_v4.3-stable_linux.x86_64 --headless --path . --editor --quit
+          ./Godot_v4.3-stable_linux.x86_64 --headless --path . --script build/verify_exact_collision.gd 2>&1 | tee build/exact_collision.log
+          if grep -E "SCRIPT ERROR|Parse Error|Invalid access|Invalid get index|Invalid call|ERROR:" build/exact_collision.log; then
+            echo "Godot collision verifier reported an error"
+            exit 1
+          fi
+
+      - name: Upload validation log
+        uses: actions/upload-artifact@v4
+        with:
+          name: wide-shelter-post-collision-validation-log
+          path: build/exact_collision.log
+          if-no-files-found: error
