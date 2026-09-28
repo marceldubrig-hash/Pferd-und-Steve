@@ -341,3 +341,130 @@ Validierung:
 - lokal entpackte APK SHA-256: `f5e51d13ff4c5cf599246d959509b5d0a5710a5d2aefeea0f6e8c5cd1c1d8e37`
 
 Dieser Build ist der aktuelle Zaun-Collision-Reteststand.
+
+## Collision-Recovery auf den letzten user-approved Stand
+
+Status: **technisch validierter Recovery-Kandidat / echter Fold-Gerätetest ausstehend**.
+
+Die beiden späteren Collision-Experimente
+`aa07a14d87ed983d2e7268fa701bae528f81f7c2` und
+`07b575e7e780ba3320bc68f3f89294f7980b5cb3` wurden nach dem echten
+Fold-Test ausdrücklich verworfen. Sie sind keine Collision-Referenz mehr.
+
+### Verifizierte historische Basis
+
+Der echte Diff von
+`d5d3ff9ca32968f035d304176668eb2a326578ad`
+zeigt die damals eingeführte und anschließend vom Nutzer bestätigte Semantik:
+
+- offene hintere Hoffläche: `0.565 × Viewporthöhe`
+- Hindernisbereiche: `0.585 × Viewporthöhe`
+- äußerste Bereiche: `0.600 × Viewporthöhe`
+- X-Profil: `0.00 / 0.36 / 0.43 / 0.80 / 0.87 / 1.00`
+- `_minimum_projected_foot_y_ratio_for_x(...)`
+- `_minimum_depth_t_for_x(...)`
+- unerlaubte Tiefenziele werden auf den nächstliegenden legalen Bodenpunkt davor projiziert
+
+Bestätigungsdokumentation:
+`f34c9142c67c388758d7749fca2536ea51734b9d`.
+Kalibrierungsdokumentation:
+`bd064faffffcde52f494886b81d6215dd18f2560`.
+
+### Warum kein Cutout-Adapter nötig ist
+
+Die Git-History zeigt, dass die Cutout-Integration die physische Collision-Semantik
+nicht verändert hat. Beim sichtbaren Austausch auf das Cutout-Rig
+(`bfba37dbc058de129e2f2605a015241ae6bca2e7`) blieb `HorseRoot`
+weiterhin der projizierte Welt-/Bodenpunkt. Der Cutout wird ausschließlich darunter
+über
+
+- `RigSpace.scale = 0.701686`
+- `HorseCutoutRig.position.y = -516.7995`
+
+auf denselben historischen sichtbaren Kalibrierraum abgebildet.
+
+Der spätere Step-12-Recovery-Stand
+`c8d10c7a8c84562275b2ec029b8fe281ec5116d0`
+hat für `scripts/main.gd` exakt den Blob
+`a32408d507f0ee1c928c766f214666bedad65175`.
+Dieser Stand enthält bereits das heutige Cutout-Rig und gleichzeitig die alte
+user-approved Collision-Mathematik. Deshalb wurde **kein neuer Anchor,
+keine Bounding Box und keine Adapter-Mathematik erfunden**.
+
+### Minimaler Runtime-Recovery
+
+Runtime-Commit:
+`fd0962080edf756030a0b2a5a06cb5c1315ea859`
+— `Restore user-approved farm collision behavior`.
+
+Geändert wurde ausschließlich:
+
+- `scripts/main.gd`
+
+Wiederhergestellter Blob:
+
+- `scripts/main.gd`: `a32408d507f0ee1c928c766f214666bedad65175`
+
+Explizit unverändert:
+
+- `scenes/main.tscn`: `336c90377be17ac57fe9b611a455ee544da6ba85`
+- `scenes/horse_cutout_rig.tscn`: `0c94231e6e037d2ff32f9a70fe69f459dcc870ac`
+- Pferdeassets
+- Bein-/Walk-Daten
+- Kopfkorrekturen 12A/12B
+- RigSpace-/Ground-Anchor-Werte
+- Farmgrafik
+- 1/Z-Perspektivmodell
+
+Die folgenden experimentellen Collision-Pfade sind im Recovery-Code wieder entfernt:
+
+- Farm-Source-Space-/Cover-Collision-Mapping
+- `HORSE_HALF_WIDTH_TO_PROJECTED_HEIGHT`
+- künstliche Links/Mitte/Rechts-Breitenprobes
+- `_clamp_horse_screen_x(...)`
+- `_minimum_depth_t_for_screen_x(...)`
+- Side-Fence-X-Clamps
+
+### Fail-closed Validierung und Android-Build
+
+Temporärer Recovery-Validator:
+`dc7924ac79ea244b0343e33f156a4fc02962e912`
+— `Add approved collision recovery validation`.
+
+Workflow-Run:
+`36368232364` — **success**.
+
+Der Validator hat geprüft:
+
+- Recovery-Commit verändert exakt nur `scripts/main.gd`
+- `main.gd`-Blob exakt `a32408d507f0ee1c928c766f214666bedad65175`
+- `main.tscn`-Blob exakt `336c90377be17ac57fe9b611a455ee544da6ba85`
+- Rig-Blob exakt `0c94231e6e037d2ff32f9a70fe69f459dcc870ac`
+- bestätigte `0.565 / 0.585 / 0.600`-Semantik vorhanden
+- experimentelle Collision-Symbole nicht mehr vorhanden
+- verifizierte Rig-Assets unverändert
+- Godot 4.3 Editor/Parse: **success**
+- echte `main.tscn` headless gestartet: **success**
+- Android Debug Export: **success**
+
+Android-Artefakt:
+
+- Artifact: `Pferd-und-Steve-approved-collision-recovery-debug`
+- Artifact-ID: `10947917953`
+- APK: `Pferd-und-Steve-approved-collision-recovery-debug.apk`
+- APK SHA-256: `d0b6d9995f9d2b4df837ed7b8fc6c61f0b1a61baacd51fbda8b2980aac86452c`
+
+### Nächster Schritt — ausschließlich echter Fold-Test
+
+Dieser Recovery-Stand ist technisch testbereit, aber **noch nicht als neuer
+integrierter FROZEN-Baseline-Commit freigegeben**.
+
+Auf dem Samsung Galaxy Z Fold7 jetzt nur Collision testen:
+
+- 1536×1384: links hinten, Mitte hinten, rechts hinten, Heuballen,
+  Scheune, Unterstand, äußerste X-Positionen, extreme Nähe
+- 1536×658: links, rechts, hinten, sichtbarer weißer Zaun ganz rechts,
+  Unterstand, Heuballen, Mitte, verschiedene Tiefen und LEFT/RIGHT
+
+Bis zur ausdrücklichen Nutzerbestätigung keine weitere Runtime-Änderung.
+
