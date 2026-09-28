@@ -299,3 +299,45 @@ Damit blieb das Recovery-Rig **unverändert**: Step-11 Beine + Step-11 Walk + au
 - APK SHA-256: `a30e097b41782094c1227f865f129d01a84009babda72308763139b35ac67c01`
 
 Dieser Build ist jetzt der gültige Collision-Reteststand.
+
+
+## Zaun-Klarstellung aus echtem Fold-Test
+
+Der Nutzer hat die tatsächlichen relevanten Collision-Objekte anhand zweier echter Gerätescreenshots präzisiert:
+
+- **1536×658 / kleines Querbild:** maßgebliche seitliche Sperre ist der **weiße Zaun ganz rechts**.
+- **1536×1384 / großes Bild:** maßgebliche hintere Sperre ist der **weiße horizontale Zaun in der Mitte**.
+
+Heuballen und Unterstand sind ausdrücklich **nicht** die Collision-Zielkante.
+
+### Umsetzung
+
+Commit:
+- `07b575e7e780ba3320bc68f3f89294f7980b5cb3` — `Use visible farm fences as movement boundaries`
+
+Runtime-Regeln:
+- globaler hinterer Zaun bleibt die validierte rear-ground Grenze
+- linke/rechte Vordergrund-Seitenzäune werden in Farm-Texturkoordinaten gespeichert
+- Side fences werden nur als X-Wand verwendet, wenn sie nach Background-`cover` tatsächlich im aktuellen Viewport sichtbar sind
+- ist ein Seitenzaun durch Cropping außerhalb des Bildes, wird dort nur gegen den sichtbaren Bildschirmrand begrenzt
+- Heu-/Shelter-spezifische künstliche Tiefenkurve wurde entfernt
+
+Gemessene Farm-X-Kanten aus dem echten 1536×658-Screenshot:
+- linker Seitenzaun: `x=45`
+- rechter Seitenzaun: `x=1416`
+
+Projection:
+- 1536×658 → links `45`, rechts `1416`, beide sichtbar
+- 1536×1384 → links ca. `-390`, rechts ca. `1806`, beide außerhalb; dort bleibt der mittlere horizontale Zaun die relevante Rear-Collision
+
+Schutz vor Rig-Regression:
+- `horse_cutout_rig.tscn` Blob weiterhin unverändert: `0c94231e6e037d2ff32f9a70fe69f459dcc870ac`
+- keine Bein-, Walk-, Kopf- oder Assetänderung in diesem Fix
+
+Validierung:
+- Godot-Validation Run `36364162114`: **success**
+- Android Build Run `36364162142`: **success**
+- Android Artifact-ID: `10946946741`
+- lokal entpackte APK SHA-256: `f5e51d13ff4c5cf599246d959509b5d0a5710a5d2aefeea0f6e8c5cd1c1d8e37`
+
+Dieser Build ist der aktuelle Zaun-Collision-Reteststand.
