@@ -536,7 +536,7 @@ _data = {
 
 [node name="TailPivot" type="Node2D" parent="."]
 position = Vector2(-449, -198)
-z_index = -1
+z_index = -2
 
 [node name="Tail" type="Sprite2D" parent="TailPivot"]
 position = Vector2(-102.18, 270.66)
