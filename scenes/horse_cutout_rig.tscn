@@ -596,7 +596,7 @@ position = Vector2(67.359, 138.418)
 texture = SubResource("AtlasTexture_front_left_hoof")
 
 [node name="HindFar" type="Node2D" parent="."]
-position = Vector2(-262, -77)
+position = Vector2(-330, -77)
 scale = Vector2(0.5, 0.5)
 z_index = -1
 
