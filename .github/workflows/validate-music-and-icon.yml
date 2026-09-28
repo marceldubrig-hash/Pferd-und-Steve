@@ -73,7 +73,7 @@ jobs:
               if not music.music_player.stream.loop:
                   _fail("Background music loop is disabled")
                   return
-              if not music.music_player.playing:
+              if not music.music_player.is_playing():
                   _fail("Background music did not start")
                   return
               if not is_equal_approx(music.music_player.volume_db, -8.0):
@@ -112,11 +112,12 @@ jobs:
         run: |
           set -o pipefail
           ./Godot_v4.3-stable_linux.x86_64 --headless --path . --editor --quit
-          ./Godot_v4.3-stable_linux.x86_64 --headless --path . --script build/verify_music_and_icon.gd 2>&1 | tee build/music_and_icon.log
+          timeout 90 ./Godot_v4.3-stable_linux.x86_64 --headless --path . --script build/verify_music_and_icon.gd 2>&1 | tee build/music_and_icon.log
           if grep -E "SCRIPT ERROR|Parse Error|Invalid access|Invalid get index|Invalid call|ERROR:" build/music_and_icon.log; then
             echo "Music and icon verifier reported an error"
             exit 1
           fi
+          grep -Fq "PASS continuous background music, app icons, main scene, frozen runtime blobs" build/music_and_icon.log
 
       - name: Upload validation log
         uses: actions/upload-artifact@v4
