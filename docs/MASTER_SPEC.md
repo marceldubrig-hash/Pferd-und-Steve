@@ -1083,3 +1083,20 @@ Die Recovery-Basis wurde danach mit einem separaten fail-closed Workflow geprüf
 - Recovery-APK SHA-256: `fe86fb4354a07e6fd02a8f7559f4a2f0b7a1d425c838e1c9e9b78d1fd44edc44`
 
 Dieser Recovery-Build ist der aktuelle Retest-Stand. Er enthält **Step-11 Beine, Step-11 Walk und Step-11 Bewegungs-/Hofgrenzen** plus ausschließlich die Kopfkorrekturen 12A/12B.
+
+
+### Aspect-ratio-feste Farmgrenzen nach Fold-Retest
+
+Der zweite Step-12-Gerätetest zeigte, dass die historische obstacle-aware Grenze zwar code-seitig erhalten war, aber im aktuellen Fold-Querformat 1536×658 visuell nicht mehr auf den Farmhindernissen lag. Ursache: die ursprüngliche Kalibrierung war als direkte Viewport-Ratios aus einem 1536×1384-Testbild gespeichert, während der Hintergrund per `cover` skaliert/gecroppt wird.
+
+Ab Commit `aa07a14d87ed983d2e7268fa701bae528f81f7c2` gelten die Hindernisgrenzen deshalb in **kanonischen 1536×864-Farmtexturkoordinaten** und werden zur Laufzeit mit dem Background-Cover-Transform in den aktuellen Viewport projiziert. Zusätzlich wird die projizierte sichtbare Pferdebreite für Hindernis- und Bildschirmrandprüfungen berücksichtigt.
+
+Wichtig:
+- keine Änderung an Pferde-Rig, Beinen oder Walk
+- Recovery-Rig-Blob bleibt `0c94231e6e037d2ff32f9a70fe69f459dcc870ac`
+- Validierungsrun `36363441866`: **success**
+- 1536×658 und 1536×1384 Mapping jeweils automatisiert geprüft
+- Android Debug Export: **success**
+- APK SHA-256: `a30e097b41782094c1227f865f129d01a84009babda72308763139b35ac67c01`
+
+Nächster Schritt ist ausschließlich der echte Fold-Retest dieser neuen Farmgrenzen.
