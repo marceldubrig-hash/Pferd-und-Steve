@@ -80,3 +80,13 @@ Nächster isolierter Fix: 12C — anatomisch falsch gerichtetes Hinterbein korri
 - Runtime-Commit: `bd81055911cb30fd86b2eb079502a0126b4de302` (`Correct reversed hind leg orientation`).
 
 Nächster isolierter Fix: 12D — äußerstes `HindFar` näher unter die Hinterhand setzen.
+
+
+## 12D — Äußeres Hinterbein näher an den Körper gesetzt
+
+- `HindFar.x` wurde von `-262` auf `-330` verschoben.
+- Y-Position, Scale, Upper/Lower/Hoof-Pivots und sämtliche Quelltexturen blieben unverändert.
+- Dadurch rückt das zuvor optisch isolierte äußerste Hinterbein um 68 Rig-Pixel unter die Hinterhand, ohne Körper, Bodenanker oder Perspektive zu verschieben.
+- Runtime-Commit: `26ba13c40a27b603f0370f82f5a77759365a6cad` (`Reposition outer hind leg closer to body`).
+
+Nächster isolierter Fix: 12E — Z-Reihenfolge von Schweif/Body/HindFar/HindNear eindeutig machen.
