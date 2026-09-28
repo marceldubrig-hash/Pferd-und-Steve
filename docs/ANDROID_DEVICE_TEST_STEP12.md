@@ -214,3 +214,24 @@ Die Runtime-Änderungen aus folgenden Commits dürfen **nicht** erneut als Zielz
 - `f3eb8ce362bf413b0d22c979844fbee39473f4ca` — Geschwindigkeitskopplung
 
 Der nächste Testbuild ist daher bewusst ein **Recovery-Build: Step-11 Bewegung/Beine + Step-12A/B Kopfkorrektur**. Erst dieser muss auf dem Fold wieder die bekannte stabile Basis bestätigen, bevor irgendein weiterer Bein- oder Walk-Fix versucht wird.
+
+
+## Recovery-Build nach Regression
+
+Der Recovery-Build wurde erfolgreich automatisiert validiert und exportiert.
+
+- Build-/Validierungsbasis: `71f4af297038d43dd76d15145bc94b9ad8a53c0c`
+- Workflow-Run: `36362768392` — **success**
+- Nachweis-Commit: `34c4b02468099a0d71931a122465f2b29ce4c419`
+- `scripts/main.gd` Git-Blob: `a32408d507f0ee1c928c766f214666bedad65175` — exakt Step 11
+- `scenes/horse_cutout_rig.tscn` Git-Blob: `0c94231e6e037d2ff32f9a70fe69f459dcc870ac` — Step-11 Beine/Walk + ausschließlich Kopf 12A/12B
+- Asset-Integrität: **success**
+- Godot 4.3 Headless: **success**
+- echte Runtime-Hauptszene gestartet: **success**
+- Android Debug Export: **success**
+- Artifact: `Pferd-und-Steve-step12-recovery-apk`
+- Artifact-ID: `10946058494`
+- APK: `Pferd-und-Steve-step12-recovery-debug.apk`
+- APK SHA-256: `fe86fb4354a07e6fd02a8f7559f4a2f0b7a1d425c838e1c9e9b78d1fd44edc44`
+
+Dieser Build ist der **einzige gültige Step-12-Reteststand**. Der vorherige Step-12-Build bleibt verworfen.
