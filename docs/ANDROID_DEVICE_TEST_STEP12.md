@@ -780,3 +780,37 @@ Grenzwerte, Exact-Cutout-Bounds, `WIDE_GROUND_BOUNDARY_POINTS`,
 Side-Fence-Limits und Solver-Details unveränderlich. Änderungen sind nur nach
 erneuter ausdrücklicher Freigabe des Nutzers erlaubt.
 
+## Gerätetest — autonomes Wandern ohne Drag
+
+Status: **BUILD BEREIT / ECHTER FOLD-GERÄTETEST AUSSTEHEND**
+
+Dieser Build entfernt die direkte Drag-Steuerung endgültig aus der Runtime.
+Das Pferd wählt nun selbstständig wechselnde Ziele im freigegebenen Hofbereich,
+wandert mit dem bestehenden Walk dorthin, richtet sich nach LEFT/RIGHT aus und
+bleibt gelegentlich für kurze Zeit stehen.
+
+Bitte auf dem Samsung Galaxy Z Fold7 prüfen:
+
+- Berührung und Drag verschieben das Pferd nicht mehr.
+- Das Pferd beginnt selbstständig zu wandern.
+- Die Wege führen sichtbar zu unterschiedlichen Hofseiten und Tiefen.
+- Richtungswechsel spiegeln das Pferd korrekt.
+- Während der Bewegung läuft der bestehende Walk; in Ruhepausen steht er still.
+- Die bereits freigegebenen Grenzen bleiben in beiden Fold-Formaten exakt
+  erhalten; kein sichtbarer Teil des Pferdes verlässt den erlaubten Laufraum.
+- Rig, Kopf, Beine, Layering, Perspektive und Assets zeigen keine Regression.
+
+Build-Daten:
+
+- Runtime: `b32a8054f330134a5316fdb7ecfb336525b4c70b`
+- Godot-Run: `36377731280` — **SUCCESS**
+- Validator-Run: `36377813356` — **SUCCESS**
+- Android-Build-Run: `36377731221` — **SUCCESS**
+- Android-Artifact-ID: `10950994851`
+- APK: `Pferd-und-Steve-autonomous-wander-debug.apk`
+- APK SHA-256:
+  `bc9855de0ee788ee604286c138b1b49c91d29c21e1b957184293320dc208a827`
+- `scripts/main.gd`: `f9282fce26465491dee07d29bd8d5f7fb0a519f1`
+- `scenes/main.tscn`: `336c90377be17ac57fe9b611a455ee544da6ba85`
+- `scenes/horse_cutout_rig.tscn`:
+  `0c94231e6e037d2ff32f9a70fe69f459dcc870ac`

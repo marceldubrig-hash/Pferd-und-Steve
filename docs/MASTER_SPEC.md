@@ -1347,3 +1347,53 @@ Nur wenn der Nutzer diesen konkreten Stand ausdrücklich bestätigt, wird er als
 neuer integrierter Collision-Snapshot unter
 `FROZEN USER-APPROVED BASELINES` festgeschrieben.
 
+## Aktueller Bewegungsstand — autonomes Wandern
+
+Status: **TECHNISCH VALIDIERT / ECHTER FOLD-GERÄTETEST AUSSTEHEND**
+
+Die direkte Touch-/Maus-Drag-Steuerung des Pferdes ist vollständig aus der
+Runtime entfernt. Das Pferd bewegt sich stattdessen selbstständig zwischen
+zufällig gewählten Punkten innerhalb des bereits freigegebenen Hof-Laufraums,
+wechselt passend zur horizontalen Bewegungsrichtung zwischen LEFT und RIGHT
+und legt gelegentlich kurze Ruhepausen ein.
+
+Verbindliche Abgrenzung dieses Schritts:
+
+- Drag-/Touch-Bewegung wurde entfernt; es existiert kein `_unhandled_input`-
+  Bewegungspfad mehr.
+- Die bestehende Walk-Animation wird ausschließlich während tatsächlicher
+  autonomer Bewegung abgespielt und während einer Ruhepause angehalten.
+- Es wurde keine neue Walk-Animation, kein neues Rig und keine neue
+  Bewegungs-State-Machine gebaut.
+- Die autonome Bewegung übergibt ihre Zielkoordinaten weiterhin an die
+  bestehende Perspektiv- und FROZEN-Collision-Auflösung.
+- Die eingefrorene Collision-Mathematik und ihre Grenzwerte wurden nicht
+  verändert.
+
+Technischer Stand:
+
+- Drag-Entfernung: `e575102d0fd4d85a6367bf3bb8af8f67832fb616`
+  — `Remove direct horse drag controls`
+- autonome Bewegung: `b32a8054f330134a5316fdb7ecfb336525b4c70b`
+  — `Add autonomous horse wandering`
+- temporärer Validator: `53f5bc0a831d60b6f1aad5a1bf7d3a1617b3c2a7`
+- Validator-Cleanup: `672c969ba47811235fcf27d84cd534f061d87864`
+- Godot-4.3-Parse-/Start-Run: `36377731280` — **SUCCESS**
+- Wander-/Collision-Validator-Run: `36377813356` — **SUCCESS**
+- Validator-Artifact-ID: `10951292144`
+- Android-Debug-Build-Run: `36377731221` — **SUCCESS**
+- Android-Artifact-ID: `10950994851`
+- APK: `Pferd-und-Steve-autonomous-wander-debug.apk`
+- APK SHA-256:
+  `bc9855de0ee788ee604286c138b1b49c91d29c21e1b957184293320dc208a827`
+- `scripts/main.gd` Blob:
+  `f9282fce26465491dee07d29bd8d5f7fb0a519f1`
+- `scenes/main.tscn` Blob:
+  `336c90377be17ac57fe9b611a455ee544da6ba85`
+- `scenes/horse_cutout_rig.tscn` Blob:
+  `0c94231e6e037d2ff32f9a70fe69f459dcc870ac`
+
+Automatisiert geprüft wurden zufällige Ziele auf beiden Hofseiten, Bewegung zu
+einem Ziel, Richtungswechsel, Walk während Bewegung, Pause im Stillstand,
+vollständig entfernte Drag-Eingabe sowie die unveränderte FROZEN-Collision für
+beide Fold-Auflösungen, LEFT/RIGHT, extreme X-Positionen und mehrere Tiefen.
