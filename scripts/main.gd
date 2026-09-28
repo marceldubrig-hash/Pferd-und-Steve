@@ -48,19 +48,9 @@ const RIGHT_OPEN_X_RATIO := 0.80
 const RIGHT_OBSTACLE_X_RATIO := 0.87
 const RIGHT_OUTER_X_RATIO := 1.00
 
-# Step 12G: keep one walk cycle, but make it respond to actual pointer motion.
-# This is intentionally not a gait state machine.
-const WALK_ANIMATION_NAME := &"walk_test"
-const WALK_MIN_PLAYBACK_SPEED := 0.72
-const WALK_MAX_PLAYBACK_SPEED := 1.60
-const WALK_MIN_AMPLITUDE := 0.86
-const WALK_MAX_AMPLITUDE := 1.20
-const WALK_FULL_SPEED_VIEWPORTS_PER_SECOND := 0.85
-
 @onready var background: Sprite2D = $Background
 @onready var horse_root: Node2D = $HorseRoot
 @onready var horse_visual: Node2D = $HorseRoot/HorseVisual
-@onready var walk_animation_player: AnimationPlayer = $HorseRoot/HorseVisual/RigSpace/HorseCutoutRig/WalkAnimationPlayer
 
 var is_night := false
 var mouse_dragging := false
@@ -70,16 +60,12 @@ var mouse_dragging := false
 var horse_x_ratio := 0.5
 var horse_depth_t := 0.28
 
-var walk_base_track_values: Dictionary = {}
-var walk_last_amplitude := 1.0
-
 
 func _ready() -> void:
 	get_viewport().size_changed.connect(_layout_scene)
 	_load_texture_if_available(background, FARM_DAY)
 	_layout_scene()
 	_apply_perspective()
-	_capture_walk_animation_baseline()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -91,7 +77,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if event is InputEventScreenDrag:
 		var drag := event as InputEventScreenDrag
-		_move_horse_to(drag.position, drag.velocity.length())
+		_move_horse_to(drag.position)
 		return
 
 	if event is InputEventMouseButton:
@@ -104,7 +90,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if event is InputEventMouseMotion and mouse_dragging:
 		var mouse_motion := event as InputEventMouseMotion
-		_move_horse_to(mouse_motion.position, mouse_motion.velocity.length())
+		_move_horse_to(mouse_motion.position)
 
 
 func _load_texture_if_available(target: Sprite2D, path: String) -> void:
@@ -158,91 +144,11 @@ func set_horse_position(new_position: Vector2) -> void:
 	_apply_perspective()
 
 
-func _move_horse_to(target_position: Vector2, input_speed_px_per_s: float = -1.0) -> void:
+func _move_horse_to(target_position: Vector2) -> void:
 	var current_x := horse_root.position.x
 	if absf(target_position.x - current_x) > 1.0:
 		set_horse_facing_right(target_position.x > current_x)
-
-	if input_speed_px_per_s < 0.0:
-		# A single tap has no drag velocity. Treat it as a calm movement cue
-		# instead of fabricating a high-speed gait from the teleport distance.
-		input_speed_px_per_s = get_viewport_rect().size.length() * 0.15
-
 	set_horse_position(target_position)
-	_apply_walk_motion_from_speed(input_speed_px_per_s)
-
-
-func _capture_walk_animation_baseline() -> void:
-	walk_base_track_values.clear()
-
-	if not walk_animation_player.has_animation(WALK_ANIMATION_NAME):
-		push_warning("Walk-Animation fehlt: %s" % WALK_ANIMATION_NAME)
-		return
-
-	var animation := walk_animation_player.get_animation(WALK_ANIMATION_NAME)
-	for track_index in range(animation.get_track_count()):
-		var values: Array = []
-		for key_index in range(animation.track_get_key_count(track_index)):
-			values.append(animation.track_get_key_value(track_index, key_index))
-		walk_base_track_values[track_index] = values
-
-
-func _apply_walk_motion_from_speed(input_speed_px_per_s: float) -> void:
-	if walk_base_track_values.is_empty():
-		return
-
-	var viewport_diagonal := maxf(get_viewport_rect().size.length(), 1.0)
-	var viewports_per_second := maxf(input_speed_px_per_s, 0.0) / viewport_diagonal
-	var speed_t := clampf(
-		viewports_per_second / WALK_FULL_SPEED_VIEWPORTS_PER_SECOND,
-		0.0,
-		1.0
-	)
-	speed_t = smoothstep(0.0, 1.0, speed_t)
-
-	walk_animation_player.speed_scale = lerpf(
-		WALK_MIN_PLAYBACK_SPEED,
-		WALK_MAX_PLAYBACK_SPEED,
-		speed_t
-	)
-
-	var amplitude := lerpf(
-		WALK_MIN_AMPLITUDE,
-		WALK_MAX_AMPLITUDE,
-		speed_t
-	)
-	_set_walk_amplitude(amplitude)
-
-
-func _set_walk_amplitude(multiplier: float) -> void:
-	if absf(multiplier - walk_last_amplitude) < 0.02:
-		return
-	if not walk_animation_player.has_animation(WALK_ANIMATION_NAME):
-		return
-
-	var animation := walk_animation_player.get_animation(WALK_ANIMATION_NAME)
-	for track_index in range(animation.get_track_count()):
-		if not walk_base_track_values.has(track_index):
-			continue
-
-		var baseline: Array = walk_base_track_values[track_index]
-		if baseline.is_empty():
-			continue
-
-		var is_position_track := String(animation.track_get_path(track_index)).ends_with(":position")
-		for key_index in range(mini(animation.track_get_key_count(track_index), baseline.size())):
-			var base_value = baseline[key_index]
-			var scaled_value = base_value
-
-			if typeof(base_value) == TYPE_FLOAT:
-				scaled_value = float(base_value) * multiplier
-			elif typeof(base_value) == TYPE_VECTOR2 and is_position_track:
-				var rest_value: Vector2 = baseline[0]
-				scaled_value = rest_value + (base_value - rest_value) * multiplier
-
-			animation.track_set_key_value(track_index, key_index, scaled_value)
-
-	walk_last_amplitude = multiplier
 
 
 func _layout_scene() -> void:
