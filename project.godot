@@ -9,12 +9,12 @@ config/name="Pferd und Steve"
 run/main_scene="res://scenes/main.tscn"
 config/icon="res://assets/icons/app_icon_512.png"
 
+
 [autoload]
 
 BackgroundMusic="*res://scripts/background_music.gd"
+HorseStats="*res://scripts/horse_stats.gd"
 
-[rendering]
 
-renderer/rendering_method="gl_compatibility"
-renderer/rendering_method.mobile="gl_compatibility"
-textures/vram_compression/import_etc2_astc=true
+
+
