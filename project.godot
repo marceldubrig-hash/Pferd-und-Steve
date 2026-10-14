@@ -14,19 +14,6 @@ config/icon="res://assets/icons/app_icon_512.png"
 
 BackgroundMusic="*res://scripts/background_music.gd"
 HorseStats="*res://scripts/horse_stats.gd"
-
-
-[autoload]
-
-BackgroundMusic="*res://scripts/background_music.gd"
-HorseStats="*res://scripts/horse_stats.gd"
-DayNightManager="*res://scripts/day_night_manager.gd"
-
-
-[autoload]
-
-BackgroundMusic="*res://scripts/background_music.gd"
-HorseStats="*res://scripts/horse_stats.gd"
 DayNightManager="*res://scripts/day_night_manager.gd"
 HorseHUD="*res://scripts/horse_hud.gd"
 
