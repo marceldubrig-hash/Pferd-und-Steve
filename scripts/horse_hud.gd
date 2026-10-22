@@ -47,6 +47,20 @@ func _ready() -> void:
 	feed_button.pressed.connect(_on_feed_pressed)
 	clean_button.pressed.connect(_on_clean_pressed)
 	
+	# Build-Version klein oben rechts: jeder Device-Screenshot beweist die Version
+	var version_label := Label.new()
+	version_label.text = "Build " + str(ProjectSettings.get_setting("application/config/version", "dev"))
+	version_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	version_label.anchor_left = 1.0
+	version_label.anchor_right = 1.0
+	version_label.offset_left = -400
+	version_label.offset_right = -30
+	version_label.offset_top = 30
+	version_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.7))
+	version_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	version_label.add_theme_constant_override("outline_size", 4)
+	add_child(version_label)
+	
 	if HorseStats:
 		HorseStats.connect("stats_changed", Callable(self, "_on_stats_changed"))
 		_on_stats_changed()
