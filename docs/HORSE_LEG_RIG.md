@@ -895,3 +895,20 @@ Einzige gegenüber Step 11 erhaltene Änderung im Rig:
 - Kopfposition/-überdeckung aus 12A/12B.
 
 Bei jedem Widerspruch mit dem verworfenen Step-12-Override ist **dieser Recovery-Abschnitt maßgeblich**.
+
+## Step 13 — Far-Beine waren falsch herum montiert (Gerätefund Marcel, Build b82)
+
+Der Gerätetest durch Marcel hat gezeigt: beide Far-Beine (`HindFar`, `FrontFar`) waren **falsch herum** montiert. Am deutlichsten am hinteren Far-Bein: Sprunggelenk knickte nach vorne, Hufspitze zeigte nach hinten.
+
+Ursache: die rechte Sheet-Spalte jeder Segmentsheet ist als Ansicht von der **anderen Pferdeseite** gezeichnet (Sprunggelenk-/Knie-Wölbung und Hufspitze zeigen spiegelverkehrt zur linken Spalte). Die Schritt-5-Montage hat die rechten Ketten ungespiegelt verbaut; der statische Montagevergleich prüfte Fußhöhe und Silhouette, nicht die Gelenkrichtung.
+
+Fix (nur Transforms/Animationswerte, keine Asset-Bytes):
+
+- `HindFar`: Root-Scale jetzt `(-0.5, 0.5)`, Root-Position `(-142.462, -77)` — dieselbe Spiegelmethode wie der Ganz-Rig-Links/Rechts-Wechsel, eine Ebene tiefer; Root-X so verschoben, dass der Huf seine Bodenposition behält.
+- `FrontFar`: Root-Scale `(-0.5, 0.5)`, Root-Position `(345.578, -53)`.
+- Die sechs Walk-Rotationstracks der beiden Far-Beine (Root, LowerPivot, HoofPivot) sind negiert, damit die gespiegelten Ketten weiter in ihren Diagonalpaaren schwingen.
+- Segment-Atlanten, Regions, Pivots innerhalb der Ketten und alle Quell-PNGs bleiben unverändert; die "keine Einzelsegmente spiegeln"-Regel gilt weiterhin — gespiegelt wird nur die komplette montierte Kette an ihrem Root.
+
+Verifikation: lokale Renders der RESET-Pose in beiden Blickrichtungen (alle vier Beine anatomisch korrekt), zwei Walk-Zwischenphasen ohne Gelenkrisse, Hufpositionen gegen Vorher-Stand verglichen. Branch `fix/far-legs-and-steve-depth`, PR #10.
+
+Hinweis zum verworfenen Step-12: der damalige Fold-Fehler kam vom Spiegeln des **Near**-Beins (bereits korrekt). Step 13 spiegelt erstmals die tatsächlich falschen **Far**-Ketten.

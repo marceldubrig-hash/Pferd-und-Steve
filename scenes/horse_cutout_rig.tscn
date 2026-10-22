@@ -367,7 +367,7 @@ tracks/1/keys = {
 "times": PackedFloat32Array(0, 0.34, 0.64, 0.94, 1.2),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
-"values": [0.0, 0.0872665, 0.0, -0.0698132, 0.0]
+"values": [0.0, -0.0872665, 0.0, 0.0698132, 0.0]
 }
 tracks/2/type = "value"
 tracks/2/imported = false
@@ -379,7 +379,7 @@ tracks/2/keys = {
 "times": PackedFloat32Array(0, 0.3, 0.6, 0.9, 1.2),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
-"values": [0.0, -0.0872665, 0.0, 0.10472, 0.0]
+"values": [0.0, 0.0872665, 0.0, -0.10472, 0.0]
 }
 tracks/3/type = "value"
 tracks/3/imported = false
@@ -415,7 +415,7 @@ tracks/5/keys = {
 "times": PackedFloat32Array(0, 0.34, 0.64, 0.94, 1.2),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
-"values": [0.0, -0.10472, 0.0, 0.0872665, 0.0]
+"values": [0.0, 0.10472, 0.0, -0.0872665, 0.0]
 }
 tracks/6/type = "value"
 tracks/6/imported = false
@@ -427,7 +427,7 @@ tracks/6/keys = {
 "times": PackedFloat32Array(0, 0.3, 0.6, 0.9, 1.2),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
-"values": [0.0, 0.10472, 0.0, -0.139626, 0.0]
+"values": [0.0, -0.10472, 0.0, 0.139626, 0.0]
 }
 tracks/7/type = "value"
 tracks/7/imported = false
@@ -463,7 +463,7 @@ tracks/9/keys = {
 "times": PackedFloat32Array(0, 0.34, 0.64, 0.94, 1.2),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
-"values": [0.0, 0.0523599, 0.0, -0.0349066, 0.0]
+"values": [0.0, -0.0523599, 0.0, 0.0349066, 0.0]
 }
 tracks/10/type = "value"
 tracks/10/imported = false
@@ -475,7 +475,7 @@ tracks/10/keys = {
 "times": PackedFloat32Array(0, 0.3, 0.6, 0.9, 1.2),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
-"values": [0.0, -0.0523599, 0.0, 0.0698132, 0.0]
+"values": [0.0, 0.0523599, 0.0, -0.0698132, 0.0]
 }
 tracks/11/type = "value"
 tracks/11/imported = false
@@ -596,8 +596,8 @@ position = Vector2(67.359, 138.418)
 texture = SubResource("AtlasTexture_front_left_hoof")
 
 [node name="HindFar" type="Node2D" parent="."]
-position = Vector2(-262, -77)
-scale = Vector2(0.5, 0.5)
+position = Vector2(-142.462, -77)
+scale = Vector2(-0.5, 0.5)
 z_index = -1
 
 [node name="Upper" type="Sprite2D" parent="HindFar"]
@@ -619,8 +619,8 @@ position = Vector2(-49.206, 182.544)
 texture = SubResource("AtlasTexture_hind_right_hoof")
 
 [node name="FrontFar" type="Node2D" parent="."]
-position = Vector2(247, -53)
-scale = Vector2(0.5, 0.5)
+position = Vector2(345.578, -53)
+scale = Vector2(-0.5, 0.5)
 z_index = -1
 
 [node name="Upper" type="Sprite2D" parent="FrontFar"]
