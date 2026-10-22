@@ -1,4 +1,4 @@
-extends Control
+extends CanvasLayer
 
 @onready var hunger_label: Label = Label.new()
 @onready var hygiene_label: Label = Label.new()
@@ -9,9 +9,14 @@ extends Control
 
 func _ready() -> void:
 	# Layout und minimalistischer South-Park / Interdimensional-Cable-Look
-	anchor_right = 1.0
-	anchor_bottom = 1.0
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# CanvasLayer statt Control-Autoload: eigener Canvas ueber der Welt.
+	# Auf Marcels Fold7 wurden Controls zwischen den Szenen-Sprites nicht
+	# gerendert (Werte + Buttons unsichtbar), als CanvasLayer erscheinen sie.
+	layer = 10
+	var ui := Control.new()
+	ui.set_anchors_preset(Control.PRESET_FULL_RECT)
+	ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(ui)
 	
 	var vbox = VBoxContainer.new()
 	vbox.position = Vector2(30, 30)
@@ -19,7 +24,7 @@ func _ready() -> void:
 	vbox.add_child(hygiene_label)
 	vbox.add_child(mood_label)
 	vbox.add_child(money_label)
-	add_child(vbox)
+	ui.add_child(vbox)
 	
 	# Stil für die Labels (gut lesbar auf der bunten Farm)
 	for child in vbox.get_children():
@@ -36,7 +41,7 @@ func _ready() -> void:
 	hbox.offset_top = -120
 	hbox.offset_bottom = -40
 	hbox.add_theme_constant_override("separation", 20)
-	add_child(hbox)
+	ui.add_child(hbox)
 	
 	feed_button.text = "🍏 Füttern"
 	clean_button.text = "✨ Waschen"
@@ -59,7 +64,7 @@ func _ready() -> void:
 	version_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.7))
 	version_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	version_label.add_theme_constant_override("outline_size", 4)
-	add_child(version_label)
+	ui.add_child(version_label)
 	
 	if HorseStats:
 		HorseStats.connect("stats_changed", Callable(self, "_on_stats_changed"))
