@@ -1,0 +1,389 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/steve/rig/steve_segments_sheet_v01.png" id="1_sheet"]
+
+[sub_resource type="AtlasTexture" id="AT_torso"]
+atlas = ExtResource("1_sheet")
+region = Rect2(0, 2096, 359, 1501)
+
+[sub_resource type="AtlasTexture" id="AT_head"]
+atlas = ExtResource("1_sheet")
+region = Rect2(0, 8, 210, 234)
+
+[sub_resource type="AtlasTexture" id="AT_upper_arm"]
+atlas = ExtResource("1_sheet")
+region = Rect2(0, 250, 92, 308)
+
+[sub_resource type="AtlasTexture" id="AT_forearm"]
+atlas = ExtResource("1_sheet")
+region = Rect2(0, 566, 139, 241)
+
+[sub_resource type="AtlasTexture" id="AT_thigh"]
+atlas = ExtResource("1_sheet")
+region = Rect2(0, 815, 119, 261)
+
+[sub_resource type="AtlasTexture" id="AT_shin_boot"]
+atlas = ExtResource("1_sheet")
+region = Rect2(0, 1084, 140, 411)
+
+[sub_resource type="AtlasTexture" id="AT_far_thigh"]
+atlas = ExtResource("1_sheet")
+region = Rect2(0, 1503, 96, 241)
+
+[sub_resource type="AtlasTexture" id="AT_far_shin_boot"]
+atlas = ExtResource("1_sheet")
+region = Rect2(0, 1752, 150, 336)
+
+[sub_resource type="Animation" id="Animation_walk"]
+resource_name = "walk"
+length = 1.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("BobRoot/ThighPivot:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.25, 0.5, 0.75, 1),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [0.2200, 0.0000, -0.2200, 0.0000, 0.2200]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("BobRoot/FarThighPivot:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.25, 0.5, 0.75, 1),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [-0.2200, 0.0000, 0.2200, 0.0000, -0.2200]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("BobRoot/ThighPivot/ShinPivot:rotation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.25, 0.5, 0.75, 1),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [0.0800, 0.3000, 0.0500, 0.1200, 0.0800]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("BobRoot/FarThighPivot/FarShinPivot:rotation")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0, 0.25, 0.5, 0.75, 1),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [0.0500, 0.1200, 0.0800, 0.3000, 0.0500]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("BobRoot/UpperArmPivot:rotation")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0, 0.25, 0.5, 0.75, 1),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [-0.1200, 0.0000, 0.1200, 0.0000, -0.1200]
+}
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("BobRoot/FarUpperArmPivot:rotation")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0, 0.25, 0.5, 0.75, 1),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [0.1200, 0.0000, -0.1200, 0.0000, 0.1200]
+}
+tracks/6/type = "value"
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/path = NodePath("BobRoot/UpperArmPivot/ForearmPivot:rotation")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/keys = {
+"times": PackedFloat32Array(0, 0.25, 0.5, 0.75, 1),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [0.0500, 0.1000, 0.1600, 0.1000, 0.0500]
+}
+tracks/7/type = "value"
+tracks/7/imported = false
+tracks/7/enabled = true
+tracks/7/path = NodePath("BobRoot/FarUpperArmPivot/FarForearmPivot:rotation")
+tracks/7/interp = 1
+tracks/7/loop_wrap = true
+tracks/7/keys = {
+"times": PackedFloat32Array(0, 0.25, 0.5, 0.75, 1),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [0.1600, 0.1000, 0.0500, 0.1000, 0.1600]
+}
+tracks/8/type = "value"
+tracks/8/imported = false
+tracks/8/enabled = true
+tracks/8/path = NodePath("BobRoot/HeadPivot:rotation")
+tracks/8/interp = 1
+tracks/8/loop_wrap = true
+tracks/8/keys = {
+"times": PackedFloat32Array(0, 0.25, 0.5, 0.75, 1),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [0.0200, 0.0000, -0.0200, 0.0000, 0.0200]
+}
+tracks/9/type = "value"
+tracks/9/imported = false
+tracks/9/enabled = true
+tracks/9/path = NodePath("BobRoot:position")
+tracks/9/interp = 1
+tracks/9/loop_wrap = true
+tracks/9/type = "value"
+tracks/9/imported = false
+tracks/9/enabled = true
+tracks/9/path = NodePath("BobRoot:position")
+tracks/9/interp = 1
+tracks/9/loop_wrap = true
+tracks/9/keys = {
+"times": PackedFloat32Array(0, 0.25, 0.5, 0.75, 1),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(0, -10), Vector2(0, 0), Vector2(0, -10), Vector2(0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_RESET"]
+resource_name = "RESET"
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("BobRoot/ThighPivot:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("BobRoot/FarThighPivot:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("BobRoot/ThighPivot/ShinPivot:rotation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("BobRoot/FarThighPivot/FarShinPivot:rotation")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("BobRoot/UpperArmPivot:rotation")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("BobRoot/FarUpperArmPivot:rotation")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/6/type = "value"
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/path = NodePath("BobRoot/UpperArmPivot/ForearmPivot:rotation")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/7/type = "value"
+tracks/7/imported = false
+tracks/7/enabled = true
+tracks/7/path = NodePath("BobRoot/FarUpperArmPivot/FarForearmPivot:rotation")
+tracks/7/interp = 1
+tracks/7/loop_wrap = true
+tracks/7/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/8/type = "value"
+tracks/8/imported = false
+tracks/8/enabled = true
+tracks/8/path = NodePath("BobRoot/HeadPivot:rotation")
+tracks/8/interp = 1
+tracks/8/loop_wrap = true
+tracks/8/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/9/type = "value"
+tracks/9/imported = false
+tracks/9/enabled = true
+tracks/9/path = NodePath("BobRoot:position")
+tracks/9/interp = 1
+tracks/9/loop_wrap = true
+tracks/9/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_steve"]
+_data = {
+"RESET": SubResource("Animation_RESET"),
+"walk": SubResource("Animation_walk")
+}
+
+[node name="SteveCutoutRig" type="Node2D"]
+
+[node name="BobRoot" type="Node2D" parent="."]
+
+[node name="FarUpperArmPivot" type="Node2D" parent="BobRoot"]
+position = Vector2(382, 318)
+z_index = -1
+modulate = Color(0.78, 0.78, 0.82, 1)
+
+[node name="Sprite" type="Sprite2D" parent="BobRoot/FarUpperArmPivot"]
+position = Vector2(-43, -50)
+texture = SubResource("AT_upper_arm")
+centered = false
+
+[node name="FarForearmPivot" type="Node2D" parent="BobRoot/FarUpperArmPivot"]
+position = Vector2(10, 258)
+
+[node name="Sprite" type="Sprite2D" parent="BobRoot/FarUpperArmPivot/FarForearmPivot"]
+position = Vector2(-30, -21)
+texture = SubResource("AT_forearm")
+centered = false
+
+[node name="FarThighPivot" type="Node2D" parent="BobRoot"]
+position = Vector2(486, 885)
+z_index = -1
+modulate = Color(0.78, 0.78, 0.82, 1)
+
+[node name="Sprite" type="Sprite2D" parent="BobRoot/FarThighPivot"]
+position = Vector2(-1, -35)
+texture = SubResource("AT_far_thigh")
+centered = false
+
+[node name="FarShinPivot" type="Node2D" parent="BobRoot/FarThighPivot"]
+position = Vector2(19, 190)
+
+[node name="Sprite" type="Sprite2D" parent="BobRoot/FarThighPivot/FarShinPivot"]
+position = Vector2(-34, -20)
+texture = SubResource("AT_far_shin_boot")
+centered = false
+
+[node name="Torso" type="Sprite2D" parent="BobRoot"]
+position = Vector2(339, 17)
+texture = SubResource("AT_torso")
+centered = false
+
+[node name="ThighPivot" type="Node2D" parent="BobRoot"]
+position = Vector2(432, 878)
+z_index = 1
+
+[node name="Sprite" type="Sprite2D" parent="BobRoot/ThighPivot"]
+position = Vector2(-55, -58)
+texture = SubResource("AT_thigh")
+centered = false
+
+[node name="ShinPivot" type="Node2D" parent="BobRoot/ThighPivot"]
+position = Vector2(0, 184)
+
+[node name="Sprite" type="Sprite2D" parent="BobRoot/ThighPivot/ShinPivot"]
+position = Vector2(-86, -27)
+texture = SubResource("AT_shin_boot")
+centered = false
+
+[node name="UpperArmPivot" type="Node2D" parent="BobRoot"]
+position = Vector2(368, 312)
+z_index = 1
+
+[node name="Sprite" type="Sprite2D" parent="BobRoot/UpperArmPivot"]
+position = Vector2(-29, -44)
+texture = SubResource("AT_upper_arm")
+centered = false
+
+[node name="ForearmPivot" type="Node2D" parent="BobRoot/UpperArmPivot"]
+position = Vector2(10, 258)
+
+[node name="Sprite" type="Sprite2D" parent="BobRoot/UpperArmPivot/ForearmPivot"]
+position = Vector2(-16, -15)
+texture = SubResource("AT_forearm")
+centered = false
+
+[node name="HeadPivot" type="Node2D" parent="BobRoot"]
+position = Vector2(448, 250)
+z_index = 2
+
+[node name="Sprite" type="Sprite2D" parent="BobRoot/HeadPivot"]
+position = Vector2(-82, -233)
+texture = SubResource("AT_head")
+centered = false
+
+[node name="SteveAnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_steve")
+}
