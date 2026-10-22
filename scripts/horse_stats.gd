@@ -9,6 +9,9 @@ var fatigue: float = 10.0
 var health: float = 100.0
 var money: int = 50 # Huf-Taler für den späteren Shop
 
+# Der Hof schläft nachts (20:00-06:00, gesteuert von main.gd/DayNightManager).
+var is_sleeping: bool = false
+
 enum Mood { HAPPY, NEUTRAL, SAD, ANGRY, SCARED, CONFUSED, EXISTENTIAL_DREAD }
 var current_mood: Mood = Mood.HAPPY
 
@@ -28,8 +31,11 @@ func _update_stats(dt: float) -> void:
 	# Hygiene sinkt langsam durch den Alltag auf der Farm
 	hygiene = maxf(0.0, hygiene - (1.0 / 60.0) * dt)
 	
-	# Müdigkeit baut sich im Laufe des Tages auf
-	fatigue = minf(100.0, fatigue + (1.5 / 60.0) * dt)
+	# Müdigkeit baut sich im Laufe des Tages auf, Schlaf erholt spürbar
+	if is_sleeping:
+		fatigue = maxf(0.0, fatigue - (8.0 / 60.0) * dt)
+	else:
+		fatigue = minf(100.0, fatigue + (1.5 / 60.0) * dt)
 
 	# Gesundheit leidet massiv, wenn Werte in den Keller rasseln
 	var base_avg = (hunger + hygiene + (100.0 - fatigue)) / 3.0

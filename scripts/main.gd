@@ -22,6 +22,24 @@ const STEVE_X_MIN_RATIO := 0.08
 const STEVE_X_MAX_RATIO := 0.92
 const STEVE_VISIBLE_HALF_WIDTH_PX := 494.0
 
+# Schlaf-Posen fuer die Nacht (20:00-06:00 Uhr, gesteuert vom DayNightManager).
+# Die Pose wird situational gewaehlt: krank/erschoepft = flach, muede = liegend,
+# sonst = stehendes Dösen. Alle drei Quellen schauen nach RECHTS (Kanon), das
+# Spiegeln uebernimmt wie beim Rig der HorseVisual-Container.
+const HORSE_SLEEP_FLAT := "res://assets/horse/sleep/horse_sleep_flat_v01.png"
+const HORSE_SLEEP_LYING := "res://assets/horse/sleep/horse_sleep_lying_v01.png"
+const HORSE_SLEEP_DOZING := "res://assets/horse/sleep/horse_sleep_dozing_v01.png"
+const SLEEP_POSE_RECHECK_SECONDS := 5.0
+# Layout pro Pose im RigSpace: Skala + Sprite-Mitte, so kalibriert, dass der
+# Bodenkontakt der Textur exakt auf der Rig-Huflinie liegt und die Koerpermasse
+# an der Koerpermitte des stehenden Pferds bleibt (gleiches Tier, gleicher Platz).
+const SLEEP_FLAT_SCALE := 0.80
+const SLEEP_FLAT_POS := Vector2(-62.0, -148.0)
+const SLEEP_LYING_SCALE := 0.78
+const SLEEP_LYING_POS := Vector2(-113.0, -249.0)
+const SLEEP_DOZING_SCALE := 1.22
+const SLEEP_DOZING_POS := Vector2(-41.0, -375.0)
+
 # Perspective model:
 # A pinhole camera projects apparent size proportional to 1 / distance.
 # The background is treated as a flat ground plane with a calibrated horizon.
@@ -137,8 +155,19 @@ var steve_dodge_target_x_ratio := STEVE_X_RATIO
 @onready var walk_animation_player: AnimationPlayer = (
 	$HorseRoot/HorseVisual/RigSpace/HorseCutoutRig/WalkAnimationPlayer
 )
+@onready var rig_space: Node2D = $HorseRoot/HorseVisual/RigSpace
+@onready var cutout_rig: Node2D = $HorseRoot/HorseVisual/RigSpace/HorseCutoutRig
+# Autoload ueber Pfad statt globalem Namen, damit das Skript auch in
+# Standalone-Harness-Umgebungen ohne Autoload-Globals kompiliert.
+@onready var horse_stats: Node = get_node("/root/HorseStats")
 
 var is_night := false
+
+# Schlafzustand: Rig ausgeblendet, Schlaf-Sprite sichtbar, Wanderung eingefroren.
+var is_sleeping := false
+var sleep_sprite: Sprite2D = null
+var sleep_pose_current := ""
+var sleep_pose_recheck_remaining := 0.0
 
 # Persist movement in normalized screen/depth coordinates so resize/fold changes
 # do not destroy the world position.
@@ -157,6 +186,7 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_layout_scene)
 	_load_texture_if_available(background, FARM_DAY)
 	_spawn_steve()
+	_spawn_sleep_sprite()
 	_layout_scene()
 	_apply_perspective()
 
@@ -167,6 +197,13 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_update_steve_dodge(delta)
+
+	if is_sleeping:
+		sleep_pose_recheck_remaining -= delta
+		if sleep_pose_recheck_remaining <= 0.0:
+			sleep_pose_recheck_remaining = SLEEP_POSE_RECHECK_SECONDS
+			_update_sleep_pose()
+		return
 
 	if wander_pause_remaining > 0.0:
 		wander_pause_remaining = maxf(wander_pause_remaining - delta, 0.0)
@@ -251,6 +288,66 @@ func _set_horse_walking(walking: bool) -> void:
 		walk_animation_player.pause()
 
 
+func _spawn_sleep_sprite() -> void:
+	sleep_sprite = Sprite2D.new()
+	sleep_sprite.name = "HorseSleepSprite"
+	sleep_sprite.visible = false
+	rig_space.add_child(sleep_sprite)
+
+
+func _enter_sleep() -> void:
+	if is_sleeping:
+		return
+	is_sleeping = true
+	horse_stats.is_sleeping = true
+	_set_horse_walking(false)
+	cutout_rig.visible = false
+	sleep_pose_current = ""
+	_update_sleep_pose()
+	sleep_sprite.visible = true
+
+
+func _exit_sleep() -> void:
+	if not is_sleeping:
+		return
+	is_sleeping = false
+	horse_stats.is_sleeping = false
+	sleep_sprite.visible = false
+	cutout_rig.visible = true
+	# Kurz stehen bleiben und dann das normale Hof-Leben fortsetzen.
+	_begin_wander_pause()
+	_apply_perspective()
+
+
+func _update_sleep_pose() -> void:
+	# Situationsbedingte Pose: krank oder komplett erschoepft -> flach auf der
+	# Seite (Tiefschlaf), muede -> gestreckt liegend, sonst -> stehendes Dösen.
+	var pose := "dozing"
+	if horse_stats.health < 50.0 or horse_stats.fatigue >= 80.0:
+		pose = "flat"
+	elif horse_stats.fatigue >= 40.0:
+		pose = "lying"
+	if pose == sleep_pose_current:
+		return
+	sleep_pose_current = pose
+	match pose:
+		"flat":
+			_apply_sleep_pose(HORSE_SLEEP_FLAT, SLEEP_FLAT_SCALE, SLEEP_FLAT_POS)
+		"lying":
+			_apply_sleep_pose(HORSE_SLEEP_LYING, SLEEP_LYING_SCALE, SLEEP_LYING_POS)
+		_:
+			_apply_sleep_pose(HORSE_SLEEP_DOZING, SLEEP_DOZING_SCALE, SLEEP_DOZING_POS)
+
+
+func _apply_sleep_pose(texture_path: String, sprite_scale: float, sprite_pos: Vector2) -> void:
+	if ResourceLoader.exists(texture_path):
+		sleep_sprite.texture = load(texture_path)
+	else:
+		push_warning("Runtime-Asset fehlt: %s" % texture_path)
+	sleep_sprite.scale = Vector2.ONE * sprite_scale
+	sleep_sprite.position = sprite_pos
+
+
 func _load_texture_if_available(target: Sprite2D, path: String) -> void:
 	if ResourceLoader.exists(path):
 		target.texture = load(path)
@@ -262,12 +359,14 @@ func _load_texture_if_available(target: Sprite2D, path: String) -> void:
 func show_day() -> void:
 	is_night = false
 	_load_texture_if_available(background, FARM_DAY)
+	_exit_sleep()
 	_layout_scene()
 
 
 func show_night() -> void:
 	is_night = true
 	_load_texture_if_available(background, FARM_NIGHT)
+	_enter_sleep()
 	_layout_scene()
 
 

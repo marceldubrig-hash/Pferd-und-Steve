@@ -1476,3 +1476,34 @@ Ergebnisse:
 Damit sind Hintergrundmusik und App-Icon technisch integriert und validiert.
 Die FROZEN Collision, das Pferde-Rig, der Walk und die autonome Bewegung wurden
 für diesen Schritt nicht verändert.
+
+## Schlaf-Meilenstein — situationsbedingte Schlaf-Posen (Nacht 20:00-06:00)
+
+Auslöser: Marcel (22.10.): situationsbedingt alle Schlafposen einbauen —
+normaler Schlaf, erschöpft, krank.
+
+Drei neue versionierte Assets (v01, nativ nach RECHTS schauend = Kanon,
+Spiegelung uebernimmt HorseVisual wie beim Rig):
+
+- `assets/horse/sleep/horse_sleep_dozing_v01.png` — stehendes Dösen (normaler Schlaf)
+- `assets/horse/sleep/horse_sleep_lying_v01.png` — gestreckt liegend (fatigue >= 40)
+- `assets/horse/sleep/horse_sleep_flat_v01.png` — flach auf der Seite
+  (Tiefschlaf: fatigue >= 80 oder health < 50)
+
+Umsetzung (rein additiv, FROZEN-Systeme unveraendert):
+
+- Schlaf-Sprite als Kind von `RigSpace`: erbt Tiefenperspektive,
+  Blickrichtungs-Spiegelung und Bodenanker unveraendert; das Rig wird im
+  Schlaf nur ausgeblendet.
+- Bodenkontakt jeder Pose auf der Rig-Huflinie kalibriert (Kontakt 5px unter
+  der Huflinie, wirkt wie natürliches Einsinken in weichen Boden).
+- Pose wird alle 5s situational neu gewaehlt und wechselt damit ueber die
+  Nacht mit Gesundheits-/Muedigkeitslage.
+- `HorseStats.is_sleeping`: Schlaf erholt Muedigkeit (-8/min statt +1,5/min).
+- Wanderung friert im Schlaf ein, Steve-Ausweichlogik laeuft weiter;
+  um 06:00 wacht der Hof auf und das normale Wandern laeuft weiter.
+- HUD-Mood zeigt waehrend des Schlafs "Schläft".
+
+Verifiziert lokal (Headless-Renders 1536x658 und 1536x1384): alle drei Posen
+in beiden Blickrichtungen, Bodenkontakt, Aufwach-Uebergang zurueck zum Rig.
+Offen: echter Fold-Retest durch Marcel.

@@ -87,12 +87,15 @@ func _on_stats_changed() -> void:
 	money_label.text = "🪙 Huf-Taler: %d" % HorseStats.money
 	
 	var mood_text = "Glücklich"
-	match HorseStats.current_mood:
-		HorseStats.Mood.NEUTRAL: mood_text = "Geht so"
-		HorseStats.Mood.SAD: mood_text = "Deprimiert (Steve weint wieder)"
-		HorseStats.Mood.ANGRY: mood_text = "Wütend"
-		HorseStats.Mood.SCARED: mood_text = "Panisch (Waschbären-Sekte)"
-		HorseStats.Mood.CONFUSED: mood_text = "Verwirrt"
-		HorseStats.Mood.EXISTENTIAL_DREAD: mood_text = "Existenzielle Krise"
+	if HorseStats.is_sleeping:
+		mood_text = "Schläft"
+	else:
+		match HorseStats.current_mood:
+			HorseStats.Mood.NEUTRAL: mood_text = "Geht so"
+			HorseStats.Mood.SAD: mood_text = "Deprimiert (Steve weint wieder)"
+			HorseStats.Mood.ANGRY: mood_text = "Wütend"
+			HorseStats.Mood.SCARED: mood_text = "Panisch (Waschbären-Sekte)"
+			HorseStats.Mood.CONFUSED: mood_text = "Verwirrt"
+			HorseStats.Mood.EXISTENTIAL_DREAD: mood_text = "Existenzielle Krise"
 	
 	mood_label.text = "🧠 Mood: %s" % mood_text
