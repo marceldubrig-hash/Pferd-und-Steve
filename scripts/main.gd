@@ -13,6 +13,14 @@ const STEVE_ANCHOR_X_PX := 494.0
 const STEVE_ANCHOR_BOTTOM_PX := 1521.0
 const STEVE_X_RATIO := 0.33
 const STEVE_DEPTH_T := 0.40
+# Steve never shares his ground spot with the horse: when the horse enters
+# Steve's depth band near his x position, Steve sidesteps until it is clear.
+const STEVE_DODGE_DEPTH_MARGIN := 0.10
+const STEVE_DODGE_X_OFFSET := 0.16
+const STEVE_DODGE_SPEED_RATIO_PER_SECOND := 0.25
+const STEVE_X_MIN_RATIO := 0.08
+const STEVE_X_MAX_RATIO := 0.92
+const STEVE_VISIBLE_HALF_WIDTH_PX := 494.0
 
 # Perspective model:
 # A pinhole camera projects apparent size proportional to 1 / distance.
@@ -123,6 +131,8 @@ const WANDER_REROUTE_MAX_SECONDS := 14.0
 @onready var horse_root: Node2D = $HorseRoot
 
 var steve_root: Node2D = null
+var steve_x_ratio := STEVE_X_RATIO
+var steve_dodge_target_x_ratio := STEVE_X_RATIO
 @onready var horse_visual: Node2D = $HorseRoot/HorseVisual
 @onready var walk_animation_player: AnimationPlayer = (
 	$HorseRoot/HorseVisual/RigSpace/HorseCutoutRig/WalkAnimationPlayer
@@ -156,6 +166,8 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	_update_steve_dodge(delta)
+
 	if wander_pause_remaining > 0.0:
 		wander_pause_remaining = maxf(wander_pause_remaining - delta, 0.0)
 		if wander_pause_remaining <= 0.0:
@@ -690,6 +702,61 @@ func _spawn_steve() -> void:
 	steve_root.add_child(steve_sprite)
 
 
+func _update_steve_dodge(delta: float) -> void:
+	if steve_root == null:
+		return
+	var size := get_viewport_rect().size
+	if size.x <= 0.0 or size.y <= 0.0:
+		return
+
+	# Same screen-space span math the horse collision solver uses.
+	var horse_span := _horse_screen_x_span(
+		horse_root.position.x,
+		size,
+		horse_depth_t,
+		_horse_visual_x_bounds_in_root_space()
+	)
+	var steve_center_x := size.x * steve_x_ratio
+	var steve_half_width := STEVE_VISIBLE_HALF_WIDTH_PX * absf(steve_root.scale.x)
+	var margin_px := size.x * 0.02
+
+	var depth_gap := absf(horse_depth_t - STEVE_DEPTH_T)
+	var horse_blocks_steve := (
+		depth_gap < STEVE_DODGE_DEPTH_MARGIN
+		and horse_span.y > steve_center_x - steve_half_width - margin_px
+		and horse_span.x < steve_center_x + steve_half_width + margin_px
+	)
+
+	if horse_blocks_steve:
+		# Sidestep to the side away from the horse's body center.
+		var horse_center_x := (horse_span.x + horse_span.y) * 0.5
+		var dodge_direction := -1.0 if horse_center_x > steve_center_x else 1.0
+		steve_dodge_target_x_ratio = clampf(
+			steve_x_ratio + dodge_direction * STEVE_DODGE_X_OFFSET,
+			STEVE_X_MIN_RATIO,
+			STEVE_X_MAX_RATIO
+		)
+	else:
+		# Return home only once the home spot itself is clear again.
+		var home_center_x := size.x * STEVE_X_RATIO
+		var home_clear := (
+			depth_gap >= STEVE_DODGE_DEPTH_MARGIN
+			or horse_span.y <= home_center_x - steve_half_width - margin_px
+			or horse_span.x >= home_center_x + steve_half_width + margin_px
+		)
+		if home_clear:
+			steve_dodge_target_x_ratio = STEVE_X_RATIO
+
+	var next_x := move_toward(
+		steve_x_ratio,
+		steve_dodge_target_x_ratio,
+		STEVE_DODGE_SPEED_RATIO_PER_SECOND * delta
+	)
+	if not is_equal_approx(next_x, steve_x_ratio):
+		steve_x_ratio = next_x
+		_place_steve(size)
+
+
 func _place_steve(size: Vector2) -> void:
 	if steve_root == null:
 		return
@@ -710,7 +777,7 @@ func _place_steve(size: Vector2) -> void:
 	var visual_scale := target_steve_height_px / STEVE_VISIBLE_SOURCE_HEIGHT_PX
 
 	steve_root.position = Vector2(
-		size.x * STEVE_X_RATIO,
+		size.x * steve_x_ratio,
 		size.y * projected_foot_y_ratio
 	)
 	steve_root.scale = Vector2.ONE * visual_scale
