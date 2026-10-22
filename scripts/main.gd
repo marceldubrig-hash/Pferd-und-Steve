@@ -290,7 +290,7 @@ func _set_horse_walking(walking: bool) -> void:
 	if walking:
 		walk_animation_player.play("walk_test")
 	else:
-		walk_animation_player.pause()
+		walk_animation_player.play("RESET")
 
 
 func _spawn_sleep_sprite() -> void:
