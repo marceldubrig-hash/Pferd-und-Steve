@@ -4,6 +4,8 @@ extends Control
 @onready var hygiene_label: Label = Label.new()
 @onready var mood_label: Label = Label.new()
 @onready var money_label: Label = Label.new()
+@onready var feed_button: Button = Button.new()
+@onready var clean_button: Button = Button.new()
 
 func _ready() -> void:
 	# Layout und minimalistischer South-Park / Interdimensional-Cable-Look
@@ -26,9 +28,36 @@ func _ready() -> void:
 			child.add_theme_color_override("font_outline_color", Color.BLACK)
 			child.add_theme_constant_override("outline_size", 4)
 	
+	# Aktions-Buttons unten links als dicke Touch-Ziele
+	var hbox = HBoxContainer.new()
+	hbox.anchor_top = 1.0
+	hbox.anchor_bottom = 1.0
+	hbox.offset_left = 30
+	hbox.offset_top = -120
+	hbox.offset_bottom = -40
+	hbox.add_theme_constant_override("separation", 20)
+	add_child(hbox)
+	
+	feed_button.text = "🍏 Füttern"
+	clean_button.text = "✨ Waschen"
+	for button in [feed_button, clean_button]:
+		button.custom_minimum_size = Vector2(220, 80)
+		hbox.add_child(button)
+	
+	feed_button.pressed.connect(_on_feed_pressed)
+	clean_button.pressed.connect(_on_clean_pressed)
+	
 	if HorseStats:
 		HorseStats.connect("stats_changed", Callable(self, "_on_stats_changed"))
 		_on_stats_changed()
+
+func _on_feed_pressed() -> void:
+	if HorseStats:
+		HorseStats.feed(25.0)
+
+func _on_clean_pressed() -> void:
+	if HorseStats:
+		HorseStats.clean(25.0)
 
 func _on_stats_changed() -> void:
 	if not HorseStats:
