@@ -912,3 +912,34 @@ Fix (nur Transforms/Animationswerte, keine Asset-Bytes):
 Verifikation: lokale Renders der RESET-Pose in beiden Blickrichtungen (alle vier Beine anatomisch korrekt), zwei Walk-Zwischenphasen ohne Gelenkrisse, Hufpositionen gegen Vorher-Stand verglichen. Branch `fix/far-legs-and-steve-depth`, PR #10.
 
 Hinweis zum verworfenen Step-12: der damalige Fold-Fehler kam vom Spiegeln des **Near**-Beins (bereits korrekt). Step 13 spiegelt erstmals die tatsächlich falschen **Far**-Ketten.
+
+## Step 14 — Step 13 hatte die falschen Ketten gespiegelt (Gerätefund Marcel, Build b85)
+
+Der Gerätetest zu b85 hat gezeigt: Vorderbein wieder verdreht, hinteres Far-Bein steht zu weit vorne. Analyse der montierten Ketten aus den tscn-Zahlen (pro Bein als Bild zusammengesetzt, nicht aus Sheet-Spalten gelesen):
+
+- `front_left`-Kettenart ist im Master selbst **falsch herum** gezeichnet (Knie + Hufspitze nach hinten, KI-Artefakt) — das ist das Bein, das Marcel in b82 einkringelte.
+- `front_right` ist die korrekte Vorderbein-Art, `hind_left` die korrekte Hinterbein-Art, `hind_right` ist falsch herum.
+- Step 13 (ed64df2) hat das bereits korrekte `FrontFar` gespiegelt und beide Far-Beine verschoben — die eigentliche Regression.
+
+Fix (nur Transforms/Animationswerte, keine Asset-Bytes):
+
+- `FrontNear`: Root-Scale `(-0.5, 0.5)` spiegelt die falsch herum gezeichnete `front_left`-Art in die korrekte Beugung; Root-Position `(171.45, -53)`, Huf behält seine Bodenposition.
+- `FrontFar`: zurück auf ungespiegelt `(247, -53)` Scale `(0.5, 0.5)` (korrekte `front_right`-Art).
+- `HindFar`: zurück an die b82-Position `(-240.80, -77)` Scale `(0.5, 0.5)`; Kindkette durch Kopie der korrekten `HindNear`-Kette ersetzt (`hind_left`-Art + HindNear-Offsets). Die ungenutzten `hind_right`-AtlasTexture-Subressourcen bleiben deklariert (harmlos).
+- Walk-Animation: Far-Bein-Tracks auf die Werte vor ed64df2 zurückgesetzt, `FrontNear`-Tracks sind die negierten Vor-ed64df2-Werte (Spiegelkompensation).
+
+Verifikation: RESET-Pose in beiden Blickrichtungen als Render geprüft (alle vier Knie/Sprunggelenke/Hufe korrekt), Full-App-Dodge-Sequenz in beiden Fold-Formaten (1536x658, 1536x1384), Walk-Zwischenphasen ohne Risse. Grundregel geschärft: Beinbiegung nur an **montierten** Renders in beiden Blickrichtungen prüfen, nie an Sheet-Spalten.
+
+## Step 15 — Steve: Lauf-Reste (Bein-Fetzen) beseitigt (Build b86)
+
+Marcel meldete zu b85: beim Laufen bleiben Teile von Steves Bein als ausgeschnittene Reste stehen. Ursache: die Segmentierung (Torso = Vollbild minus um 22 px erodierte Gliedmaßen) ließ einen ~22 px breiten Gliedmaßen-Rand im statischen Torso; bei der Walk-Rotation blieb dieser Rand stehen.
+
+Fix: das Überlappungspolster gehört jetzt den **Gliedmaßen** statt dem Torso — jede Gliedmaßen-Maske ist um 28 px dilatiert (das Polster rotiert mit), der Torso verliert genau diesen dilatierten Bereich. Ruhepose bleibt pixelgleich, weil die Gliedmaßen ihr Polster über/unter der Torso-Lücke selbst zeichnen; beim Rotieren entstehen keine statischen Reste mehr. Neues Sheet `steve_segments_sheet_v02.png` (v01 entfernt, ungemergte Arbeit), Regionen und Sprite-Offsets in `scenes/steve_cutout_rig.tscn` aus dem neuen Manifest neu gerechnet, Animationswerte unverändert.
+
+Verifikation: Ruhepose pixelgleich zum Original (Abweichungen nur durch harte Alpha-Kanten), Walk-Frames an zwei Phasen ohne stehengebliebene Beinteile, Rotationsloch-Test ±18° ohne Löcher im Walk-Amplitudenbereich.
+
+## Step 16 — "Verdrehtes Bein" im Stand = eingefrorene Walk-Phase; Steve-Gangbild (Build b88)
+
+Marcels b87-Gerätefund "ein Bein immer noch verdreht" war kein Montagefehler: alle vier Ketten sind isoliert (Ruhe + Walk, beide Blickrichtungen) anatomisch korrekt. Ursache: `_set_horse_walking(false)` hat den WalkAnimationPlayer nur **pausiert** — das Pferd erstarrte mitten in der Walk-Phase mit rotierten Beingelenken (bis ~11° an Unterbein/Huf), im Stand lesbar als "verdrehtes Bein", wechselnd je nach Zufallsphase. Fix: beim Anhalten `play("RESET")` statt `pause()` (gleiches Muster wie bei Steve). Gerenderte Kontrolle: geparktes Pferd steht jetzt neutral (alle Cannons vertikal, Sprunggelenke hinten, Knie vorne).
+
+Steve-Gangbild: die Walk-Keys beugten das Knie in der **Rückwärts**-Phase (Schienbein-Peak bei t=0.25) — der Stiefel blieb sichtbar am Boden ("Hälfte des Beins steht"). Fix: Schienbein-Swing-Peak auf die Vorwärtsphase verschoben (near t=0.75, far t=0.25), Swing-Amplitude 0.58 rad, Oberschenkel ±0.28 rad. Frame-Serie über 6 Phasen: beide Stiefel heben sichtbar ab, keine Gelenkrisse, keine Torso-Löcher.

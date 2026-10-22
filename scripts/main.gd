@@ -3,6 +3,7 @@ extends Node2D
 const FARM_DAY := "res://assets/backgrounds/farm_day_v01.png"
 const FARM_NIGHT := "res://assets/backgrounds/farm_night_v01.png"
 const STEVE_STANDING := "res://assets/steve/steve_standing_v01.png"
+const STEVE_CUTOUT_RIG := "res://scenes/steve_cutout_rig.tscn"
 
 # Farmer Steve stands at a fixed yard spot for now (no movement, no collision).
 # Calibration from the confirmed cutout steve_standing_v01.png (1024x1536):
@@ -149,6 +150,10 @@ const WANDER_REROUTE_MAX_SECONDS := 14.0
 @onready var horse_root: Node2D = $HorseRoot
 
 var steve_root: Node2D = null
+var steve_rig: Node2D = null
+var steve_anim: AnimationPlayer = null
+# +1 = schaut nach rechts (Kanon-Seitenansicht), -1 = nach links.
+var steve_facing := 1.0
 var steve_x_ratio := STEVE_X_RATIO
 var steve_dodge_target_x_ratio := STEVE_X_RATIO
 @onready var horse_visual: Node2D = $HorseRoot/HorseVisual
@@ -285,7 +290,7 @@ func _set_horse_walking(walking: bool) -> void:
 	if walking:
 		walk_animation_player.play("walk_test")
 	else:
-		walk_animation_player.pause()
+		walk_animation_player.play("RESET")
 
 
 func _spawn_sleep_sprite() -> void:
@@ -792,13 +797,13 @@ func _spawn_steve() -> void:
 	steve_root.name = "SteveRoot"
 	add_child(steve_root)
 
-	var steve_sprite := Sprite2D.new()
-	steve_sprite.name = "SteveVisual"
-	steve_sprite.texture = load(STEVE_STANDING)
-	steve_sprite.centered = false
-	# Boots-bottom-center of the cutout sits exactly on the root anchor.
-	steve_sprite.position = Vector2(-STEVE_ANCHOR_X_PX, -STEVE_ANCHOR_BOTTOM_PX)
-	steve_root.add_child(steve_sprite)
+	# Articulated cutout rig (same 1024x1536 source space, boots-bottom-center
+	# anchor (494, 1521) like the old static sprite).
+	steve_rig = load(STEVE_CUTOUT_RIG).instantiate()
+	steve_rig.name = "SteveVisual"
+	steve_rig.position = Vector2(-STEVE_ANCHOR_X_PX, -STEVE_ANCHOR_BOTTOM_PX)
+	steve_root.add_child(steve_rig)
+	steve_anim = steve_rig.get_node("SteveAnimationPlayer")
 
 
 func _update_steve_dodge(delta: float) -> void:
@@ -852,7 +857,19 @@ func _update_steve_dodge(delta: float) -> void:
 		STEVE_DODGE_SPEED_RATIO_PER_SECOND * delta
 	)
 	if not is_equal_approx(next_x, steve_x_ratio):
+		# Beim Ausweichen in Laufrichtung schauen, Walk-Animation an.
+		steve_facing = 1.0 if next_x > steve_x_ratio else -1.0
 		steve_x_ratio = next_x
+		if steve_anim and steve_anim.current_animation != "walk":
+			steve_anim.play("walk")
+		_place_steve(size)
+	else:
+		# Im Stand dem Pferd zugewandt (er passt ja auf es auf).
+		var horse_center_x := (horse_span.x + horse_span.y) * 0.5
+		steve_facing = 1.0 if horse_center_x >= steve_center_x else -1.0
+		if steve_anim and steve_anim.current_animation == "walk":
+			steve_anim.play("RESET")
+			steve_anim.advance(0.0)
 		_place_steve(size)
 
 
@@ -879,5 +896,5 @@ func _place_steve(size: Vector2) -> void:
 		size.x * steve_x_ratio,
 		size.y * projected_foot_y_ratio
 	)
-	steve_root.scale = Vector2.ONE * visual_scale
+	steve_root.scale = Vector2(visual_scale * steve_facing, visual_scale)
 	steve_root.z_index = int(round(STEVE_DEPTH_T * 100.0))
