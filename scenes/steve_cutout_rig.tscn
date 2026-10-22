@@ -1,38 +1,38 @@
 [gd_scene load_steps=12 format=3]
 
-[ext_resource type="Texture2D" path="res://assets/steve/rig/steve_segments_sheet_v01.png" id="1_sheet"]
+[ext_resource type="Texture2D" path="res://assets/steve/rig/steve_segments_sheet_v02.png" id="1_sheet"]
 
 [sub_resource type="AtlasTexture" id="AT_torso"]
 atlas = ExtResource("1_sheet")
-region = Rect2(0, 2096, 359, 1501)
+region = Rect2(0, 2460, 344, 1452)
 
 [sub_resource type="AtlasTexture" id="AT_head"]
 atlas = ExtResource("1_sheet")
-region = Rect2(0, 8, 210, 234)
+region = Rect2(0, 8, 244, 262)
 
 [sub_resource type="AtlasTexture" id="AT_upper_arm"]
 atlas = ExtResource("1_sheet")
-region = Rect2(0, 250, 92, 308)
+region = Rect2(0, 278, 120, 364)
 
 [sub_resource type="AtlasTexture" id="AT_forearm"]
 atlas = ExtResource("1_sheet")
-region = Rect2(0, 566, 139, 241)
+region = Rect2(0, 650, 171, 297)
 
 [sub_resource type="AtlasTexture" id="AT_thigh"]
 atlas = ExtResource("1_sheet")
-region = Rect2(0, 815, 119, 261)
+region = Rect2(0, 955, 159, 317)
 
 [sub_resource type="AtlasTexture" id="AT_shin_boot"]
 atlas = ExtResource("1_sheet")
-region = Rect2(0, 1084, 140, 411)
+region = Rect2(0, 1280, 168, 467)
 
 [sub_resource type="AtlasTexture" id="AT_far_thigh"]
 atlas = ExtResource("1_sheet")
-region = Rect2(0, 1503, 96, 241)
+region = Rect2(0, 1755, 152, 297)
 
 [sub_resource type="AtlasTexture" id="AT_far_shin_boot"]
 atlas = ExtResource("1_sheet")
-region = Rect2(0, 1752, 150, 336)
+region = Rect2(0, 2060, 206, 392)
 
 [sub_resource type="Animation" id="Animation_walk"]
 resource_name = "walk"
@@ -305,7 +305,7 @@ z_index = -1
 modulate = Color(0.78, 0.78, 0.82, 1)
 
 [node name="Sprite" type="Sprite2D" parent="BobRoot/FarUpperArmPivot"]
-position = Vector2(-43, -50)
+position = Vector2(-29, -72)
 texture = SubResource("AT_upper_arm")
 centered = false
 
@@ -313,7 +313,7 @@ centered = false
 position = Vector2(10, 258)
 
 [node name="Sprite" type="Sprite2D" parent="BobRoot/FarUpperArmPivot/FarForearmPivot"]
-position = Vector2(-30, -21)
+position = Vector2(-20, -43)
 texture = SubResource("AT_forearm")
 centered = false
 
@@ -323,7 +323,7 @@ z_index = -1
 modulate = Color(0.78, 0.78, 0.82, 1)
 
 [node name="Sprite" type="Sprite2D" parent="BobRoot/FarThighPivot"]
-position = Vector2(-1, -35)
+position = Vector2(-29, -63)
 texture = SubResource("AT_far_thigh")
 centered = false
 
@@ -331,12 +331,12 @@ centered = false
 position = Vector2(19, 190)
 
 [node name="Sprite" type="Sprite2D" parent="BobRoot/FarThighPivot/FarShinPivot"]
-position = Vector2(-34, -20)
+position = Vector2(-62, -48)
 texture = SubResource("AT_far_shin_boot")
 centered = false
 
 [node name="Torso" type="Sprite2D" parent="BobRoot"]
-position = Vector2(339, 17)
+position = Vector2(354, 66)
 texture = SubResource("AT_torso")
 centered = false
 
@@ -345,7 +345,7 @@ position = Vector2(432, 878)
 z_index = 1
 
 [node name="Sprite" type="Sprite2D" parent="BobRoot/ThighPivot"]
-position = Vector2(-55, -58)
+position = Vector2(-67, -86)
 texture = SubResource("AT_thigh")
 centered = false
 
@@ -353,7 +353,7 @@ centered = false
 position = Vector2(0, 184)
 
 [node name="Sprite" type="Sprite2D" parent="BobRoot/ThighPivot/ShinPivot"]
-position = Vector2(-86, -27)
+position = Vector2(-86, -55)
 texture = SubResource("AT_shin_boot")
 centered = false
 
@@ -362,7 +362,7 @@ position = Vector2(368, 312)
 z_index = 1
 
 [node name="Sprite" type="Sprite2D" parent="BobRoot/UpperArmPivot"]
-position = Vector2(-29, -44)
+position = Vector2(-29, -72)
 texture = SubResource("AT_upper_arm")
 centered = false
 
@@ -370,7 +370,7 @@ centered = false
 position = Vector2(10, 258)
 
 [node name="Sprite" type="Sprite2D" parent="BobRoot/UpperArmPivot/ForearmPivot"]
-position = Vector2(-16, -15)
+position = Vector2(-20, -43)
 texture = SubResource("AT_forearm")
 centered = false
 
@@ -379,7 +379,7 @@ position = Vector2(448, 250)
 z_index = 2
 
 [node name="Sprite" type="Sprite2D" parent="BobRoot/HeadPivot"]
-position = Vector2(-82, -233)
+position = Vector2(-88, -233)
 texture = SubResource("AT_head")
 centered = false
 

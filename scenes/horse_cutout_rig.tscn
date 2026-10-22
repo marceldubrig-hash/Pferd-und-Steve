@@ -170,7 +170,7 @@ tracks/0/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [0.0]
+"values": [-0]
 }
 tracks/1/type = "value"
 tracks/1/imported = false
@@ -218,7 +218,7 @@ tracks/4/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [0.0]
+"values": [-0]
 }
 tracks/5/type = "value"
 tracks/5/imported = false
@@ -266,7 +266,7 @@ tracks/8/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [0.0]
+"values": [-0]
 }
 tracks/9/type = "value"
 tracks/9/imported = false
@@ -573,8 +573,8 @@ position = Vector2(49.841, 181.998)
 texture = SubResource("AtlasTexture_hind_left_hoof")
 
 [node name="FrontNear" type="Node2D" parent="."]
-position = Vector2(155, -53)
-scale = Vector2(0.5, 0.5)
+position = Vector2(171.45, -53)
+scale = Vector2(-0.5, 0.5)
 z_index = 1
 
 [node name="Upper" type="Sprite2D" parent="FrontNear"]
@@ -596,31 +596,31 @@ position = Vector2(67.359, 138.418)
 texture = SubResource("AtlasTexture_front_left_hoof")
 
 [node name="HindFar" type="Node2D" parent="."]
-position = Vector2(-142.462, -77)
-scale = Vector2(-0.5, 0.5)
+position = Vector2(-240.80, -77)
+scale = Vector2(0.5, 0.5)
 z_index = -1
 
 [node name="Upper" type="Sprite2D" parent="HindFar"]
-position = Vector2(32.071, 233.122)
-texture = SubResource("AtlasTexture_hind_right_upper")
+position = Vector2(-20.816, 234.353)
+texture = SubResource("AtlasTexture_hind_left_upper")
 
 [node name="LowerPivot" type="Node2D" parent="HindFar/Upper"]
-position = Vector2(7.159, 219.652)
+position = Vector2(-36.101, 235.597)
 
 [node name="Lower" type="Sprite2D" parent="HindFar/Upper/LowerPivot"]
-position = Vector2(38.005, 165.058)
-texture = SubResource("AtlasTexture_hind_right_lower")
+position = Vector2(-13.638, 163.241)
+texture = SubResource("AtlasTexture_hind_left_lower")
 
 [node name="HoofPivot" type="Node2D" parent="HindFar/Upper/LowerPivot/Lower"]
-position = Vector2(31.74, 160.626)
+position = Vector2(-34.745, 160.511)
 
 [node name="Hoof" type="Sprite2D" parent="HindFar/Upper/LowerPivot/Lower/HoofPivot"]
-position = Vector2(-49.206, 182.544)
-texture = SubResource("AtlasTexture_hind_right_hoof")
+position = Vector2(49.841, 181.998)
+texture = SubResource("AtlasTexture_hind_left_hoof")
 
 [node name="FrontFar" type="Node2D" parent="."]
-position = Vector2(345.578, -53)
-scale = Vector2(-0.5, 0.5)
+position = Vector2(247, -53)
+scale = Vector2(0.5, 0.5)
 z_index = -1
 
 [node name="Upper" type="Sprite2D" parent="FrontFar"]
