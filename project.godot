@@ -6,6 +6,7 @@ config_version=5
 [application]
 
 config/name="Pferd und Steve"
+config/version="dev"
 run/main_scene="res://scenes/main.tscn"
 config/icon="res://assets/icons/app_icon_512.png"
 
