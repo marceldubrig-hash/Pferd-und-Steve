@@ -2,6 +2,17 @@ extends Node2D
 
 const FARM_DAY := "res://assets/backgrounds/farm_day_v01.png"
 const FARM_NIGHT := "res://assets/backgrounds/farm_night_v01.png"
+const STEVE_STANDING := "res://assets/steve/steve_standing_v01.png"
+
+# Farmer Steve stands at a fixed yard spot for now (no movement, no collision).
+# Calibration from the confirmed cutout steve_standing_v01.png (1024x1536):
+# visible alpha bbox 988x1521, boots-bottom-center anchor at (494, 1521).
+const STEVE_WORLD_HEIGHT_M := 1.80
+const STEVE_VISIBLE_SOURCE_HEIGHT_PX := 1521.0
+const STEVE_ANCHOR_X_PX := 494.0
+const STEVE_ANCHOR_BOTTOM_PX := 1521.0
+const STEVE_X_RATIO := 0.33
+const STEVE_DEPTH_T := 0.40
 
 # Perspective model:
 # A pinhole camera projects apparent size proportional to 1 / distance.
@@ -110,6 +121,8 @@ const WANDER_REROUTE_MAX_SECONDS := 14.0
 
 @onready var background: Sprite2D = $Background
 @onready var horse_root: Node2D = $HorseRoot
+
+var steve_root: Node2D = null
 @onready var horse_visual: Node2D = $HorseRoot/HorseVisual
 @onready var walk_animation_player: AnimationPlayer = (
 	$HorseRoot/HorseVisual/RigSpace/HorseCutoutRig/WalkAnimationPlayer
@@ -133,6 +146,7 @@ var horse_is_walking := false
 func _ready() -> void:
 	get_viewport().size_changed.connect(_layout_scene)
 	_load_texture_if_available(background, FARM_DAY)
+	_spawn_steve()
 	_layout_scene()
 	_apply_perspective()
 
@@ -659,3 +673,45 @@ func _apply_perspective() -> void:
 	)
 	horse_root.scale = Vector2.ONE * visual_scale
 	horse_root.z_index = int(round(horse_depth_t * 100.0))
+	_place_steve(size)
+
+
+func _spawn_steve() -> void:
+	steve_root = Node2D.new()
+	steve_root.name = "SteveRoot"
+	add_child(steve_root)
+
+	var steve_sprite := Sprite2D.new()
+	steve_sprite.name = "SteveVisual"
+	steve_sprite.texture = load(STEVE_STANDING)
+	steve_sprite.centered = false
+	# Boots-bottom-center of the cutout sits exactly on the root anchor.
+	steve_sprite.position = Vector2(-STEVE_ANCHOR_X_PX, -STEVE_ANCHOR_BOTTOM_PX)
+	steve_root.add_child(steve_sprite)
+
+
+func _place_steve(size: Vector2) -> void:
+	if steve_root == null:
+		return
+
+	# Same 1/Z ground projection as the horse, with Steve's own real height.
+	var distance_m := lerpf(FAR_DISTANCE_M, NEAR_DISTANCE_M, STEVE_DEPTH_T)
+	var inverse_depth_gain := FAR_DISTANCE_M / maxf(distance_m, 0.01)
+	var foot_delta_from_horizon := (
+		FAR_PROJECTED_FOOT_Y_RATIO - PERSPECTIVE_HORIZON_Y_RATIO
+	) * inverse_depth_gain
+	var projected_foot_y_ratio := (
+		PERSPECTIVE_HORIZON_Y_RATIO + foot_delta_from_horizon
+	)
+	var projected_steve_height_ratio := (
+		STEVE_WORLD_HEIGHT_M / CAMERA_HEIGHT_M
+	) * maxf(foot_delta_from_horizon, 0.001)
+	var target_steve_height_px := size.y * projected_steve_height_ratio
+	var visual_scale := target_steve_height_px / STEVE_VISIBLE_SOURCE_HEIGHT_PX
+
+	steve_root.position = Vector2(
+		size.x * STEVE_X_RATIO,
+		size.y * projected_foot_y_ratio
+	)
+	steve_root.scale = Vector2.ONE * visual_scale
+	steve_root.z_index = int(round(STEVE_DEPTH_T * 100.0))
